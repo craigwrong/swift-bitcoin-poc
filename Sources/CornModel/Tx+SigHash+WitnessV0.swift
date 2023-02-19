@@ -2,14 +2,14 @@ import Foundation
 
 public extension Tx {
     
-    func signedWitnessV0(privateKey: String, publicKey: String, inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
+    func signedWitnessV0(privateKey: Data, publicKey: Data, inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
         
         // For P2WPKH witness program, the scriptCode is 0x1976a914{20-byte-pubkey-hash}88ac.
         // OP_DUP OP_HASH160 1d0f172a0ecb48aee1be1f2687d2963ae33f71a1 OP_EQUALVERIFY OP_CHECKSIG
         let scriptCode = Script(ops: [
             .dup,
             .hash160,
-            .pushBytes(hash160(Data(hex: publicKey))), // previousTxOut.scriptPubKey.ops[1], // pushBytes 20
+            .pushBytes(hash160(publicKey)), // previousTxOut.scriptPubKey.ops[1], // pushBytes 20
             .equalVerify,
             .checkSig
         ])
@@ -17,15 +17,14 @@ public extension Tx {
         let preImage = signatureMessageV0(inputIndex: inputIndex, scriptCode: scriptCode, amount: previousTxOut.value, sigHashType: sigHashType)
         let preImageHash = doubleHash(preImage)
         
-        let signature = signECDSA(message: preImageHash, privateKey: privateKey) + sigHashType.data.hex
-        print("Sig length: \((signature.count - 2) / 2)")
+        let signature = sign(message: preImageHash, privateKey: privateKey) + sigHashType.data
         
         var newWitnesses = [Witness]()
         ins.enumerated().forEach { index, _ in
             if index == inputIndex {
                 newWitnesses.append(.init(stack: [
-                    signature,
-                    publicKey
+                    signature.hex,
+                    publicKey.hex
                 ]))
             } else {
                 newWitnesses.append(.init(stack: []))

@@ -13,8 +13,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey0 = "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201" // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
-        let publicKey0 = "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708"
+        let privateKey0 = Data(hex: "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201") // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
+        let publicKey0 = Data(hex: "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708")
         
         let signedTx = unsignedTx.signed(privateKey: privateKey0, publicKey: publicKey0, redeemScript: .none, inputIndex: 0, previousTxOut: previousTxOut0, sigHashType: .all)
         
@@ -31,8 +31,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey0 = "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201" // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
-        let publicKey0 = "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708"
+        let privateKey0 = Data(hex: "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201") // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
+        let publicKey0 = Data(hex: "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708")
         
         let message = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .all)
         XCTAssertEqual(message.hex, "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988acffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac0000000001000000")
@@ -52,9 +52,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey0 = "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201" // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
-        let publicKey0 = "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708"
-
+        let privateKey0 = Data(hex: "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201") // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
+        let publicKey0 = Data(hex: "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708")
         let preImage = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .none)
         XCTAssertEqual(preImage.hex, "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988acffffffff000000000002000000")
 
@@ -73,8 +72,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey0 = "a67d3c308333c63f5e83a75e42a5533d0ac27153ecf443dd75cd4306d0c68fba01" // cTALNpTpRbbxTCJ2A5Vq88UxT44w1PE2cYqiB3n4hRvzyCev1Wwo
-        let publicKey0 = "02d82c9860e36f15d7b72aa59e29347f951277c21cd4d34822acdeeadbcff8a546"
+        let privateKey0 = Data(hex: "a67d3c308333c63f5e83a75e42a5533d0ac27153ecf443dd75cd4306d0c68fba01") // cTALNpTpRbbxTCJ2A5Vq88UxT44w1PE2cYqiB3n4hRvzyCev1Wwo
+        let publicKey0 = Data(hex: "02d82c9860e36f15d7b72aa59e29347f951277c21cd4d34822acdeeadbcff8a546")
         
         let message0 = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .all)
         XCTAssertEqual(message0.hex, "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c4676000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88acffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760100000000ffffffff0240548900000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988ac40548900000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac0000000001000000")
@@ -88,8 +87,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey1 = "f0ef687ea00a50936b659748b89a5b65dff8b3cea215d33f5d8c0917faab9c4301" // cVf3kGh6552jU2rLaKwXTKq5APHPoZqCP4GQzQirWGHFoHQ9rEVt
-        let publicKey1 = "02364d6f04487a71b5966eae3e14a4dc6f00dbe8e55e61bedd0b880766bfe72b5d"
+        let privateKey1 = Data(hex: "f0ef687ea00a50936b659748b89a5b65dff8b3cea215d33f5d8c0917faab9c4301") // cVf3kGh6552jU2rLaKwXTKq5APHPoZqCP4GQzQirWGHFoHQ9rEVt
+        let publicKey1 = Data(hex: "02364d6f04487a71b5966eae3e14a4dc6f00dbe8e55e61bedd0b880766bfe72b5d")
         
         let message1 = unsignedTx.signatureMessageLegacy(inputIndex: 1, scriptCode: previousTxOut1.scriptPubKey, sigHashType: .all)
         XCTAssertEqual(message1.hex, "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760000000000ffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c4676010000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988acffffffff0240548900000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988ac40548900000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac0000000001000000")
@@ -113,8 +112,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey0 = "a67d3c308333c63f5e83a75e42a5533d0ac27153ecf443dd75cd4306d0c68fba01" // cTALNpTpRbbxTCJ2A5Vq88UxT44w1PE2cYqiB3n4hRvzyCev1Wwo
-        let publicKey0 = "02d82c9860e36f15d7b72aa59e29347f951277c21cd4d34822acdeeadbcff8a546"
+        let privateKey0 = Data(hex: "a67d3c308333c63f5e83a75e42a5533d0ac27153ecf443dd75cd4306d0c68fba01") // cTALNpTpRbbxTCJ2A5Vq88UxT44w1PE2cYqiB3n4hRvzyCev1Wwo
+        let publicKey0 = Data(hex: "02d82c9860e36f15d7b72aa59e29347f951277c21cd4d34822acdeeadbcff8a546")
         
         let message0 = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .none)
         XCTAssertEqual(message0.hex, "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c4676000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88acffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c4676010000000000000000000000000002000000")
@@ -128,8 +127,8 @@ final class RegtestTests: XCTestCase {
             .equalVerify,
             .checkSig
         ]))
-        let privateKey1 = "f0ef687ea00a50936b659748b89a5b65dff8b3cea215d33f5d8c0917faab9c4301" // cVf3kGh6552jU2rLaKwXTKq5APHPoZqCP4GQzQirWGHFoHQ9rEVt
-        let publicKey1 = "02364d6f04487a71b5966eae3e14a4dc6f00dbe8e55e61bedd0b880766bfe72b5d"
+        let privateKey1 = Data(hex: "f0ef687ea00a50936b659748b89a5b65dff8b3cea215d33f5d8c0917faab9c4301") // cVf3kGh6552jU2rLaKwXTKq5APHPoZqCP4GQzQirWGHFoHQ9rEVt
+        let publicKey1 = Data(hex: "02364d6f04487a71b5966eae3e14a4dc6f00dbe8e55e61bedd0b880766bfe72b5d")
         
         let message1 = unsignedTx.signatureMessageLegacy(inputIndex: 1, scriptCode: previousTxOut1.scriptPubKey, sigHashType: .none)
         XCTAssertEqual(message1.hex, "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760000000000000000000f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c4676010000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988acffffffff000000000002000000")
@@ -145,14 +144,14 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let previousTxOut0 = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includeLength: false))
-        let privateKey0 = "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c" // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
-        let publicKey0 = "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125" // 03ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e mrVceFBXfu9MJwdbiWFB2A6cpiWb4j1n27
+        let privateKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
+        let publicKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125") // 03ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e mrVceFBXfu9MJwdbiWFB2A6cpiWb4j1n27
         
         let preImage = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .all)
         XCTAssertEqual(preImage.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000001000000")
         let sigHash = unsignedTx.signatureHashLegacy(sigHashType: .all, inputIndex: 0, previousTxOut: previousTxOut0, redeemScript: .none)
-        let signatureHex = signECDSA(message: sigHash, privateKey: privateKey0)
-        XCTAssertTrue(unsignedTx.checkSigLegacy(Data(hex: signatureHex) + SigHashType.all.data, privateKey: privateKey0, inputIndex: 0, previousTxOut: previousTxOut0, redeemScript: .none))
+        let signature = sign(message: sigHash, privateKey: privateKey0)
+        XCTAssertTrue(unsignedTx.checkSigLegacy(signature + SigHashType.all.data, privateKey: privateKey0, inputIndex: 0, previousTxOut: previousTxOut0, redeemScript: .none))
         
 
         // Since Core generates a different signature, let's at least make sure that their signature also verifies our hash.
@@ -173,8 +172,8 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let previousTxOut0 = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includeLength: false))
-        let privateKey0 = "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c" // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
-        let publicKey0 = "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125"
+        let privateKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
+        let publicKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
         let preImage = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .allAnyCanPay)
         XCTAssertEqual(preImage.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000081000000")
@@ -182,15 +181,15 @@ final class RegtestTests: XCTestCase {
 
         let signedTx = unsignedTx.signed(privateKey: privateKey0, publicKey: publicKey0, redeemScript: .none, inputIndex: 0, previousTxOut: previousTxOut0, sigHashType: .allAnyCanPay)
         
-        // XCTAssertEqual(signedTx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022071d3102292c188fb2be5878ac2a34241f49538352435642087ff2350fd5a05040220755797e78c480a4c8fdd47e1dd37ff6e8e343a188d2056ceb894a681d72d7b7c814104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
+        //XCTAssertEqual(signedTx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022071d3102292c188fb2be5878ac2a34241f49538352435642087ff2350fd5a05040220755797e78c480a4c8fdd47e1dd37ff6e8e343a188d2056ceb894a681d72d7b7c814104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
     }
 
     func testLegacy_1to1_none() {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let previousTxOut0 = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includeLength: false))
-        let privateKey0 = "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c" // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
-        let publicKey0 = "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125"
+        let privateKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
+        let publicKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
         let signedTx = unsignedTx.signed(privateKey: privateKey0, publicKey: publicKey0, redeemScript: .none, inputIndex: 0, previousTxOut: previousTxOut0, sigHashType: .none)
         
@@ -201,8 +200,8 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let previousTxOut0 = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includeLength: false))
-        let privateKey0 = "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c" // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
-        let publicKey0 = "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125"
+        let privateKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
+        let publicKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
         let preImage = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .noneAnyCanPay)
         XCTAssertEqual(preImage.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff000000000082000000")
@@ -216,8 +215,8 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let previousTxOut0 = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includeLength: false))
-        let privateKey0 = "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c" // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
-        let publicKey0 = "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125"
+        let privateKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
+        let publicKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
         let preImage = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .single)
         XCTAssertEqual(preImage.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000003000000")
@@ -231,8 +230,8 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let previousTxOut0 = Tx.Out(value: UInt64(312500000), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includeLength: false))
-        let privateKey0 = "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c" // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
-        let publicKey0 = "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125"
+        let privateKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
+        let publicKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
         let preImage = unsignedTx.signatureMessageLegacy(inputIndex: 0, scriptCode: previousTxOut0.scriptPubKey, sigHashType: .singleAnyCanPay)
         XCTAssertEqual(preImage.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000083000000")

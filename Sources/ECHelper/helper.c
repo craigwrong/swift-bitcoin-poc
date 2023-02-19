@@ -1,8 +1,6 @@
 #include "include/helper.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-//#include <stdint.h>
 #include <assert.h>
 #include <string.h>
 
@@ -32,7 +30,7 @@ char SigHasLowR(const secp256k1_ecdsa_signature* sig)
     return compact_sig[0] < 0x80;
 }
 
-const char* computeInternalKey(const unsigned char secretKey[32]) {
+const char* computeInternalKey(const u_char secretKey[32]) {
     // unsigned char sk[32] = "\x41\xf4\x1d\x69\x26\x0d\xf4\xcf\x27\x78\x26\xa9\xb6\x5a\x37\x17\xe4\xee\xdd\xbe\xed\xf6\x37\xf2\x12\xca\x09\x65\x76\x47\x93\x61";
     secp256k1_context *context = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     secp256k1_keypair keypair;
@@ -56,7 +54,7 @@ void WriteLE32(unsigned char* ptr, uint32_t x)
     memcpy(ptr, (char*)&v, 4);
 }
 
-const char* sign(const u_char secretKey[32], const u_char message[32], const u_char grind) {
+int cSign(u_char* signatureOut, size_t* signatureOutLength,const u_char message[32], const u_char secretKey[32], const u_char grind) {
     const size_t SIGNATURE_SIZE = 72;
     // TODO: Create context in the same way as bitcoin core
     secp256k1_context *secp256k1_context_sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
@@ -75,7 +73,7 @@ const char* sign(const u_char secretKey[32], const u_char message[32], const u_c
     }
     assert(ret);
     size_t sigLen = SIGNATURE_SIZE;
-    unsigned char *signature = malloc(sigLen);
+    u_char *signature = malloc(sigLen);
     ret = secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, signature, &sigLen, &sig);
     assert(ret);
     // Additional verification step to prevent using a potentially corrupted signature
@@ -85,10 +83,12 @@ const char* sign(const u_char secretKey[32], const u_char message[32], const u_c
     // secp256k1_context_no_precomp should be secp256k1_context_static
     ret = secp256k1_ecdsa_verify(secp256k1_context_no_precomp, &sig, message, &pk);
     assert(ret);
-    return toHex(signature, sigLen);
+    memcpy(signatureOut, signature, sigLen);
+    *signatureOutLength = sigLen;
+    return 1;
 }
 
-const int verify(const u_char secretKey[32], const u_char message[32], const u_char *signature, const size_t signatureLen) {
+const int verify(const u_char *signature, const size_t signatureLen, const u_char message[32], const u_char secretKey[32]) {
     // TODO: Create context in the same way as bitcoin core
     secp256k1_context *secp256k1_context_sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
     secp256k1_context *secp256k1_context_verify = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
@@ -149,7 +149,7 @@ const char* signSchnorr(const unsigned char secretKey[32], const unsigned char m
  }
  */
 
-const char* computeOutputKey(const unsigned char internalKeyBytes[32], unsigned char tweak[32]) {
+const char* computeOutputKey(const u_char internalKeyBytes[32], const u_char tweak[32]) {
     secp256k1_context *context = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     secp256k1_xonly_pubkey internalKey;
     secp256k1_pubkey outputKey; // Used for non keypair flow

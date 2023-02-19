@@ -2,16 +2,16 @@ import Foundation
 
 public extension Tx {
     
-    func checkSigLegacy(_ signatureWithHashType: Data, privateKey: String, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Bool {
+    func checkSigLegacy(_ signatureWithHashType: Data, privateKey: Data, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Bool {
         var signature = signatureWithHashType
         guard let hashTypeRaw = signature.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
             fatalError()
         }
         let sigHash = signatureHashLegacy(sigHashType: hashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
-        return verifyECDSA(signature: signature, message: sigHash, privateKey: privateKey)
+        return verify(signature: signature, message: sigHash, privateKey: privateKey)
     }
     
-    func signed(privateKey: String, publicKey: String, redeemScript: Script? = .none, inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
+    func signed(privateKey: Data, publicKey: Data, redeemScript: Script? = .none, inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
         switch(previousTxOut.scriptPubKey.scriptType) {
         case .nonStandard:
             fatalError("Signing of non-standard scripts is not implemented.")
@@ -58,12 +58,11 @@ public extension Tx {
         return doubleHash(preImage)
     }
 
-    func signedLegacy(privateKey: String, publicKey: String, redeemScript: Script? = .none,
+    func signedLegacy(privateKey: Data, publicKey: Data, redeemScript: Script? = .none,
                       inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
         let sigHash = signatureHashLegacy(sigHashType: sigHashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
         
-        let signatureHex = signECDSA(message: sigHash, privateKey: privateKey) // grind: false)
-        let signature = Data(hex: signatureHex)
+        let signature = sign(message: sigHash, privateKey: privateKey) // grind: false)
         let signatureWithHashType = signature + sigHashType.data
         
         let currentInput = ins[inputIndex]
@@ -74,7 +73,7 @@ public extension Tx {
         } else if previousTxOut.scriptPubKey.scriptType == .pubKeyHash {
             newScriptSig = .init(ops: [
                 .pushBytes(signatureWithHashType),
-                .pushBytes(Data(hex: publicKey))
+                .pushBytes(publicKey)
             ])
         } else { // if previousTxOut.scriptPubKey.scriptType == .scriptHash {
             let currentOps = currentInput.scriptSig.ops

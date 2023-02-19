@@ -2,7 +2,7 @@ import Foundation
 
 public extension Tx {
     
-    func signedWitnessV1(privateKey: String, publicKey: String, inputIndex: Int, previousTxOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
+    func signedWitnessV1(privateKey: Data, publicKey: Data, inputIndex: Int, previousTxOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
         
         let preImage = signatureMessageV1(inputIndex: inputIndex, previousTxOuts: previousTxOuts, sigHashType: sigHashType, extFlag: 0) // TODO: Produce ext_flag
         let preImageHash = singleHash(preImage) // TODO: is this correct?
@@ -16,7 +16,7 @@ public extension Tx {
             if index == inputIndex {
                 newWitnesses.append(.init(stack: [
                     signature,
-                    publicKey
+                    publicKey.hex
                 ]))
             } else {
                 newWitnesses.append(.init(stack: []))

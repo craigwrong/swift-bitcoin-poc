@@ -2,6 +2,13 @@ import XCTest
 import CornModel
     
 final class BitcoinTransactionTests: XCTestCase {
+    override class func setUp() {
+        eccStart()
+    }
+
+    override class func tearDown() {
+        eccStop()
+    }
 
     func testCoinbaseTx() {
         XCTAssertTrue(CoreTx.Sample.coinbase1.toBitcoinTransaction.isCoinbase)

@@ -5,18 +5,17 @@ public extension Tx {
     func signedWitnessV1(privateKey: Data, publicKey: Data, inputIndex: Int, previousTxOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
         
         let preImage = signatureMessageV1(inputIndex: inputIndex, previousTxOuts: previousTxOuts, sigHashType: sigHashType, extFlag: 0) // TODO: Produce ext_flag
-        let preImageHash = singleHash(preImage) // TODO: is this correct?
+        let preImageHash = taggedHash(tag: "TagSighash", payload: sigHashType.data + preImage)
         
-        let signature = signSchnorr(message: preImageHash, privateKey: privateKey) // + sigHashType.data.hex
-        // TODO: Figure out if appending hash type is necessary
+        let aux = getRandBytes(32)
+        let signature = signSchnorr(message: preImageHash, secretKey: privateKey, merkleRoot: .none, aux: aux) + (sigHashType == .default ? Data() : sigHashType.data)
         
-        // TODO: this is likely wrong (just copied from witness v0)
+        // TODO: this is only for keyPath spending
         var newWitnesses = [Witness]()
         ins.enumerated().forEach { index, _ in
             if index == inputIndex {
                 newWitnesses.append(.init(stack: [
-                    signature,
-                    publicKey.hex
+                    signature
                 ]))
             } else {
                 newWitnesses.append(.init(stack: []))
@@ -79,7 +78,7 @@ public extension Tx {
         let originalWitnessStack = witnessData[inputIndex].stack // TODO: Check this witness stack is the original.
         let firstByteOfLastElement: UInt8?
         if let lastElement = originalWitnessStack.last, lastElement.count > 3 {
-            firstByteOfLastElement = Data(hex: lastElement)[1]
+            firstByteOfLastElement = lastElement[1]
         } else {
             firstByteOfLastElement = .none
         }
@@ -112,8 +111,8 @@ public extension Tx {
             guard let annex = originalWitnessStack.last else {
                 fatalError("Annex is supposed to be present.")
             }
-            let annexData = Data(hex: annex) // TODO: Review and make sure it includes the varInt prefix (length)
-            let shaAnnex = singleHash(annexData)
+            // TODO: Review and make sure it includes the varInt prefix (length)
+            let shaAnnex = singleHash(annex)
             inputData.append(shaAnnex)
         }
         

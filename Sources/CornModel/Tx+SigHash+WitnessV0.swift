@@ -23,8 +23,8 @@ public extension Tx {
         ins.enumerated().forEach { index, _ in
             if index == inputIndex {
                 newWitnesses.append(.init(stack: [
-                    signature.hex,
-                    publicKey.hex
+                    signature,
+                    publicKey
                 ]))
             } else {
                 newWitnesses.append(.init(stack: []))

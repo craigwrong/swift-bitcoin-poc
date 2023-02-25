@@ -380,11 +380,4 @@ public extension RIPEMD160 {
         md.update(data: message)
         return md.finalize()
     }
-    
-    /// Compute hash from `String`
-    /// - Parameter message: Input string
-    /// - Returns: Hash digest
-    static func hash(_ message: String) -> Data {
-        return RIPEMD160.hash(message.data(using: .utf8)!)
-    }
 }

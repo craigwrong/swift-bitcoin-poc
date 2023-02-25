@@ -2,6 +2,13 @@ import XCTest
 @testable import CornModel
 
 final class BTransactionBCoreTransactionTests: XCTestCase {
+    override class func setUp() {
+        eccStart()
+    }
+
+    override class func tearDown() {
+        eccStop()
+    }
 
     func testBCoreTransactionConversionRoundTrip() {
         let coreTx = CoreTx.Sample.coinbase1NoAddressDescriptor
@@ -53,7 +60,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let witness = tx.witnessData[0]
         XCTAssertEqual(input.sequence, UInt32(bCoreInput.sequence))
         XCTAssertEqual(input.scriptSig.data(includeLength: false).hex, bCoreInput.coinbase!)
-        XCTAssertEqual(witness.stack, bCoreInput.txinwitness)
+        XCTAssertEqual(witness.stack.map(\.hex), bCoreInput.txinwitness)
         
         let segWitInput = CoreTx.Sample.segwit1.vin[0]
         let txSegwit = Tx(Data(hex: CoreTx.Sample.segwit1.hex))
@@ -61,7 +68,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let witnessSegwit = txSegwit.witnessData[0]
         XCTAssertEqual(inputSegwit.sequence, UInt32(segWitInput.sequence))
         XCTAssertEqual(inputSegwit.scriptSig.data(includeLength: false).hex, segWitInput.scriptSig!.hex)
-        XCTAssertEqual(witnessSegwit.stack, segWitInput.txinwitness!)
+        XCTAssertEqual(witnessSegwit.stack.map(\.hex), segWitInput.txinwitness!)
         
     }
     

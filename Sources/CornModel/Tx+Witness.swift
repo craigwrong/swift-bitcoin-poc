@@ -2,7 +2,7 @@ import Foundation
 
 public extension Tx {
     struct Witness: Equatable {
-        var stack: [String]
+        var stack: [Data]
     }
 }
 
@@ -26,9 +26,9 @@ public extension Tx.Witness {
         let stackCount = data.varInt
         data = data.dropFirst(stackCount.varIntSize)
         
-        var stack = [String]()
+        var stack = [Data]()
         for _ in 0 ..< stackCount {
-            let stackElement = String(varLengthData: data)
+            let stackElement = Data(varLengthData: data)
             stack.append(stackElement)
             data = data.dropFirst(stackElement.varLengthSize)
         }

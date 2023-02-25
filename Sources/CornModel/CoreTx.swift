@@ -144,7 +144,7 @@ public extension Tx.In {
             scriptSig: .none,
             txid: .none,
             vout: .none,
-            txinwitness: witness.stack,
+            txinwitness: witness.stack.map(\.hex),
             sequence: sequence
         )
         : .init(
@@ -155,7 +155,7 @@ public extension Tx.In {
             ),
             txid: txID,
             vout: output,
-            txinwitness: witness.stack,
+            txinwitness: witness.stack.map(\.hex),
             sequence: sequence
         )
     }

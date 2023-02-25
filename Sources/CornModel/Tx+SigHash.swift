@@ -11,12 +11,12 @@ public extension Tx {
         return verify(signature: signature, message: sigHash, privateKey: privateKey)
     }
     
-    func signed(privateKey: Data, publicKey: Data, redeemScript: Script? = .none, inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
-        switch(previousTxOut.scriptPubKey.scriptType) {
+    func signed(privateKey: Data, publicKey: Data, redeemScript: Script? = .none, inputIndex: Int, previousTxOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
+        switch(previousTxOuts[inputIndex].scriptPubKey.scriptType) {
         case .nonStandard:
             fatalError("Signing of non-standard scripts is not implemented.")
         case .pubKey, .pubKeyHash:
-            return signedLegacy(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOut, sigHashType: sigHashType)
+            return signedLegacy(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
         case .scriptHash:
             guard let redeemScript else {
                 fatalError("Missing required redeem script.")
@@ -25,20 +25,20 @@ public extension Tx {
                 // TODO: Pass redeem script on to add to input's script sig
                 var withScriptSig = self
                 withScriptSig.ins[inputIndex].scriptSig = .init(ops: [.pushBytes(redeemScript.data(includeLength: false))])
-                return withScriptSig.signedWitnessV0(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOut, sigHashType: sigHashType)
+                return withScriptSig.signedWitnessV0(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
             }
             // TODO: Handle P2SH-P2WSH
-            return signedLegacy(privateKey: privateKey, publicKey: publicKey, redeemScript: redeemScript, inputIndex: inputIndex, previousTxOut: previousTxOut, sigHashType: sigHashType)
+            return signedLegacy(privateKey: privateKey, publicKey: publicKey, redeemScript: redeemScript, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
         case .multiSig:
             fatalError("Signing of legacy multisig transactions is not yet implemented.")
         case .nullData:
             fatalError("Null data script transactions cannot be signed nor spent.")
         case .witnessV0KeyHash:
-            return signedWitnessV0(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOut, sigHashType: sigHashType)
+            return signedWitnessV0(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
         case .witnessV0ScriptHash:
             fatalError("Signing of P2WSH transactions is not yet implemented.")
         case .witnessV1TapRoot:
-            fatalError("Signing of taproot transactions is not yet implemented.")
+            return signedWitnessV1(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOuts: previousTxOuts, sigHashType: sigHashType)
         case .witnessUnknown:
             fatalError("Signing of transactions with witness script version higher than 1 is not yet implemented.")
         }

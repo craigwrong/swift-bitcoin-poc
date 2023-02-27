@@ -29,7 +29,15 @@ public extension Script {
              witnessV1TapRoot = "witness_v1_taproot",
              witnessUnknown = "witness_unknown"
     }
-    
+
+    var segwitProgram: Data {
+        precondition(scriptType == .witnessV0KeyHash || scriptType == .witnessV0ScriptHash || scriptType == .witnessV1TapRoot || scriptType == .witnessUnknown)
+        guard case let .pushBytes(programData) = ops[1] else {
+            fatalError()
+        }
+        return programData
+    }
+
     var scriptType: ScriptType {
         if ops.count == 2, ops[1] == .checkSig, case let .pushBytes(data) = ops[0], data.count == 33 {
             return .pubKey

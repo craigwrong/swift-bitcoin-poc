@@ -10,6 +10,7 @@ let package = Package(
             targets: ["CornModel"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0")
     ],
     targets: [
         .binaryTarget(name: "secp256k1",
@@ -20,7 +21,7 @@ let package = Package(
             dependencies: ["secp256k1"]),
         .target(
             name: "CornModel",
-            dependencies: ["ECHelper"]),
+            dependencies: ["ECHelper", "BigInt"]),
         .testTarget(
             name: "CornModelTests",
             dependencies: ["CornModel"]),

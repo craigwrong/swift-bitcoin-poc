@@ -160,7 +160,7 @@ extension CoreTx {
     }
     """.data(using: .utf8)!)
         
-        static let segwit1NoAddressDescriptor = try! JSONDecoder().decode(CoreTx.self, from: """
+        static let segwit1NoDescriptor = try! JSONDecoder().decode(CoreTx.self, from: """
     {
       "txid": "33684826ae8b25e6e15eb9007b71a5248ebff9da5bfed84c739f89ccc9c4cf7e",
       "hash": "83caf3bd74e0d5a54c6659727b1813bd1d123c9f9351ca4dd22e9fc80609b85d",
@@ -192,7 +192,7 @@ extension CoreTx {
             "asm": "0 b42c2a34d039ebbe5eb7525830a3e30c059fd634",
             "desc": "",
             "hex": "0014b42c2a34d039ebbe5eb7525830a3e30c059fd634",
-            "address": "",
+            "address": "bcrt1qkskz5dxs884muh4h2fvrpglrpszel43552r32s",
             "type": "witness_v0_keyhash"
           }
         },
@@ -203,7 +203,7 @@ extension CoreTx {
             "asm": "0 d8d5b8d4dc7635db74ba6630188c4c839f19beb8",
             "desc": "",
             "hex": "0014d8d5b8d4dc7635db74ba6630188c4c839f19beb8",
-            "address": "",
+            "address": "bcrt1qmr2m34xuwc6aka96vccp3rzvsw03n04ckhqjz8",
             "type": "witness_v0_keyhash"
           }
         }

@@ -170,7 +170,7 @@ public extension Tx.Out {
                 asm: scriptPubKey.asm,
                 desc: "", // TODO: Create descriptor
                 hex: scriptPubKey.data(includeLength: false).hex,
-                address: "", // TODO: Create address
+                address: address,
                 type: .init(rawValue: scriptPubKey.scriptType.rawValue) ?? .unknown
             )
         )

@@ -35,9 +35,7 @@ public extension Tx.Out {
     
     var address: String {
         if scriptPubKey.scriptType == .witnessV0KeyHash || scriptPubKey.scriptType == .witnessV0ScriptHash {
-            // b42c2a34d039ebbe5eb7525830a3e30c059fd634
-            print(scriptPubKey.segwitProgram.hex)
-            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: Config.shared.isTestnet ? "bcrt" : "bc", version: 0, program: scriptPubKey.segwitProgram)) ?? ""
+            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: Config.shared.isTestnet ? "bcrt" : "bc", version: 0, program: scriptPubKey.segwitProgram)) ?? ""
         } else if scriptPubKey.scriptType == .witnessV1TapRoot {
             return (try? SegwitAddrCoder(bech32m: true).encode(hrp: Config.shared.isTestnet ? "bcrt" : "bc", version: 1, program: scriptPubKey.segwitProgram)) ?? ""
         }

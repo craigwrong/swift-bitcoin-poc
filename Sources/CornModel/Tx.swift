@@ -3,6 +3,13 @@ import CryptoKit
 import ECHelper
 
 public struct Tx: Equatable {
+    public init(version: Tx.Version, ins: [Tx.In], outs: [Tx.Out], witnessData: [Tx.Witness], lockTime: UInt32) {
+        self.version = version
+        self.ins = ins
+        self.outs = outs
+        self.witnessData = witnessData
+        self.lockTime = lockTime
+    }
     
     /// Its presence withn transaction data indicates the inclusion of seggregated witness (SegWit) data.
     static let segwitMarker = UInt8(0x00)

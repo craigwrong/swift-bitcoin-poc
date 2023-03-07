@@ -61,10 +61,10 @@ public extension Script {
         if ops.count == 2, ops[0] == .zero, case let .pushBytes(data) = ops[1], data.count == 32 {
             return .witnessV0ScriptHash
         }
-        if ops.count == 2, ops[0] == .one, case let .pushBytes(data) = ops[1], data.count == 32 {
+        if ops.count == 2, ops[0] == .constant(1), case let .pushBytes(data) = ops[1], data.count == 32 {
             return .witnessV1TapRoot
         }
-        if ops.count == 2, ops[0].opCode > Op.one.opCode, ops[0].opCode < Op.sixteen.opCode, case let .pushBytes(data) = ops[1], data.count >= 2, data.count <= 40 {
+        if ops.count == 2, ops[0].opCode > Op.constant(1).opCode, ops[0].opCode < Op.constant(16).opCode, case let .pushBytes(data) = ops[1], data.count >= 2, data.count <= 40 {
             return .witnessUnknown
         }
         return .nonStandard

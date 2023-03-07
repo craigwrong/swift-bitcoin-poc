@@ -36,19 +36,19 @@ char SigHasLowR(const secp256k1_ecdsa_signature* sig)
     return compact_sig[0] < 0x80;
 }
 
-int sign(u_char* signatureOut, size_t* signatureOutLength,const u_char message[32], const u_char secretKey[32], const u_char grind) {
+const int sign(u_char* signatureOut, size_t* signatureOutLength,const u_char* message32, const u_char* secretKey32, const u_char grind) {
     const size_t SIGNATURE_SIZE = 72;
     const u_char test_case = 0;
     u_char extra_entropy[32] = {0};
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
     uint32_t counter = 0;
-    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, message, secretKey, secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : NULL);
+    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, message32, secretKey32, secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : NULL);
     
     // Grind for low R
     while (ret && !SigHasLowR(&sig) && grind) {
         WriteLE32(extra_entropy, ++counter);
-        ret = secp256k1_ecdsa_sign(secp256k1_context_sign,  &sig, message, secretKey, secp256k1_nonce_function_rfc6979, extra_entropy);
+        ret = secp256k1_ecdsa_sign(secp256k1_context_sign,  &sig, message32, secretKey32, secp256k1_nonce_function_rfc6979, extra_entropy);
     }
     assert(ret);
     size_t sigLen = SIGNATURE_SIZE;
@@ -57,21 +57,17 @@ int sign(u_char* signatureOut, size_t* signatureOutLength,const u_char message[3
     assert(ret);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey pk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, secretKey);
+    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, secretKey32);
     assert(ret);
     // secp256k1_context_no_precomp should be secp256k1_context_static
-    ret = secp256k1_ecdsa_verify(secp256k1_context_no_precomp, &sig, message, &pk);
+    ret = secp256k1_ecdsa_verify(secp256k1_context_no_precomp, &sig, message32, &pk);
     assert(ret);
     memcpy(signatureOut, signature, sigLen);
     *signatureOutLength = sigLen;
     return 1;
 }
 
-/// <#Description#>
-/// - Parameters:
-///   - signature: <#signature description#>
-///   - signatureLen: <#signatureLen description#>
-const int verifySignature(const u_char *signature, const size_t signatureLen, const u_char message[32], const u_char secretKey[32]) {
+const int verifySignatureWithPubKey(const u_char *signature, const size_t signatureLen, const u_char* message32, const u_char* pubKey, const size_t pubKeyLen) {
     secp256k1_context *secp256k1_context_verify = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
 
     secp256k1_ecdsa_signature sig;
@@ -79,9 +75,25 @@ const int verifySignature(const u_char *signature, const size_t signatureLen, co
     assert(ret);
     
     secp256k1_pubkey pk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, secretKey);
+    ret = secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pk, pubKey, pubKeyLen);
     assert(ret);
     // secp256k1_context_no_precomp should be secp256k1_context_static
-    ret = secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, message, &pk);
+    ret = secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, message32, &pk);
+    return ret;
+    return ret;
+}
+
+const int verifySignatureWithSecretKey(const u_char *signature, const size_t signatureLen, const u_char* message32, const u_char* secretKey32) {
+    secp256k1_context *secp256k1_context_verify = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+
+    secp256k1_ecdsa_signature sig;
+    int ret = secp256k1_ecdsa_signature_parse_der(secp256k1_context_static, &sig, signature, signatureLen);
+    assert(ret);
+    
+    secp256k1_pubkey pk;
+    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, secretKey32);
+    assert(ret);
+    // secp256k1_context_no_precomp should be secp256k1_context_static
+    ret = secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, message32, &pk);
     return ret;
 }

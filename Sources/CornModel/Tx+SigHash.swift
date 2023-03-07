@@ -2,15 +2,25 @@ import Foundation
 
 public extension Tx {
     
+    func checkSigLegacy(_ signatureWithHashType: Data, pubKey: Data, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Bool {
+        var signature = signatureWithHashType
+        guard let hashTypeRaw = signature.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
+            fatalError()
+        }
+        let sigHash = signatureHashLegacy(sigHashType: hashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
+        let result = CornModel.verifyWithPubKey(signature: signature, message: sigHash, pubKey: pubKey)
+        return result
+    }
+    
     func checkSigLegacy(_ signatureWithHashType: Data, privateKey: Data, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Bool {
         var signature = signatureWithHashType
         guard let hashTypeRaw = signature.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
             fatalError()
         }
         let sigHash = signatureHashLegacy(sigHashType: hashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
-        return verify(signature: signature, message: sigHash, privateKey: privateKey)
+        return CornModel.verifyWithSecretKey(signature: signature, message: sigHash, privateKey: privateKey)
     }
-    
+
     func signed(privateKey: Data, publicKey: Data, redeemScript: Script? = .none, inputIndex: Int, previousTxOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
         switch(previousTxOuts[inputIndex].scriptPubKey.scriptType) {
         case .nonStandard:

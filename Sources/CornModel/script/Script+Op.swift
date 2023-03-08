@@ -11,14 +11,14 @@ extension Script.Op {
     var memSize: Int {
         let additionalSize: Int
         switch(self) {
-        case .pushBytes(let pushData):
-            additionalSize = pushData.count
-        case .pushData1(let pushData):
-            additionalSize = MemoryLayout<UInt8>.size + pushData.count
-        case .pushData2(let pushData):
-            additionalSize = MemoryLayout<UInt16>.size + pushData.count
-        case .pushData4(let pushData):
-            additionalSize = MemoryLayout<UInt32>.size + pushData.count
+        case .pushBytes(let d):
+            additionalSize = d.count
+        case .pushData1(let d):
+            additionalSize = MemoryLayout<UInt8>.size + d.count
+        case .pushData2(let d):
+            additionalSize = MemoryLayout<UInt16>.size + d.count
+        case .pushData4(let d):
+            additionalSize = MemoryLayout<UInt32>.size + d.count
         default:
             additionalSize = 0
         }
@@ -29,8 +29,8 @@ extension Script.Op {
         switch(self) {
         case .zero:
             return 0x00
-        case .pushBytes(let data):
-            return UInt8(data.count)
+        case .pushBytes(let d):
+            return UInt8(d.count)
         case .pushData1(_):
             return 0x4c
         case .pushData2(_):
@@ -139,8 +139,8 @@ extension Script.Op {
         // Operations that don't consume any parameters from the stack
         case .zero:
             return opConstant(value: 0, stack: &stack)
-        case .pushBytes(let data), .pushData1(let data), .pushData2(let data), .pushData4(let data):
-            return opPushData(data: data, stack: &stack)
+        case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d):
+            return opPushData(data: d, stack: &stack)
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return opConstant(value: Int8(k), stack: &stack)
@@ -205,8 +205,8 @@ extension Script.Op {
 public extension Script.Op {
     
     var asm: String {
-        if case .pushBytes(let data) = self {
-            return data.hex
+        if case .pushBytes(let d) = self {
+            return d.hex
         }
         guard let keyword else {
             fatalError()
@@ -214,12 +214,8 @@ public extension Script.Op {
         switch(self) {
         case .zero:
             return "0"
-        case .pushData1(let pushData):
-            return "\(keyword) \(pushData.hex)"
-        case .pushData2(let pushData):
-            return "\(keyword) \(pushData.hex)"
-        case .pushData4(let pushData):
-            return "\(keyword) \(pushData.hex)"
+        case .pushData1(let d), .pushData2(let d), .pushData4(let d):
+            return "\(keyword) \(d.hex)"
         default:
             return keyword
         }
@@ -229,19 +225,19 @@ public extension Script.Op {
         let opCodeData = withUnsafeBytes(of: opCode) { Data($0) }
         let lengthData: Data
         switch(self) {
-        case .pushData1(let pushData):
-            lengthData = withUnsafeBytes(of: UInt8(pushData.count)) { Data($0) }
-        case .pushData2(let pushData):
-            lengthData = withUnsafeBytes(of: UInt16(pushData.count)) { Data($0) }
-        case .pushData4(let pushData):
-            lengthData = withUnsafeBytes(of: UInt32(pushData.count)) { Data($0) }
+        case .pushData1(let d):
+            lengthData = withUnsafeBytes(of: UInt8(d.count)) { Data($0) }
+        case .pushData2(let d):
+            lengthData = withUnsafeBytes(of: UInt16(d.count)) { Data($0) }
+        case .pushData4(let d):
+            lengthData = withUnsafeBytes(of: UInt32(d.count)) { Data($0) }
         default:
             lengthData = Data()
         }
         let rawData: Data
         switch(self) {
-        case .pushBytes(let data), .pushData1(let data), .pushData2(let data), .pushData4(let data):
-            rawData = data
+        case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d):
+            rawData = d
         default:
             rawData = Data()
         }
@@ -256,8 +252,8 @@ public extension Script.Op {
         case Self.zero.opCode:
             return .zero
         case 0x01 ... 0x4b:
-            let pushData = Data(data[data.startIndex ..< data.startIndex + Int(opCode)])
-            return .pushBytes(pushData)
+            let d = Data(data[data.startIndex ..< data.startIndex + Int(opCode)])
+            return .pushBytes(d)
         case 0x4c ... 0x4e:
             let pushDataLengthInt: Int
             if opCode == 0x4c {
@@ -275,13 +271,13 @@ public extension Script.Op {
             } else {
                 fatalError() // We should never arrive here.
             }
-            let pushData = Data(data[data.startIndex ..< data.startIndex + pushDataLengthInt])
+            let d = Data(data[data.startIndex ..< data.startIndex + pushDataLengthInt])
             if opCode == 0x4c {
-                return .pushData1(pushData)
+                return .pushData1(d)
             } else if opCode == 0x4d {
-                return .pushData2(pushData)
+                return .pushData2(d)
             }
-            return .pushData4(pushData)
+            return .pushData4(d)
         case Self.oneNegate.opCode:
             return .oneNegate
         case Self.reserved.opCode:

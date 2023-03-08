@@ -13,8 +13,14 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
     func testBCoreTransactionConversionRoundTrip() {
         let coreTx = CoreTx.Sample.coinbase1NoAddressDescriptor
         XCTAssertEqual(coreTx, coreTx.toBitcoinTransaction.toBCoreTransaction)
+        
+        // Testnet!
         let coreTx2 = CoreTx.Sample.segwit1NoDescriptor
-        let coreTx2RoundTrip = coreTx2.toBitcoinTransaction.toBCoreTransaction
+        var tx2 = coreTx2.toBitcoinTransaction
+        for i in tx2.outs.indices {
+            tx2.outs[i].network = .test
+        }
+        let coreTx2RoundTrip = tx2.toBCoreTransaction
         XCTAssertEqual(coreTx2.vout[0], coreTx2RoundTrip.vout[0])
         XCTAssertEqual(coreTx2, coreTx2RoundTrip)
     }

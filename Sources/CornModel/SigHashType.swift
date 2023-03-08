@@ -1,7 +1,7 @@
 import Foundation
 
 public enum SigHashType: UInt8 {
-    case `default` = 0x00, all = 0x01, none = 0x02, single = 0x03, allAnyCanPay = 0x81, noneAnyCanPay = 0x82, singleAnyCanPay = 0x83
+    case all = 0x01, none = 0x02, single = 0x03, allAnyCanPay = 0x81, noneAnyCanPay = 0x82, singleAnyCanPay = 0x83
 }
 
 public extension SigHashType {

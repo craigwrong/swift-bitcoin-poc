@@ -1,6 +1,7 @@
 import Foundation
 
 public struct Script: Equatable {
+    
     public init(ops: [Script.Op]) {
         self.ops = ops
     }
@@ -8,26 +9,22 @@ public struct Script: Equatable {
     public let ops: [Op]
 }
 
-extension Script {
-    var memSize: Int {
-        let opsSize = ops.reduce(0) { $0 + $1.memSize }
-        return UInt64(opsSize).varIntSize + opsSize
-    }
-}
-
 public extension Script {
 
-    enum ScriptType: String, Equatable, Decodable {
-        case nonStandard = "nonstandard",
-             pubKey = "pubkey",
-             pubKeyHash = "pubkeyhash",
-             scriptHash = "scripthash",
-             multiSig = "multisig",
-             nullData = "nulldata",
-             witnessV0KeyHash = "witness_v0_keyhash",
-             witnessV0ScriptHash = "witness_v0_scripthash",
-             witnessV1TapRoot = "witness_v1_taproot",
-             witnessUnknown = "witness_unknown"
+    init(_ data: Data, includesLength: Bool = true) {
+        var data = data
+        if includesLength {
+            let length = data.varInt
+            data = data.dropFirst(length.varIntSize)
+            data = data[..<(data.startIndex + Int(length))]
+        }
+        var newOps = [Op]()
+        while data.count > 0 {
+            let op = Op.fromData(data)
+            newOps.append(op)
+            data = data.dropFirst(op.memSize)
+        }
+        ops = newOps
     }
 
     var segwitProgram: Data {
@@ -75,26 +72,18 @@ public extension Script {
             ($0.isEmpty ? "" : "\($0) ") + $1.asm
         }
     }
+}
+
+extension Script {
+    
+    var memSize: Int {
+        let opsSize = ops.reduce(0) { $0 + $1.memSize }
+        return UInt64(opsSize).varIntSize + opsSize
+    }
 
     func data(includeLength: Bool = true) -> Data {
         let opsData = ops.reduce(Data()) { $0 + $1.data }
         let lengthData = includeLength ? Data(varInt: UInt64(opsData.count)) : Data()
         return lengthData + opsData
-    }
-    
-    init(_ data: Data, includesLength: Bool = true) {
-        var data = data
-        if includesLength {
-            let length = data.varInt
-            data = data.dropFirst(length.varIntSize)
-            data = data[..<(data.startIndex + Int(length))]
-        }
-        var newOps = [Op]()
-        while data.count > 0 {
-            let op = Op.fromData(data)
-            newOps.append(op)
-            data = data.dropFirst(op.memSize)
-        }
-        ops = newOps
     }
 }

@@ -12,21 +12,21 @@ public extension Tx {
         return result
     }
     
-    func checkSigLegacy(_ sigWithHashType: Data, secretKey: Data, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Bool {
+    func checkSigLegacy(_ sigWithHashType: Data, privKey: Data, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Bool {
         var sig = sigWithHashType
         guard let hashTypeRaw = sig.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
             fatalError()
         }
         let sigHash = sigHashLegacy(sigHashType: hashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
-        return CornModel.verifyWithSecretKey(sig: sig, msg: sigHash, secretKey: secretKey)
+        return CornModel.verifyWithPrivKey(sig: sig, msg: sigHash, privKey: privKey)
     }
 
-    func signed(secretKey: Data, pubKey: Data, redeemScript: Script? = .none, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
+    func signed(privKey: Data, pubKey: Data, redeemScript: Script? = .none, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .nonStandard:
             fatalError("Signing of non-standard scripts is not implemented.")
         case .pubKey, .pubKeyHash:
-            return signedLegacy(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
+            return signedLegacy(privKey: privKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
         case .scriptHash:
             guard let redeemScript else {
                 fatalError("Missing required redeem script.")
@@ -35,20 +35,20 @@ public extension Tx {
                 // TODO: Pass redeem script on to add to input's script sig
                 var withScriptSig = self
                 withScriptSig.ins[inIdx].scriptSig = .init(ops: [.pushBytes(redeemScript.data(includeLength: false))])
-                return withScriptSig.signedWitnessV0(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
+                return withScriptSig.signedWitnessV0(privKey: privKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
             }
             // TODO: Handle P2SH-P2WSH
-            return signedLegacy(secretKey: secretKey, pubKey: pubKey, redeemScript: redeemScript, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
+            return signedLegacy(privKey: privKey, pubKey: pubKey, redeemScript: redeemScript, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
         case .multiSig:
             fatalError("Signing of legacy multisig transactions is not yet implemented.")
         case .nullData:
             fatalError("Null data script transactions cannot be signed nor spent.")
         case .witnessV0KeyHash:
-            return signedWitnessV0(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
+            return signedWitnessV0(privKey: privKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
         case .witnessV0ScriptHash:
             fatalError("Signing of P2WSH transactions is not yet implemented.")
         case .witnessV1TapRoot:
-            return signedWitnessV1(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType)
+            return signedWitnessV1(privKey: privKey, pubKey: pubKey, inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType)
         case .witnessUnknown:
             fatalError("Signing of transactions with witness script version higher than 1 is not yet implemented.")
         }
@@ -68,11 +68,11 @@ public extension Tx {
         return doubleHash(sigMsg)
     }
 
-    func signedLegacy(secretKey: Data, pubKey: Data, redeemScript: Script? = .none,
+    func signedLegacy(privKey: Data, pubKey: Data, redeemScript: Script? = .none,
                       inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
         let sigHash = sigHashLegacy(sigHashType: sigHashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
         
-        let sig = sign(msg: sigHash, secretKey: secretKey) // grind: false)
+        let sig = sign(msg: sigHash, privKey: privKey) // grind: false)
         let sigWithHashType = sig + sigHashType.data
         
         let currentInput = ins[inIdx]

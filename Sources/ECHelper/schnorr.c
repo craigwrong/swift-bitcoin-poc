@@ -14,10 +14,10 @@ const size_t SIG_LEN = 64;
 extern secp256k1_context* secp256k1_context_static;
 extern secp256k1_context* secp256k1_context_sign;
 
-const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigOutLen, const u_char* msg32, const u_char* merkleRoot32, const u_char forceTweak, const u_char* aux32, const u_char* secretKey32) {
+const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigOutLen, const u_char* msg32, const u_char* merkleRoot32, const u_char forceTweak, const u_char* aux32, const u_char* privKey32) {
     secp256k1_keypair keypair;
     assert(secp256k1_context_sign != NULL);
-    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, secretKey32)) return 0;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, privKey32)) return 0;
 
     if (merkleRoot32 != NULL || forceTweak) {
         secp256k1_xonly_pubkey pubKey;
@@ -96,13 +96,13 @@ const char* toHex(const u_char* bytes, long int count) {
     return converted;
 }
 
-const char* computeInternalKey(const u_char secretKey[32]) {
-    // u_char secretKey32 = "\x41\xf4\x1d\x69\x26\x0d\xf4\xcf\x27\x78\x26\xa9\xb6\x5a\x37\x17\xe4\xee\xdd\xbe\xed\xf6\x37\xf2\x12\xca\x09\x65\x76\x47\x93\x61";
+const char* computeInternalKey(const u_char privKey[32]) {
+    // u_char privKey32 = "\x41\xf4\x1d\x69\x26\x0d\xf4\xcf\x27\x78\x26\xa9\xb6\x5a\x37\x17\xe4\xee\xdd\xbe\xed\xf6\x37\xf2\x12\xca\x09\x65\x76\x47\x93\x61";
     const secp256k1_context *context = secp256k1_context_static;
     secp256k1_keypair keypair;
     secp256k1_xonly_pubkey internalKey;
     u_char internalKeyBytes[32];
-    if (!secp256k1_keypair_create(context, &keypair, secretKey)) { return NULL; };
+    if (!secp256k1_keypair_create(context, &keypair, privKey)) { return NULL; };
     if (!secp256k1_keypair_xonly_pub(context, &internalKey, NULL, &keypair)) { return NULL; };
     if (!secp256k1_xonly_pubkey_serialize(context, internalKeyBytes, &internalKey)) { return NULL; }
     return toHex(internalKeyBytes, 32);

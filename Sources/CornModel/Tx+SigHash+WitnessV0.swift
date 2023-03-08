@@ -2,7 +2,7 @@ import Foundation
 
 public extension Tx {
     
-    func signedWitnessV0(secretKey: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
+    func signedWitnessV0(privKey: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
         
         // For P2WPKH witness program, the scriptCode is 0x1976a914{20-byte-pubkey-hash}88ac.
         // OP_DUP OP_HASH160 1d0f172a0ecb48aee1be1f2687d2963ae33f71a1 OP_EQUALVERIFY OP_CHECKSIG
@@ -17,7 +17,7 @@ public extension Tx {
         let sigMsg = sigMsgV0(inIdx: inIdx, scriptCode: scriptCode, amount: prevOut.value, sigHashType: sigHashType)
         let sigHash = doubleHash(sigMsg)
         
-        let sig = sign(msg: sigHash, secretKey: secretKey) + sigHashType.data
+        let sig = sign(msg: sigHash, privKey: privKey) + sigHashType.data
         
         var newWitnesses = [Witness]()
         ins.enumerated().forEach { i, _ in

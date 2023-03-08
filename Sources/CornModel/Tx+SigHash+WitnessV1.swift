@@ -2,13 +2,13 @@ import Foundation
 
 public extension Tx {
     
-    func signedWitnessV1(secretKey: Data, pubKey: Data, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
+    func signedWitnessV1(privKey: Data, pubKey: Data, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
         
         let sigMsg = sigMsgV1(inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType, extFlag: 0) // TODO: Produce ext_flag
         let sigHash = taggedHash(tag: "TagSighash", payload: sigHashType.data + sigMsg)
         
         let aux = getRandBytes(32)
-        let sig = signSchnorr(msg: sigHash, secretKey: secretKey, merkleRoot: .none, aux: aux) + (sigHashType == .default ? Data() : sigHashType.data)
+        let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: .none, aux: aux) + (sigHashType == .default ? Data() : sigHashType.data)
         
         // TODO: this is only for keyPath spending
         var newWitnesses = [Witness]()

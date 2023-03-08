@@ -1,11 +1,11 @@
 import Foundation
 import ECHelper
 
-public func sign(message: Data, privateKey: Data, grind: Bool = true) -> Data {
-   let messagePointer = message.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
-   let privateKeyPointer = privateKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
-   let signature: [u_char] = .init(unsafeUninitializedCapacity: 74) { buffer, initializedCount in
-      sign(buffer.baseAddress, &initializedCount, messagePointer, privateKeyPointer, grind ? 1 : 0)
+public func sign(msg: Data, secretKey: Data, grind: Bool = true) -> Data {
+   let msgPtr = msg.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
+   let secretKeyPtr = secretKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
+   let sig: [u_char] = .init(unsafeUninitializedCapacity: 74) { buf, len in
+      sign(buf.baseAddress, &len, msgPtr, secretKeyPtr, grind ? 1 : 0)
    }
-   return Data(signature)
+   return Data(sig)
 }

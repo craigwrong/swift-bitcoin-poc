@@ -2,17 +2,18 @@ import Foundation
 
 extension Data {
 
-    var varLengthSize: Int {
+    /// Memory size as variable length array (array prefixed with its element count as compact integer).
+    var varLenSize: Int {
         UInt64(count).varIntSize + count
     }
 
-    var varLengthData: Data {
+    var varLenData: Data {
         let contentLenData = Data(varInt: UInt64(count))
         return contentLenData + self
     }
     
-    init(varLengthData: Data) {
-        var data = varLengthData
+    init(varLenData: Data) {
+        var data = varLenData
         let contentLen = data.varInt
         data = data.dropFirst(contentLen.varIntSize)
         self = data[..<(data.startIndex + Int(contentLen))]

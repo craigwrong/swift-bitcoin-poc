@@ -9,7 +9,7 @@ public extension Tx {
 extension Tx.Witness {
     
     var memSize: Int {
-        UInt64(stack.count).varIntSize + stack.varLengthSize
+        UInt64(stack.count).varIntSize + stack.varLenSize
     }
 }
 
@@ -17,7 +17,7 @@ public extension Tx.Witness {
 
     var data: Data {
         let stackCountData = Data(varInt: UInt64(stack.count))
-        let stackData = stack.reduce(Data()) { $0 + $1.varLengthData }
+        let stackData = stack.reduce(Data()) { $0 + $1.varLenData }
         return stackCountData + stackData
     }
     
@@ -28,9 +28,9 @@ public extension Tx.Witness {
         
         var stack = [Data]()
         for _ in 0 ..< stackCount {
-            let stackElement = Data(varLengthData: data)
+            let stackElement = Data(varLenData: data)
             stack.append(stackElement)
-            data = data.dropFirst(stackElement.varLengthSize)
+            data = data.dropFirst(stackElement.varLenSize)
         }
         self.init(stack: stack)
     }

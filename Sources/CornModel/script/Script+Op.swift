@@ -133,7 +133,7 @@ extension Script.Op {
         }
     }
     
-    func execute(stack: inout [Data], transaction: Tx, prevOuts: [Tx.Out], inputIndex: Int) -> Bool {
+    func execute(stack: inout [Data], tx: Tx, prevOuts: [Tx.Out], inIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -189,9 +189,9 @@ extension Script.Op {
             case .equalVerify:
                 return opEqualVerify(first, second, stack: &stack)
             case .checkSig:
-                return opCheckSig(first, second, stack: &stack, transaction: transaction, prevOuts: prevOuts, inputIndex: inputIndex)
+                return opCheckSig(first, second, stack: &stack, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
             case .checkSigVerify:
-                return opCheckSigVerify(first, second, stack: &stack, transaction: transaction, prevOuts: prevOuts, inputIndex: inputIndex)
+                return opCheckSigVerify(first, second, stack: &stack, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
             default:
                 fatalError()
             }

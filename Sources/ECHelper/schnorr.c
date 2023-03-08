@@ -14,7 +14,7 @@ const size_t SIG_LEN = 64;
 extern secp256k1_context* secp256k1_context_static;
 extern secp256k1_context* secp256k1_context_sign;
 
-const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigOutLen, const u_char* message32, const u_char* merkleRoot32, const u_char forceTweak, const u_char* aux32, const u_char* secretKey32) {
+const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigOutLen, const u_char* msg32, const u_char* merkleRoot32, const u_char forceTweak, const u_char* aux32, const u_char* secretKey32) {
     secp256k1_keypair keypair;
     assert(secp256k1_context_sign != NULL);
     if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, secretKey32)) return 0;
@@ -34,7 +34,7 @@ const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const 
     
     // Do the signing.
     u_char* sigOutTmp64 = malloc(SIG_LEN);
-    int result = /* secp256k1_schnorrsig_sign32() */ secp256k1_schnorrsig_sign(secp256k1_context_sign, sigOutTmp64, message32, &keypair, aux32);
+    int result = /* secp256k1_schnorrsig_sign32() */ secp256k1_schnorrsig_sign(secp256k1_context_sign, sigOutTmp64, msg32, &keypair, aux32);
 
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_xonly_pubkey pubKeyVerify;
@@ -42,7 +42,7 @@ const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const 
         result = secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubKeyVerify, NULL, &keypair);
     }
     if (result) {
-        result = secp256k1_schnorrsig_verify(secp256k1_context_static, sigOutTmp64, message32, HASH_LEN, &pubKeyVerify);
+        result = secp256k1_schnorrsig_verify(secp256k1_context_static, sigOutTmp64, msg32, HASH_LEN, &pubKeyVerify);
     }
     if (result) {
         memcpy(sigOut64, sigOutTmp64, SIG_LEN);

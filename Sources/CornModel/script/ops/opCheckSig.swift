@@ -1,8 +1,8 @@
 import Foundation
 import BigInt
 
-func opCheckSig(_ signature: Data, _ pubKey: Data, stack: inout [Data], transaction: Tx, prevOuts: [Tx.Out], inputIndex: Int) -> Bool {
-    let result = transaction.checkSigLegacy(signature, pubKey: pubKey, inputIndex: inputIndex, previousTxOut: prevOuts[inputIndex], redeemScript: .none)
+func opCheckSig(_ sig: Data, _ pubKey: Data, stack: inout [Data], tx: Tx, prevOuts: [Tx.Out], inIdx: Int) -> Bool {
+    let result = tx.checkSigLegacy(sig, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], redeemScript: .none)
     stack.append(result ? BigInt(1).serialize() : BigInt.zero.serialize())
     return true
 }

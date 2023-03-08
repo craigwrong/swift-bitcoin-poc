@@ -82,9 +82,9 @@ public extension Script {
         return lengthData + opsData
     }
     
-    init(_ data: Data, includeLength: Bool = true) {
+    init(_ data: Data, includesLength: Bool = true) {
         var data = data
-        if includeLength {
+        if includesLength {
             let length = data.varInt
             data = data.dropFirst(length.varIntSize)
             data = data[..<(data.startIndex + Int(length))]

@@ -2,23 +2,23 @@ public extension Tx {
     func verify(prevOuts: [Tx.Out]) -> Bool {
         ins.enumerated().reduce(true) {
             let (i, input) = $1
-            return $0 && input.verify(prevOuts: prevOuts, index: i)
+            return $0 && input.verify(prevOuts: prevOuts, inIdx: i)
         }
     }
 }
 
 public extension Tx.In {
-    func verify(prevOuts: [Tx.Out], index: Int) -> Bool {
+    func verify(prevOuts: [Tx.Out], inIdx: Int) -> Bool {
         let prevOut = prevOuts
         let scriptOps: [Script.Op]
         switch scriptSig.scriptType {
         case .pubKey, .pubKeyHash, .multiSig, .nonStandard:
-            scriptOps = scriptSig.ops + prevOuts[index].scriptPubKey.ops
+            scriptOps = scriptSig.ops + prevOuts[inIdx].scriptPubKey.ops
         case .scriptHash:
             guard let lastOp = scriptSig.ops.last else {
                 fatalError()
             }
-            scriptOps = [lastOp] + prevOuts[index].scriptPubKey.ops
+            scriptOps = [lastOp] + prevOuts[inIdx].scriptPubKey.ops
         case .nullData:
             return false
         case .witnessV0KeyHash:
@@ -35,7 +35,7 @@ public extension Tx.In {
             guard let lastOp = scriptSig.ops.last, case let .pushBytes(redeemScriptData) = lastOp else {
                 fatalError()
             }
-            let redeemScript = Script(redeemScriptData, includeLength: false)
+            let redeemScript = Script(redeemScriptData, includesLength: false)
             let fullRedeemScript = Script(ops: scriptSig.ops.dropLast() + redeemScript.ops)
             //fullRedeemScript.run()
             fatalError("To be implemented…")

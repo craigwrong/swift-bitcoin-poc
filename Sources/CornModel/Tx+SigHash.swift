@@ -2,31 +2,31 @@ import Foundation
 
 public extension Tx {
     
-    func checkSigLegacy(_ signatureWithHashType: Data, pubKey: Data, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Bool {
-        var signature = signatureWithHashType
-        guard let hashTypeRaw = signature.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
+    func checkSigLegacy(_ sigWithHashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Bool {
+        var sig = sigWithHashType
+        guard let hashTypeRaw = sig.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
             fatalError()
         }
-        let sigHash = signatureHashLegacy(sigHashType: hashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
-        let result = CornModel.verifyWithPubKey(signature: signature, message: sigHash, pubKey: pubKey)
+        let sigHash = sigHashLegacy(sigHashType: hashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
+        let result = CornModel.verifyWithPubKey(sig: sig, msg: sigHash, pubKey: pubKey)
         return result
     }
     
-    func checkSigLegacy(_ signatureWithHashType: Data, privateKey: Data, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Bool {
-        var signature = signatureWithHashType
-        guard let hashTypeRaw = signature.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
+    func checkSigLegacy(_ sigWithHashType: Data, secretKey: Data, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Bool {
+        var sig = sigWithHashType
+        guard let hashTypeRaw = sig.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
             fatalError()
         }
-        let sigHash = signatureHashLegacy(sigHashType: hashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
-        return CornModel.verifyWithSecretKey(signature: signature, message: sigHash, privateKey: privateKey)
+        let sigHash = sigHashLegacy(sigHashType: hashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
+        return CornModel.verifyWithSecretKey(sig: sig, msg: sigHash, secretKey: secretKey)
     }
 
-    func signed(privateKey: Data, publicKey: Data, redeemScript: Script? = .none, inputIndex: Int, previousTxOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
-        switch(previousTxOuts[inputIndex].scriptPubKey.scriptType) {
+    func signed(secretKey: Data, pubKey: Data, redeemScript: Script? = .none, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
+        switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .nonStandard:
             fatalError("Signing of non-standard scripts is not implemented.")
         case .pubKey, .pubKeyHash:
-            return signedLegacy(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
+            return signedLegacy(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
         case .scriptHash:
             guard let redeemScript else {
                 fatalError("Missing required redeem script.")
@@ -34,62 +34,62 @@ public extension Tx {
             if redeemScript.scriptType == .witnessV0KeyHash {
                 // TODO: Pass redeem script on to add to input's script sig
                 var withScriptSig = self
-                withScriptSig.ins[inputIndex].scriptSig = .init(ops: [.pushBytes(redeemScript.data(includeLength: false))])
-                return withScriptSig.signedWitnessV0(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
+                withScriptSig.ins[inIdx].scriptSig = .init(ops: [.pushBytes(redeemScript.data(includeLength: false))])
+                return withScriptSig.signedWitnessV0(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
             }
             // TODO: Handle P2SH-P2WSH
-            return signedLegacy(privateKey: privateKey, publicKey: publicKey, redeemScript: redeemScript, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
+            return signedLegacy(secretKey: secretKey, pubKey: pubKey, redeemScript: redeemScript, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
         case .multiSig:
             fatalError("Signing of legacy multisig transactions is not yet implemented.")
         case .nullData:
             fatalError("Null data script transactions cannot be signed nor spent.")
         case .witnessV0KeyHash:
-            return signedWitnessV0(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOut: previousTxOuts[inputIndex], sigHashType: sigHashType)
+            return signedWitnessV0(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
         case .witnessV0ScriptHash:
             fatalError("Signing of P2WSH transactions is not yet implemented.")
         case .witnessV1TapRoot:
-            return signedWitnessV1(privateKey: privateKey, publicKey: publicKey, inputIndex: inputIndex, previousTxOuts: previousTxOuts, sigHashType: sigHashType)
+            return signedWitnessV1(secretKey: secretKey, pubKey: pubKey, inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType)
         case .witnessUnknown:
             fatalError("Signing of transactions with witness script version higher than 1 is not yet implemented.")
         }
     }
 
-    func signatureHashLegacy(sigHashType: SigHashType, inputIndex: Int, previousTxOut: Tx.Out, redeemScript: Script?) -> Data {
+    func sigHashLegacy(sigHashType: SigHashType, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Data {
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let scriptCode: Script
-        if previousTxOut.scriptPubKey.scriptType == .pubKey || previousTxOut.scriptPubKey.scriptType == .pubKeyHash {
-            scriptCode = previousTxOut.scriptPubKey
-        } else if previousTxOut.scriptPubKey.scriptType == .scriptHash, let redeemScript {
+        if prevOut.scriptPubKey.scriptType == .pubKey || prevOut.scriptPubKey.scriptType == .pubKeyHash {
+            scriptCode = prevOut.scriptPubKey
+        } else if prevOut.scriptPubKey.scriptType == .scriptHash, let redeemScript {
             scriptCode = redeemScript
         } else {
             fatalError("Invalid legacy previous output or redeem script not provided.")
         }
-        let preImage = signatureMessageLegacy(inputIndex: inputIndex, scriptCode: scriptCode, sigHashType: sigHashType)
-        return doubleHash(preImage)
+        let sigMsg = sigMsgLegacy(inIdx: inIdx, scriptCode: scriptCode, sigHashType: sigHashType)
+        return doubleHash(sigMsg)
     }
 
-    func signedLegacy(privateKey: Data, publicKey: Data, redeemScript: Script? = .none,
-                      inputIndex: Int, previousTxOut: Tx.Out, sigHashType: SigHashType) -> Tx {
-        let sigHash = signatureHashLegacy(sigHashType: sigHashType, inputIndex: inputIndex, previousTxOut: previousTxOut, redeemScript: redeemScript)
+    func signedLegacy(secretKey: Data, pubKey: Data, redeemScript: Script? = .none,
+                      inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
+        let sigHash = sigHashLegacy(sigHashType: sigHashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
         
-        let signature = sign(message: sigHash, privateKey: privateKey) // grind: false)
-        let signatureWithHashType = signature + sigHashType.data
+        let sig = sign(msg: sigHash, secretKey: secretKey) // grind: false)
+        let sigWithHashType = sig + sigHashType.data
         
-        let currentInput = ins[inputIndex]
+        let currentInput = ins[inIdx]
         
         let newScriptSig: Script
-        if previousTxOut.scriptPubKey.scriptType == .pubKey {
-            newScriptSig = .init(ops: [.pushBytes(signatureWithHashType)])
-        } else if previousTxOut.scriptPubKey.scriptType == .pubKeyHash {
+        if prevOut.scriptPubKey.scriptType == .pubKey {
+            newScriptSig = .init(ops: [.pushBytes(sigWithHashType)])
+        } else if prevOut.scriptPubKey.scriptType == .pubKeyHash {
             newScriptSig = .init(ops: [
-                .pushBytes(signatureWithHashType),
-                .pushBytes(publicKey)
+                .pushBytes(sigWithHashType),
+                .pushBytes(pubKey)
             ])
-        } else { // if previousTxOut.scriptPubKey.scriptType == .scriptHash {
+        } else { // if prevOut.scriptPubKey.scriptType == .scriptHash {
             let currentOps = currentInput.scriptSig.ops
             newScriptSig = .init(
                 ops: [
-                    .pushBytes(signatureWithHashType),
+                    .pushBytes(sigWithHashType),
                 ] +
                 (currentOps.isEmpty ? [.pushBytes(redeemScript!.data(includeLength: false))] : []) +
                 currentOps
@@ -105,7 +105,7 @@ public extension Tx {
         
         var newInputs = [In]()
         ins.enumerated().forEach { index, input in
-            if index == inputIndex {
+            if index == inIdx {
                 newInputs.append(signedInput)
             } else {
                 newInputs.append(input)
@@ -115,14 +115,14 @@ public extension Tx {
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func signatureMessageLegacy(inputIndex: Int, scriptCode: Script, sigHashType: SigHashType) -> Data {
-        let subScript = scriptCode // TODO: Account for code separators and FindAndDelete of signatures (not standard).
+    func sigMsgLegacy(inIdx: Int, scriptCode: Script, sigHashType: SigHashType) -> Data {
+        let subScript = scriptCode // TODO: Account for code separators and FindAndDelete of sigs (not standard).
         var newInputs = [Tx.In]()
         if sigHashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
             // The current transaction input (with scriptPubKey modified to subScript) is set as the first and only member of this vector.
-            newInputs.append(.init(txID: ins[inputIndex].txID, output: ins[inputIndex].output, scriptSig: subScript, sequence: ins[inputIndex].sequence))
+            newInputs.append(.init(txID: ins[inIdx].txID, output: ins[inIdx].output, scriptSig: subScript, sequence: ins[inIdx].sequence))
         } else {
             ins.enumerated().forEach { index, input in
                 newInputs.append(.init(
@@ -130,16 +130,16 @@ public extension Tx {
                     output: input.output,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
-                    scriptSig: index == inputIndex ? subScript : .init(ops: []),
+                    scriptSig: index == inIdx ? subScript : .init(ops: []),
                     // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
-                    sequence: index == inputIndex || sigHashType.isAll ? input.sequence : 0
+                    sequence: index == inIdx || sigHashType.isAll ? input.sequence : 0
                 ))
             }
         }
         var newOutputs: [Tx.Out]
         // Procedure for Hashtype SIGHASH_SINGLE
         
-        //if sigHashType.isSingle && inputIndex >= outs.count {
+        //if sigHashType.isSingle && inIdx >= outs.count {
         // uint256 of 0x0000......0001 is committed if the input index for a SINGLE signature is greater than or equal to the number of outputs.
         //outs = Data(repeating: 0, count: 255) + [0x01]
         // TODO: figure out this
@@ -150,12 +150,12 @@ public extension Tx {
             newOutputs = []
             
             outs.enumerated().forEach { index, output in
-                guard index <= inputIndex else {
+                guard index <= inIdx else {
                     return
                 }
-                if index == inputIndex {
+                if index == inIdx {
                     newOutputs.append(output)
-                } else if index < inputIndex {
+                } else if index < inIdx {
                     // TODO: Verify that "long -1" means  UInt64(bitPattern: -1) aka UInt64.max
                     newOutputs.append(.init(value: UInt64.max, scriptPubKey: .init(ops: [])))
                 }
@@ -176,29 +176,29 @@ public extension Tx {
         return txCopy.data + sigHashType.data32
     }
 
-    func signatureMessageLegacy2(inputIndex: Int, scriptCode subScript: Script, sigHashType: SigHashType) -> Data {
-        let currentInput = ins[inputIndex]
+    func sigMsgLegacy2(inIdx: Int, scriptCode subScript: Script, sigHashType: SigHashType) -> Data {
+        let currentInput = ins[inIdx]
         var txCopy = self
         txCopy.witnessData = []
         txCopy.ins.indices.forEach {
             txCopy.ins[$0].scriptSig = .init(ops: [])
         }
-        txCopy.ins[inputIndex].scriptSig = subScript
+        txCopy.ins[inIdx].scriptSig = subScript
         if sigHashType.isNone {
             txCopy.outs = []
         } else if sigHashType.isSingle {
             txCopy.outs = []
             outs.enumerated().forEach { (i, out) in
-                if i == inputIndex {
+                if i == inIdx {
                     txCopy.outs.append(out)
-                } else if i < inputIndex {
+                } else if i < inIdx {
                     txCopy.outs.append(.init(value: UInt64.max, scriptPubKey: .init(ops: [])))
                 }
             }
         }
         if sigHashType.isNone || sigHashType.isSingle {
             txCopy.ins.indices.forEach {
-                if $0 != inputIndex {
+                if $0 != inIdx {
                     txCopy.ins[$0].sequence = 0
                 }
             }

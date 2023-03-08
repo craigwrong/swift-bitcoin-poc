@@ -117,21 +117,21 @@ public extension Tx {
         let inputsCount = data.varInt
         data = data.dropFirst(inputsCount.varIntSize)
         
-        var inputs = [In]()
+        var ins = [In]()
         for _ in 0 ..< inputsCount {
             let input = In(data)
-            inputs.append(input)
+            ins.append(input)
             data = data.dropFirst(input.memSize)
         }
 
-        let outputsCount = data.varInt
-        data = data.dropFirst(outputsCount.varIntSize)
+        let outsLen = data.varInt
+        data = data.dropFirst(outsLen.varIntSize)
         
-        var outputs = [Out]()
-        for _ in 0 ..< outputsCount {
-            let output = Out(data)
-            outputs.append(output)
-            data = data.dropFirst(output.memSize)
+        var outs = [Out]()
+        for _ in 0 ..< outsLen {
+            let out = Out(data)
+            outs.append(out)
+            data = data.dropFirst(out.memSize)
         }
 
         let witnessesCount = inputsCount
@@ -149,7 +149,7 @@ public extension Tx {
         }
         data = data.dropFirst(MemoryLayout<UInt32>.size)
         
-        self.init(version: version, ins: inputs, outs: outputs, witnessData: witnesses, lockTime: lockTime)
+        self.init(version: version, ins: ins, outs: outs, witnessData: witnesses, lockTime: lockTime)
     }
 
     var size: Int {

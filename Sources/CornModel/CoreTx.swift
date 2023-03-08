@@ -124,8 +124,8 @@ public extension Tx {
             vin: zip(ins, witnessData).map { (input, witness) in
                 input.toBCoreInput(witness: witness)
             },
-            vout: outs.enumerated().map { (index, output) in
-                output.toBCoreOutput(index: index)
+            vout: outs.enumerated().map { (i, output) in
+                output.toBCoreOutput(outIdx: i)
             },
             hex: data.hex,
             blockhash: .none,
@@ -162,10 +162,10 @@ public extension Tx.In {
 }
 
 public extension Tx.Out {
-    func toBCoreOutput(index: Int) -> CoreTx.Output {
+    func toBCoreOutput(outIdx: Int) -> CoreTx.Output {
         .init(
             value: doubleValue,
-            n: index,
+            n: outIdx,
             scriptPubKey: .init(
                 asm: scriptPubKey.asm,
                 desc: "", // TODO: Create descriptor

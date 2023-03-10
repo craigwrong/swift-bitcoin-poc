@@ -133,7 +133,7 @@ extension Script.Op {
         }
     }
     
-    func execute(stack: inout [Data], tx: Tx, prevOuts: [Tx.Out], inIdx: Int) -> Bool {
+    func execute(stack: inout [Data], script: Script, tx: Tx, prevOuts: [Tx.Out], inIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -189,6 +189,11 @@ extension Script.Op {
             case .equalVerify:
                 return opEqualVerify(first, second, stack: &stack)
             case .checkSig:
+                if script.version == .v0 {
+                    return opCheckSigV0(first, second, stack: &stack, script: script, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
+                } else if script.version == .v1 {
+                    return opCheckSigV1(first, second, stack: &stack, script: script, tx: tx, prevOuts: prevOuts, inIdx: inIdx, extFlag: 0) // TODO: produce extFlag.. TapRoot vs TapScript
+                }
                 return opCheckSig(first, second, stack: &stack, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
             case .checkSigVerify:
                 return opCheckSigVerify(first, second, stack: &stack, tx: tx, prevOuts: prevOuts, inIdx: inIdx)

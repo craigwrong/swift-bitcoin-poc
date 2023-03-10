@@ -4,11 +4,7 @@ public extension Tx {
     
     func signedV1(privKey: Data, pubKey: Data, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType?) -> Tx {
         
-        let sigMsg = sigMsgV1(inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType, extFlag: 0)
-        // TODO: Produce ext_flag for either sigversion taproot (ext_flag = 0) or tapscript (ext_flag = 1). Also produce key_version ( key_version = 0) for BIP 342 signatures.
-        
-        let sigHash = taggedHash(tag: "TapSighash", payload: sigMsg)
-
+        let sigHash = sigHashV1(inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType, extFlag: 0)
         let aux = getRandBytes(32)
         
         let sigHashTypeSuffix: Data
@@ -31,6 +27,13 @@ public extension Tx {
             }
         }
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
+    }
+
+    func sigHashV1(inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType?, extFlag: UInt8) -> Data {
+        let sigMsg = sigMsgV1(inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType, extFlag: 0)
+        // TODO: Produce ext_flag for either sigversion taproot (ext_flag = 0) or tapscript (ext_flag = 1). Also produce key_version ( key_version = 0) for BIP 342 signatures.
+        
+        return taggedHash(tag: "TapSighash", payload: sigMsg)
     }
     
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .

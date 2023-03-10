@@ -15,7 +15,7 @@ final class ScriptTests: XCTestCase {
     func testDrop() {
         let bigNummber = BigInt(UInt64.max) * 2
         let numberData = bigNummber.serialize()
-        let script = Script(ops: [.pushBytes(numberData), .drop])
+        let script = Script([.pushBytes(numberData), .drop])
         var stack = [Data]()
         let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
         let result = script.run(stack: &stack, tx: dummyTx, prevOuts: [], inIdx: -1)
@@ -26,7 +26,7 @@ final class ScriptTests: XCTestCase {
     func testDup() {
         let bigNummber = BigInt(UInt64.max) * 2
         let numberData = bigNummber.serialize()
-        let script = Script(ops: [.pushBytes(numberData), .dup])
+        let script = Script([.pushBytes(numberData), .dup])
         var stack = [Data]()
         let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
         let result = script.run(stack: &stack, tx: dummyTx, prevOuts: [], inIdx: -1)
@@ -48,11 +48,12 @@ final class ScriptTests: XCTestCase {
 
         let pubKeyHash = hash160(pubKey)
 
-        let script = Script(ops: [.pushBytes(sig), .pushBytes(pubKey), .dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
+        let script = Script([.pushBytes(sig), .pushBytes(pubKey), .dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
 
         var stack = [Data]()
         let result = script.run(stack: &stack, tx: tx, prevOuts: [prevOut], inIdx: 0)
         XCTAssert(result)
         XCTAssertEqual(stack, [BigInt(1).serialize()])
+        XCTAssert(tx.verify(prevOuts: [prevOut]))
     }
 }

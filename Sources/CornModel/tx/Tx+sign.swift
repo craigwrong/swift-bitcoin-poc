@@ -2,16 +2,6 @@ import Foundation
 
 public extension Tx {
     
-    func checkSig(_ sigSigHashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Bool {
-        var sig = sigSigHashType
-        guard let hashTypeRaw = sig.popLast(), let hashType = SigHashType(rawValue: hashTypeRaw) else {
-            fatalError()
-        }
-        let sigHash = sigHash(sigHashType: hashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
-        let result = verifyECDSA(sig: sig, msg: sigHash, pubKey: pubKey)
-        return result
-    }
-    
     func sign(privKey: Data, pubKey: Data, redeemScript: Script? = .none, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType) -> Tx {
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .nonStandard:
@@ -25,7 +15,7 @@ public extension Tx {
             if redeemScript.scriptType == .witnessV0KeyHash {
                 // TODO: Pass redeem script on to add to input's script sig
                 var withScriptSig = self
-                withScriptSig.ins[inIdx].scriptSig = .init(ops: [.pushBytes(redeemScript.data(includeLength: false))])
+                withScriptSig.ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data(includeLength: false))])
                 return withScriptSig.signedV0(privKey: privKey, pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], sigHashType: sigHashType)
             }
             // TODO: Handle P2SH-P2WSH

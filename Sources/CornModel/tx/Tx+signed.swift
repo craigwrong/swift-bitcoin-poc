@@ -6,25 +6,22 @@ public extension Tx {
                 inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
         let sigHash = sigHash(sigHashType: sigHashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
         
-        let sig = signECDSA(msg: sigHash, privKey: privKey) // grind: false)
-        let sigSigHashType = sig + sigHashType.data
+        let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + sigHashType.data
         
         let input = ins[inIdx]
         
         let newScriptSig: Script
         if prevOut.scriptPubKey.scriptType == .pubKey {
-            newScriptSig = .init(ops: [.pushBytes(sigSigHashType)])
+            newScriptSig = .init([.pushBytes(sig)])
         } else if prevOut.scriptPubKey.scriptType == .pubKeyHash {
-            newScriptSig = .init(ops: [
-                .pushBytes(sigSigHashType),
+            newScriptSig = .init([
+                .pushBytes(sig),
                 .pushBytes(pubKey)
             ])
         } else { // if prevOut.scriptPubKey.scriptType == .scriptHash {
             let currentOps = input.scriptSig.ops
             newScriptSig = .init(
-                ops: [
-                    .pushBytes(sigSigHashType),
-                ] +
+                [.pushBytes(sig)] +
                 (currentOps.isEmpty ? [.pushBytes(redeemScript!.data(includeLength: false))] : []) +
                 currentOps
             )
@@ -79,7 +76,7 @@ public extension Tx {
                     outIdx: input.outIdx,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
-                    scriptSig: i == inIdx ? subScript : .init(ops: []),
+                    scriptSig: i == inIdx ? subScript : .init([]),
                     // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
                     sequence: i == inIdx || sigHashType.isAll ? input.sequence : 0
                 ))
@@ -106,7 +103,7 @@ public extension Tx {
                     newOuts.append(out)
                 } else if i < inIdx {
                     // TODO: Verify that "long -1" means  UInt64(bitPattern: -1) aka UInt64.max
-                    newOuts.append(.init(value: UInt64.max, scriptPubKey: .init(ops: [])))
+                    newOuts.append(.init(value: UInt64.max, scriptPubKey: .init([])))
                 }
             }
             
@@ -131,7 +128,7 @@ public extension Tx {
         var txCopy = self
         txCopy.witnessData = []
         txCopy.ins.indices.forEach {
-            txCopy.ins[$0].scriptSig = .init(ops: [])
+            txCopy.ins[$0].scriptSig = .init([])
         }
         txCopy.ins[inIdx].scriptSig = subScript
         if sigHashType.isNone {
@@ -142,7 +139,7 @@ public extension Tx {
                 if i == inIdx {
                     txCopy.outs.append(out)
                 } else if i < inIdx {
-                    txCopy.outs.append(.init(value: UInt64.max, scriptPubKey: .init(ops: [])))
+                    txCopy.outs.append(.init(value: UInt64.max, scriptPubKey: .init([])))
                 }
             }
         }

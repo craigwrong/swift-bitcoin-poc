@@ -2,16 +2,18 @@ import Foundation
 
 public struct Script: Equatable {
     
-    public init(ops: [Script.Op]) {
+    public init(_ ops: [Script.Op], version: Version = .legacy) {
         self.ops = ops
+        self.version = version
     }
     
-    public let ops: [Op]
+    public var ops: [Op]
+    public var version: Version
 }
 
 public extension Script {
 
-    init(_ data: Data, includesLength: Bool = true) {
+    init(_ data: Data, version: Version = .legacy, includesLength: Bool = true) {
         var data = data
         if includesLength {
             let length = data.varInt
@@ -25,6 +27,7 @@ public extension Script {
             data = data.dropFirst(op.memSize)
         }
         ops = newOps
+        self.version = version
     }
 
     var segwitProgram: Data {

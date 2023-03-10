@@ -3,20 +3,8 @@ import Foundation
 public extension Tx {
     
     func signedV0(privKey: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
-        
-        // For P2WPKH witness program, the scriptCode is 0x1976a914{20-byte-pubkey-hash}88ac.
-        // OP_DUP OP_HASH160 1d0f172a0ecb48aee1be1f2687d2963ae33f71a1 OP_EQUALVERIFY OP_CHECKSIG
-        let scriptCode = Script(ops: [
-            .dup,
-            .hash160,
-            .pushBytes(hash160(pubKey)), // prevOut.scriptPubKey.ops[1], // pushBytes 20
-            .equalVerify,
-            .checkSig
-        ])
-        
-        let sigMsg = sigMsgV0(inIdx: inIdx, scriptCode: scriptCode, amount: prevOut.value, sigHashType: sigHashType)
-        let sigHash = hash256(sigMsg)
-        
+        let scriptCode = Script.scriptCodeV0(hash160(pubKey))
+        let sigHash = sigHashV0(inIdx: inIdx, scriptCode: scriptCode, amount: prevOut.value, sigHashType: sigHashType)
         let sig = signECDSA(msg: sigHash, privKey: privKey) + sigHashType.data
         
         var newWitnesses = [Witness]()
@@ -33,6 +21,10 @@ public extension Tx {
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
     }
     
+    func sigHashV0(inIdx: Int, scriptCode: Script, amount: UInt64, sigHashType: SigHashType) -> Data {
+        hash256(sigMsgV0(inIdx: inIdx, scriptCode: scriptCode, amount: amount, sigHashType: sigHashType))
+    }
+
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
     func sigMsgV0(inIdx: Int, scriptCode: Script, amount: UInt64, sigHashType: SigHashType) -> Data {
         

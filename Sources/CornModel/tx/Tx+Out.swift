@@ -36,11 +36,10 @@ public extension Tx.Out {
     }
     
     var address: String {
-        // TODO: Keep `isTestnet` or similar on the struct itself.
         if scriptPubKey.scriptType == .witnessV0KeyHash || scriptPubKey.scriptType == .witnessV0ScriptHash {
-            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: scriptPubKey.segwitProgram)) ?? ""
+            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: scriptPubKey.witnessProgram)) ?? ""
         } else if scriptPubKey.scriptType == .witnessV1TapRoot {
-            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: scriptPubKey.segwitProgram)) ?? ""
+            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: scriptPubKey.witnessProgram)) ?? ""
         }
         return ""
     }

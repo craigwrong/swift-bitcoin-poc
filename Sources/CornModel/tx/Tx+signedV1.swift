@@ -2,9 +2,9 @@ import Foundation
 
 public extension Tx {
     
-    func signedV1(privKey: Data, pubKey: Data, inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType?) -> Tx {
+    func signedV1(privKey: Data, pubKey: Data, sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
         
-        let sigHash = sigHashV1(inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType, extFlag: 0)
+        let sigHash = sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts)
         let aux = getRandBytes(32)
         
         let sigHashTypeSuffix: Data
@@ -29,8 +29,8 @@ public extension Tx {
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
     }
 
-    func sigHashV1(inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType?, extFlag: UInt8) -> Data {
-        let sigMsg = sigMsgV1(inIdx: inIdx, prevOuts: prevOuts, sigHashType: sigHashType, extFlag: 0)
+    func sigHashV1(_ type: SigHashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Data {
+        let sigMsg = sigMsgV1(sigHashType: type, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0)
         // TODO: Produce ext_flag for either sigversion taproot (ext_flag = 0) or tapscript (ext_flag = 1). Also produce key_version ( key_version = 0) for BIP 342 signatures.
         
         return taggedHash(tag: "TapSighash", payload: sigMsg)
@@ -39,7 +39,7 @@ public extension Tx {
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .
     /// https://github.com/bitcoin/bitcoin/blob/58da1619be7ac13e686cb8bbfc2ab0f836eb3fa5/src/script/interpreter.cpp#L1477
     /// https://bitcoin.stackexchange.com/questions/115328/how-do-you-calculate-a-taproot-sighash
-    func sigMsgV1(inIdx: Int, prevOuts: [Tx.Out], sigHashType: SigHashType?, extFlag: UInt8) -> Data {
+    func sigMsgV1(sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8) -> Data {
         
         precondition(prevOuts.count == ins.count, "The corresponding (aligned) UTXO for each transaction input is required.")
         precondition(!sigHashType.isSingle || inIdx < outs.count, "For single hash type, the selected input needs to have a matching output.")

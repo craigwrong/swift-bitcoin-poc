@@ -2,55 +2,73 @@ import Foundation
 public extension Tx {
     func verify(prevOuts: [Tx.Out]) -> Bool {
         ins.indices.reduce(true) { result, i in
-            result && verify(prevOuts: prevOuts, inIdx: i)
+            result && verify(inIdx: i, prevOuts: prevOuts)
         }
     }
     
-    func verify(prevOuts: [Tx.Out], inIdx: Int) -> Bool {
+    func verify(inIdx: Int, prevOuts: [Tx.Out]) -> Bool {
         let input = ins[inIdx]
         let prevOut = prevOuts[inIdx]
-        let scriptSig = input.scriptSig
+        let scriptPubKey = prevOut.scriptPubKey
         
-        var stack = [Data]()
-        let scriptSig2: Script
-        switch scriptSig.scriptType {
+        let scriptPubKey2: Script
+        switch prevOut.scriptPubKey.scriptType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
-            let script = Script(scriptSig.ops + prevOut.scriptPubKey.ops)
-            return script.run(stack: &stack, tx: self, prevOuts: prevOuts, inIdx: inIdx)
+            var stack = [Data]()
+            guard input.scriptSig.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts) else {
+                return false
+            }
+            return prevOut.scriptPubKey.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .scriptHash:
-            guard let lastOp = scriptSig.ops.last else {
+            var stack = [Data]()
+            guard
+                let op = input.scriptSig.ops.last,
+                Script([op]).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts),
+                prevOut.scriptPubKey.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            else {
                 return false
             }
-            let script = Script([lastOp] + prevOuts[inIdx].scriptPubKey.ops)
-            guard script.run(stack: &stack, tx: self, prevOuts: prevOuts, inIdx: inIdx) else {
-                return false
-            }
-            guard let lastOp = scriptSig.ops.last, case let .pushBytes(redeemScriptData) = lastOp else {
+            guard let lastOp = input.scriptSig.ops.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
                 fatalError()
             }
-            let redeemScript = Script(redeemScriptData, includesLength: false)
+            let redeemScript = Script(redeemScriptRaw, includesLength: false)
             if redeemScript.scriptType != .witnessV0KeyHash && redeemScript.scriptType != .witnessV0ScriptHash {
-                let finalScript = Script(scriptSig.ops.dropLast() + redeemScript.ops)
                 var stack2 = [Data]()
-                return finalScript.run(stack: &stack2, tx: self, prevOuts: prevOuts, inIdx: inIdx)
+                guard
+                    Script(input.scriptSig.ops.dropLast()).run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+                else {
+                    return false
+                }
+                return redeemScript.run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             }
-            scriptSig2 = redeemScript
+            guard input.scriptSig.ops.count == 1 else {
+                // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
+                return false
+            }
+            scriptPubKey2 = redeemScript
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
-            scriptSig2 = scriptSig
+            guard input.scriptSig.ops.count == 0 else {
+                // The scriptSig must be exactly empty or validation fails. ("native witness program")
+                return false
+            }
+            scriptPubKey2 = scriptPubKey
         }
-        switch scriptSig.scriptType {
+        switch scriptPubKey2.scriptType {
         case .witnessV0KeyHash:
-            let witnessProgram = scriptSig2.segwitProgram
+            let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the public key
             var stack = witnessData[inIdx].stack
-            let script = Script.scriptCodeV0(witnessProgram)
-            return script.run(stack: &stack, tx: self, prevOuts: prevOuts, inIdx: inIdx)
+            return Script.v0KeyHashScript(witnessProgram).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
+            let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
             var stack = witnessData[inIdx].stack
             guard let witnessScriptRaw = stack.popLast() else {
                 fatalError()
             }
+            guard sha256(witnessScriptRaw) == witnessProgram else {
+                return false
+            }
             let witnessScript = Script(witnessScriptRaw, version: .v0, includesLength: false)
-            return witnessScript.run(stack: &stack, tx: self, prevOuts: prevOuts, inIdx: inIdx)
+            return witnessScript.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             fatalError("TODO")
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown, .scriptHash:

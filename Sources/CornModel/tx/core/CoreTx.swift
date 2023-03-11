@@ -171,7 +171,7 @@ public extension Tx.Out {
                 desc: "", // TODO: Create descriptor
                 hex: scriptPubKey.data(includeLength: false).hex,
                 address: address,
-                type: .init(rawValue: scriptPubKey.scriptType.rawValue) ?? .unknown
+                type: .init(rawValue: CoreScriptType(scriptPubKey.scriptType).rawValue) ?? .unknown
             )
         )
     }

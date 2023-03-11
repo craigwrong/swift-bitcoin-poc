@@ -133,7 +133,8 @@ extension Script.Op {
         }
     }
     
-    func execute(stack: inout [Data], script: Script, tx: Tx, prevOuts: [Tx.Out], inIdx: Int) -> Bool {
+    // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
+    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: Script, opIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -189,14 +190,9 @@ extension Script.Op {
             case .equalVerify:
                 return opEqualVerify(first, second, stack: &stack)
             case .checkSig:
-                if script.version == .v0 {
-                    return opCheckSigV0(first, second, stack: &stack, script: script, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
-                } else if script.version == .v1 {
-                    return opCheckSigV1(first, second, stack: &stack, script: script, tx: tx, prevOuts: prevOuts, inIdx: inIdx, extFlag: 0) // TODO: produce extFlag.. TapRoot vs TapScript
-                }
-                return opCheckSig(first, second, stack: &stack, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
+                return opCheckSig(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
             case .checkSigVerify:
-                return opCheckSigVerify(first, second, stack: &stack, tx: tx, prevOuts: prevOuts, inIdx: inIdx)
+                return opCheckSigVerify(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
             default:
                 fatalError()
             }

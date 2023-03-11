@@ -30,7 +30,7 @@ public extension Script {
         self.version = version
     }
 
-    var segwitProgram: Data {
+    var witnessProgram: Data {
         precondition(scriptType == .witnessV0KeyHash || scriptType == .witnessV0ScriptHash || scriptType == .witnessV1TapRoot || scriptType == .witnessUnknown)
         guard case let .pushBytes(programData) = ops[1] else {
             fatalError()
@@ -38,7 +38,7 @@ public extension Script {
         return programData
     }
 
-    var scriptType: ScriptType {
+    var scriptType: LockScriptType {
         if ops.count == 2, ops[1] == .checkSig, case let .pushBytes(data) = ops[0], data.count == 33 {
             return .pubKey
         }
@@ -50,7 +50,7 @@ public extension Script {
         }
         // TODO: Improve check. Look for "0 ... sigs ... <m> ... addresses ... <n> OP_CHECKMULTISIG".
         if ops.count > 5, ops[0] == .zero, ops.last == .checkMultiSig {
-            return .multiSig
+            return .multiSig(-1, -1)
         }
         if ops.count == 2, ops[0] == .return, case .pushBytes(_) = ops[1] {
             return .nullData
@@ -88,5 +88,17 @@ extension Script {
         let opsData = ops.reduce(Data()) { $0 + $1.data }
         let lengthData = includeLength ? Data(varInt: UInt64(opsData.count)) : Data()
         return lengthData + opsData
+    }
+    
+    mutating func removeSubScripts(before opIdx: Int) {
+        if let previousCodeSeparatorIdx = ops.indices.last(where : { i in
+            ops[i] == .codeSeparator && i < opIdx
+        }) {
+            ops = .init(ops.dropFirst(previousCodeSeparatorIdx + 1))
+        }
+    }
+    
+    mutating func removeCodeSeparators() {
+        ops.removeAll { $0 == .codeSeparator }
     }
 }

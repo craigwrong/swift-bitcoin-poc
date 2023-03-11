@@ -2,9 +2,9 @@ import Foundation
 
 public extension Tx {
     
-    func signedV0(privKey: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
-        let scriptCode = Script.scriptCodeV0(hash160(pubKey))
-        let sigHash = sigHashV0(inIdx: inIdx, scriptCode: scriptCode, amount: prevOut.value, sigHashType: sigHashType)
+    func signedV0(privKey: Data, pubKey: Data, sigHashType: SigHashType, inIdx: Int, prevOut: Tx.Out) -> Tx {
+        let scriptCode = Script.v0KeyHashScript(hash160(pubKey))
+        let sigHash = sigHashV0(sigHashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sigHash, privKey: privKey) + sigHashType.data
         
         var newWitnesses = [Witness]()
@@ -21,12 +21,16 @@ public extension Tx {
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
     }
     
-    func sigHashV0(inIdx: Int, scriptCode: Script, amount: UInt64, sigHashType: SigHashType) -> Data {
-        hash256(sigMsgV0(inIdx: inIdx, scriptCode: scriptCode, amount: amount, sigHashType: sigHashType))
+    func sigHashV0(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: Script, opIdx: Int) -> Data {
+        // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
+        var scriptCode = scriptCode
+        scriptCode.removeSubScripts(before: opIdx)
+        let amount = prevOut.value
+        return hash256(sigMsgV0(sigHashType: type, inIdx: inIdx, scriptCode: scriptCode, amount: amount))
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
-    func sigMsgV0(inIdx: Int, scriptCode: Script, amount: UInt64, sigHashType: SigHashType) -> Data {
+    func sigMsgV0(sigHashType: SigHashType, inIdx: Int, scriptCode: Script, amount: UInt64) -> Data {
         
         //If the ANYONECANPAY flag is not set, hashPrevouts is the double SHA256 of the serialization of all input outpoints;
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.

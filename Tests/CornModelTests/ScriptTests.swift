@@ -18,7 +18,7 @@ final class ScriptTests: XCTestCase {
         let script = Script([.pushBytes(numberData), .drop])
         var stack = [Data]()
         let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
-        let result = script.run(stack: &stack, tx: dummyTx, prevOuts: [], inIdx: -1)
+        let result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssert(stack.isEmpty)
     }
@@ -29,7 +29,7 @@ final class ScriptTests: XCTestCase {
         let script = Script([.pushBytes(numberData), .dup])
         var stack = [Data]()
         let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
-        let result = script.run(stack: &stack, tx: dummyTx, prevOuts: [], inIdx: -1)
+        let result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [numberData, numberData])
     }
@@ -48,10 +48,12 @@ final class ScriptTests: XCTestCase {
 
         let pubKeyHash = hash160(pubKey)
 
-        let script = Script([.pushBytes(sig), .pushBytes(pubKey), .dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
+        let scriptSig = Script([.pushBytes(sig), .pushBytes(pubKey)])
+        let scriptPubKey = Script([.dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
 
         var stack = [Data]()
-        let result = script.run(stack: &stack, tx: tx, prevOuts: [prevOut], inIdx: 0)
+        var result = scriptSig.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
+        result = result && scriptPubKey.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
         XCTAssert(result)
         XCTAssertEqual(stack, [BigInt(1).serialize()])
         XCTAssert(tx.verify(prevOuts: [prevOut]))

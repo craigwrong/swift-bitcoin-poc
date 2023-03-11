@@ -2,9 +2,9 @@ import Foundation
 
 public extension Tx {
     
-    func signed(privKey: Data, pubKey: Data, redeemScript: Script? = .none,
-                inIdx: Int, prevOut: Tx.Out, sigHashType: SigHashType) -> Tx {
-        let sigHash = sigHash(sigHashType: sigHashType, inIdx: inIdx, prevOut: prevOut, redeemScript: redeemScript)
+    func signed(privKey: Data, pubKey: Data, redeemScript: Script? = .none, sigHashType: SigHashType,
+                inIdx: Int, prevOut: Tx.Out) -> Tx {
+        let sigHash = sigHash(sigHashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
         let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + sigHashType.data
         
@@ -46,23 +46,32 @@ public extension Tx {
     }
     
     
-    func sigHash(sigHashType: SigHashType, inIdx: Int, prevOut: Tx.Out, redeemScript: Script?) -> Data {
+    func sigHash(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: Script, opIdx: Int) -> Data {
+        
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
-        let scriptCode: Script
+        let subScript: Script
         if prevOut.scriptPubKey.scriptType == .pubKey || prevOut.scriptPubKey.scriptType == .pubKeyHash {
-            scriptCode = prevOut.scriptPubKey
-        } else if prevOut.scriptPubKey.scriptType == .scriptHash, let redeemScript {
-            scriptCode = redeemScript
+            // TODO: Account for code separators. Find the last executed one and remove anything before it. After that, remove all remaining OP_CODESEPARATOR instances from script code
+            var scriptCode = scriptCode
+            scriptCode.removeSubScripts(before: opIdx)
+            scriptCode.removeCodeSeparators()
+            subScript = scriptCode
+            // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).
+        } else if prevOut.scriptPubKey.scriptType == .scriptHash {
+            let input = ins[inIdx]
+            guard let op = input.scriptSig.ops.last, case let .pushBytes(redeemScriptRaw) = op else {
+                preconditionFailure()
+            }
+            subScript = Script(redeemScriptRaw, includesLength: false)
         } else {
             fatalError("Invalid legacy previous output or redeem script not provided.")
         }
-        let sigMsg = sigMsg(inIdx: inIdx, scriptCode: scriptCode, sigHashType: sigHashType)
+        let sigMsg = sigMsg(sigHashType: type, inIdx: inIdx, subScript: subScript)
         return hash256(sigMsg)
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func sigMsg(inIdx: Int, scriptCode: Script, sigHashType: SigHashType) -> Data {
-        let subScript = scriptCode // TODO: Account for code separators and FindAndDelete of sigs (not standard).
+    func sigMsg(sigHashType: SigHashType, inIdx: Int, subScript: Script) -> Data {
         var newIns = [Tx.In]()
         if sigHashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
@@ -123,7 +132,7 @@ public extension Tx {
     }
     
     // TODO: Remove once newer implementation was tested.
-    func sigMsgAlt(inIdx: Int, scriptCode subScript: Script, sigHashType: SigHashType) -> Data {
+    func sigMsgAlt(sigHashType: SigHashType, inIdx: Int, scriptCode subScript: Script) -> Data {
         let input = ins[inIdx]
         var txCopy = self
         txCopy.witnessData = []

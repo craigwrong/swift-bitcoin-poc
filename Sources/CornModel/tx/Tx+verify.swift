@@ -70,7 +70,63 @@ public extension Tx {
             let witnessScript = Script(witnessScriptRaw, version: .v0, includesLength: false)
             return witnessScript.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
-            fatalError("TODO")
+            // P2SH-wrapped version 1 outputs, remain unencumbered.
+            if prevOut.scriptPubKey.scriptType == .scriptHash {
+                return true
+            }
+            let witnessProgram = scriptPubKey2.witnessProgram
+            
+            // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
+            // Not needed as it would be recognized as non-standard and execute normally
+            // if witnessProgram.count != 32 {
+                // return true
+            // }
+            
+            // Immutable copy to us as reference to the original witness stack
+            let originalStack = witnessData[inIdx].stack
+            
+            // Fail if the witness stack has 0 elements.
+            if originalStack.count == 0 {
+                return false
+            }
+
+            // We will modify the stack
+            var newStack = originalStack
+
+            // If there are at least two witness elements, and the first byte of the last element is 0x50, this last element is called annex a
+            let annex: Data?
+            if originalStack.count > 1, let maybeAnnex = originalStack.last, maybeAnnex.isValidTaprootAnnex {
+                annex = maybeAnnex
+            } else {
+                annex = .none
+            }
+            
+            // this last element is called annex a and is removed from the witness stack
+            if annex != .none {
+                newStack.removeLast()
+            }
+            
+            // If there is exactly one element left in the witness stack, key path spending is used:
+            if newStack.count == 1 {
+                let outputKey = scriptPubKey2.witnessProgram // In this case it is the public key (aka taproot output key q)
+                // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig)[20], where Verify is defined in BIP340.
+                // If the sig is 65 bytes long, return sig[64] ≠ 0x00[21] and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
+                // Otherwise, fail[22].
+                return Script.v1KeyHashScript(outputKey).run(stack: &newStack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            }
+            
+            // If there are at least two witness elements left, script path spending is used:
+            
+            // The last stack element is called the control block c
+            let controlBlock = newStack.removeLast()
+
+            // control block c, and must have length 33 + 32m, for a value of m that is an integer between 0 and 128[6], inclusive. Fail if it does not have such a length.
+            
+            // Call the second-to-last stack element s, the script.
+            let script = newStack.removeLast()
+            
+            return false
+            
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown, .scriptHash:
             fatalError()
         }

@@ -49,7 +49,6 @@ final class BIP340Tests: XCTestCase {
                 XCTAssert(checkTapTweak(pubKey: pubKeyData, tweakedKey: tweakedKey, merkleRoot: merkleRoot, parity: parity))
                 
                 let altSignature = signSchnorr(msg: msgData, privKey: secKeyData, merkleRoot: merkleRoot, forceTweak: merkleRoot == .none, aux: auxRnd)
-                print("merkleRoot: \(merkleRoot == .none ? "None": "Some")")
                 let verificationResult = verifySchnorr(sig: altSignature, msg: msgData, pubKey: tweakedKey)
                 XCTAssert(verificationResult)
 

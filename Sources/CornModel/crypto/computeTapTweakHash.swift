@@ -2,7 +2,7 @@ import Foundation
 import ECCHelper
 import CryptoKit
 
-func computeTapTweakHash(xOnlyPubKey: Data, merkleRoot: Data?) -> Data {
+public func computeTapTweakHash(xOnlyPubKey: Data, merkleRoot: Data?) -> Data {
     var joined = xOnlyPubKey
     if let merkleRoot {
         joined += merkleRoot

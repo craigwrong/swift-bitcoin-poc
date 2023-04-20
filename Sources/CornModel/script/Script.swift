@@ -75,6 +75,12 @@ public extension Script {
             ($0.isEmpty ? "" : "\($0) ") + $1.asm
         }
     }
+    
+    func data(includeLength: Bool = true) -> Data {
+        let opsData = ops.reduce(Data()) { $0 + $1.data }
+        let lengthData = includeLength ? Data(varInt: UInt64(opsData.count)) : Data()
+        return lengthData + opsData
+    }
 }
 
 extension Script {
@@ -84,12 +90,6 @@ extension Script {
         return UInt64(opsSize).varIntSize + opsSize
     }
 
-    func data(includeLength: Bool = true) -> Data {
-        let opsData = ops.reduce(Data()) { $0 + $1.data }
-        let lengthData = includeLength ? Data(varInt: UInt64(opsData.count)) : Data()
-        return lengthData + opsData
-    }
-    
     mutating func removeSubScripts(before opIdx: Int) {
         if let previousCodeSeparatorIdx = ops.indices.last(where : { i in
             ops[i] == .codeSeparator && i < opIdx

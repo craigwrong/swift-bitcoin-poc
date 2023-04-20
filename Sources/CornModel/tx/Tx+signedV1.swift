@@ -89,10 +89,13 @@ public extension Tx {
         // Data about this input:
         // spend_type (1): equal to (ext_flag * 2) + annex_present, where annex_present is 0 if no annex is present, or 1 otherwise (the original witness stack has two or more witness elements, and the first byte of the last element is 0x50)
         var inputData = Data()
-        let originalWitnessStack = witnessData[inIdx].stack // TODO: Check this witness stack is the original.
+        let originalWitnessStack = witnessData[inIdx].stack // TODO: Check this witness stack is the original (and not a modified version by the execution of OP_CHECKSIG)
         let firstByteOfLastElement: UInt8?
-        if let lastElement = originalWitnessStack.last, lastElement.count > 3 {
-            firstByteOfLastElement = lastElement[1]
+        // TODO: Investigate why we were using `lastElement.count > 3` and `lastElement[1]` in the first place
+        // if let lastElement = originalWitnessStack.last, lastElement.count > 3 {
+            // firstByteOfLastElement = lastElement[1]
+        if let lastElement = originalWitnessStack.last, lastElement.count > 0 {
+            firstByteOfLastElement = lastElement[0]
         } else {
             firstByteOfLastElement = .none
         }

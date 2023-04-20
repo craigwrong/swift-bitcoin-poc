@@ -75,4 +75,8 @@ extension Script {
             .checkSig
         ], version: .v0)
     }
+    
+    static func v1KeyHashScript(_ outputKey: Data) -> Self {
+        .init([.pushBytes(outputKey), .checkSig], version: .v1)
+    }
 }

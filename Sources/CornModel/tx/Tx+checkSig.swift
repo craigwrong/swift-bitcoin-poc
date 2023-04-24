@@ -2,7 +2,7 @@ import Foundation
 
 public extension Tx {
     
-    func checkSig(_ sigSigHashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: Script, opIdx: Int) -> Bool {
+    func checkSig(_ sigSigHashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
         var sig = sigSigHashType
         guard let rawValue = sig.popLast(), let sigHashType = SigHashType(rawValue: rawValue) else {
             preconditionFailure()

@@ -13,13 +13,13 @@ final class RegtestTests: XCTestCase {
     func testLegacy_pyBitcoin_all() {
         let unsignedTx = Tx(Data(hex: "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb0000000000ffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a914c992931350c9ba48538003706953831402ea34ea88ac00000000"))
         
-        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKey: .init([
+        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
             .dup,
             .hash160,
             .pushBytes(Data(hex: "c3f8e5b0f8455a2b02c29c4488a550278209b669")),
             .equalVerify,
             .checkSig
-        ]))]
+        ]).data())]
         let privKey0 = Data(hex: "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201") // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
         let pubKey0 = Data(hex: "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708")
         
@@ -31,13 +31,13 @@ final class RegtestTests: XCTestCase {
     func testLegacy_pyBitcoin2_all() {
         let unsignedTx = Tx(Data(hex: "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb0000000000ffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
-        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKey: .init([
+        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
             .dup,
             .hash160,
             .pushBytes(Data(hex: "c3f8e5b0f8455a2b02c29c4488a550278209b669")),
             .equalVerify,
             .checkSig
-        ]))]
+        ]).data())]
         let privKey0 = Data(hex: "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201") // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
         let pubKey0 = Data(hex: "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708")
         
@@ -52,13 +52,13 @@ final class RegtestTests: XCTestCase {
     func testLegacy_pyBitcoin2_none() {
         let unsignedTx = Tx(Data(hex: "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb0000000000ffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
-        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKey: .init([
+        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
             .dup,
             .hash160,
             .pushBytes(Data(hex: "c3f8e5b0f8455a2b02c29c4488a550278209b669")),
             .equalVerify,
             .checkSig
-        ]))]
+        ]).data())]
         let privKey0 = Data(hex: "81c70e36ffa5e3e6425dc19c7c35315d3d72dc60b79cb78fe009a335de29dd2201") // cRvyLwCPLU88jsyj94L7iJjQX5C2f8koG4G2gevN4BeSGcEvfKe9
         let pubKey0 = Data(hex: "03a2fef1829e0742b89c218c51898d9e7cb9d51201ba2bf9d9e9214ebb6af32708")
         let sigMsg = unsignedTx.sigMsg(sigHashType: .none, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
@@ -73,20 +73,20 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760000000000ffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760100000000ffffffff0240548900000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988ac40548900000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
         let prevOuts = [
-            Tx.Out(value: UInt64(0), scriptPubKey: .init([
+            Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a")),
                 .equalVerify,
                 .checkSig
-            ])),
-            Tx.Out(value: UInt64(0), scriptPubKey: .init([
+            ]).data()),
+            Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "42151d0c21442c2b038af0ad5ee64b9d6f4f4e49")),
                 .equalVerify,
                 .checkSig
-            ]))
+            ]).data())
         ]
         let privKey0 = Data(hex: "a67d3c308333c63f5e83a75e42a5533d0ac27153ecf443dd75cd4306d0c68fba01") // cTALNpTpRbbxTCJ2A5Vq88UxT44w1PE2cYqiB3n4hRvzyCev1Wwo
         let pubKey0 = Data(hex: "02d82c9860e36f15d7b72aa59e29347f951277c21cd4d34822acdeeadbcff8a546")
@@ -115,20 +115,20 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760000000000ffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760100000000ffffffff0240548900000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988ac40548900000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
         let prevOuts = [
-            Tx.Out(value: UInt64(0), scriptPubKey: .init([
+            Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a")),
                 .equalVerify,
                 .checkSig
-            ])),
-            Tx.Out(value: UInt64(0), scriptPubKey: .init([
+            ]).data()),
+            Tx.Out(value: UInt64(0), scriptPubKeyData: ScriptLegacy([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "42151d0c21442c2b038af0ad5ee64b9d6f4f4e49")),
                 .equalVerify,
                 .checkSig
-            ]))
+            ]).data())
         ]
         
         let privKey0 = Data(hex: "a67d3c308333c63f5e83a75e42a5533d0ac27153ecf443dd75cd4306d0c68fba01") // cTALNpTpRbbxTCJ2A5Vq88UxT44w1PE2cYqiB3n4hRvzyCev1Wwo
@@ -155,7 +155,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_1to1_all() {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
-        let prevOut0 = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))
+        let prevOut0 = Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125") // 03ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e mrVceFBXfu9MJwdbiWFB2A6cpiWb4j1n27
         
@@ -184,7 +184,7 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOuts = [
-            Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))
+            Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))
         ]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
@@ -202,7 +202,7 @@ final class RegtestTests: XCTestCase {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOuts = [
-            Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))
+            Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))
         ]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
@@ -215,7 +215,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_1to1_noneAny() {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
-        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))]
+        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
@@ -230,7 +230,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_1to1_single() {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
-        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))]
+        let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
@@ -245,7 +245,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_1to1_singleAny() {
         let unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
-        let prevOuts = [Tx.Out(value: UInt64(312500000), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))]
+        let prevOuts = [Tx.Out(value: UInt64(312500000), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         

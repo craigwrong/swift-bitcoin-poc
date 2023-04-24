@@ -3,32 +3,36 @@ import Foundation
 public extension Tx {
     
     struct Out: Equatable {
-        public init(network: Network = .main, value: UInt64, scriptPubKey: Script) {
+        public init(network: Network = .main, value: UInt64, scriptPubKeyData: Data) {
             self.network = network
             self.value = value
-            self.scriptPubKey = scriptPubKey
+            self.scriptPubKeyData = scriptPubKeyData
         }
         
         public var network: Network
         public var value: UInt64 // Sats
-        public var scriptPubKey: Script
+        public var scriptPubKeyData: Data
     }
 }
 
 extension Tx.Out {
     var memSize: Int {
-        MemoryLayout.size(ofValue: value) + scriptPubKey.memSize
+        MemoryLayout.size(ofValue: value) + scriptPubKeyData.varLenSize
     }
 }
 
 public extension Tx.Out {
 
+    var scriptPubKey: ScriptLegacy {
+        ScriptLegacy(scriptPubKeyData)
+    }
+    
     var doubleValue: Double {
         Double(value) / 100_000_000
     }
 
     var data: Data {
-        return valueData + scriptPubKey.data()
+        return valueData + scriptPubKeyData.varLenData
     }
 
     var valueData: Data {
@@ -45,9 +49,10 @@ public extension Tx.Out {
     }
     
     init(_ data: Data) {
+        var data = data
         let value = data.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) }
-        let data = data.dropFirst(MemoryLayout.size(ofValue: value))
-        let scriptPubKey = Script(data)
-        self.init(value: value, scriptPubKey: scriptPubKey)
+        data = data.dropFirst(MemoryLayout.size(ofValue: value))
+        let scriptPubKeyData = Data(varLenData: data)
+        self.init(value: value, scriptPubKeyData: scriptPubKeyData)
     }
 }

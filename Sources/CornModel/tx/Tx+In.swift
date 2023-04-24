@@ -5,10 +5,10 @@ public extension Tx {
     struct In: Equatable {
         public var txID: String // 32 bytes hex
         public var outIdx: UInt32 // Index of vout
-        public var scriptSig: Script
+        public var scriptSig: ScriptLegacy
         public var sequence: UInt32 // Index of vout
 
-        public init(txID: String, outIdx: UInt32, scriptSig: Script, sequence: UInt32) {
+        public init(txID: String, outIdx: UInt32, scriptSig: ScriptLegacy, sequence: UInt32) {
             self.txID = txID
             self.outIdx = outIdx
             self.scriptSig = scriptSig
@@ -31,8 +31,9 @@ public extension Tx.In {
         }
         offset += outIdxData.count
         
-        let scriptSig = Script(data[offset...])
-        offset += scriptSig.memSize
+        let scriptSigData = Data(varLenData: data[offset...])
+        let scriptSig = ScriptLegacy(scriptSigData)
+        offset += scriptSigData.varLenSize
         
         let sequenceData = data[offset ..< offset + MemoryLayout<UInt32>.size]
         let sequence = sequenceData.withUnsafeBytes {
@@ -57,7 +58,7 @@ extension Tx.In {
     var data: Data {
         let txIDData = Data(hex: txID).reversed()
         let outputData = withUnsafeBytes(of: outIdx) { Data($0) }
-        return txIDData + outputData + scriptSig.data() + sequenceData
+        return txIDData + outputData + scriptSig.data().varLenData + sequenceData
     }
 
     var prevoutData: Data {

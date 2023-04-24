@@ -3,13 +3,13 @@ import Foundation
 public extension Tx {
 
     /// Populates unlocking script / witness with signatures and provided redeem script.
-    func signInput(privKey: Data, pubKey: Data, redeemScript: Script, sigHashType: SigHashType, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
+    func signInput(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy, sigHashType: SigHashType, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .scriptHash:
             if redeemScript.scriptType == .witnessV0KeyHash {
                 // TODO: Pass redeem script on to add to input's script sig
                 var withScriptSig = self
-                withScriptSig.ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data(includeLength: false))])
+                withScriptSig.ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data())])
                 return withScriptSig.signedV0(privKey: privKey, pubKey: pubKey, sigHashType: sigHashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
             }
             // TODO: Handle P2SH-P2WSH

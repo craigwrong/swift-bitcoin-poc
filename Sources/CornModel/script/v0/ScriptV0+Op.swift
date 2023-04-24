@@ -1,12 +1,12 @@
 import Foundation
 
-public extension ScriptV1 {
+public extension ScriptV0 {
     enum Op: Equatable {
-        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, success(UInt8), constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
+        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
     }
 }
 
-extension ScriptV1.Op {
+extension ScriptV0.Op {
     
     var memSize: Int {
         let additionalSize: Int
@@ -39,11 +39,8 @@ extension ScriptV1.Op {
             return 0x4e
         case .oneNegate:
             return 0x4f
-        case .success(let k):
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            return k
+        case .reserved:
+            return 0x50
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return 0x50 + k
@@ -98,11 +95,8 @@ extension ScriptV1.Op {
             return "OP_PUSHDATA4"
         case .oneNegate:
             return "OP_1NEGATE"
-        case .success(let k):
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // These opcodes are renamed to OP_SUCCESS80, ..., OP_SUCCESS254, and collectively known as OP_SUCCESSx[1].
-            return "OP_SUCCESS\(k)"
+        case .reserved:
+            return "OP_RESERVED"
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return "OP_\(k)"
@@ -144,7 +138,7 @@ extension ScriptV1.Op {
     }
     
     // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
-    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptV1, opIdx: Int) -> Bool {
+    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptV0, opIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -157,9 +151,8 @@ extension ScriptV1.Op {
             return opConstant(value: Int8(k), stack: &stack)
         case .oneNegate:
             return opConstant(value: -1, stack: &stack)
-        case .success(let k):
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            return opSuccess(stack: &stack)
+        case .reserved:
+            return opReserved()
         case .noOp:
             return opNoOp()
         case .return:
@@ -203,9 +196,9 @@ extension ScriptV1.Op {
             case .boolAnd:
                 return opBoolAnd(first, second, stack: &stack)
             case .checkSig:
-                return opCheckSig(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+                return opCheckSigV0(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
             case .checkSigVerify:
-                return opCheckSigVerify(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+                return opCheckSigVerifyV0(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
             default:
                 fatalError()
             }
@@ -216,7 +209,7 @@ extension ScriptV1.Op {
     }
 }
 
-public extension ScriptV1.Op {
+public extension ScriptV0.Op {
     
     var asm: String {
         if case .pushBytes(let d) = self {
@@ -294,17 +287,8 @@ public extension ScriptV1.Op {
             return .pushData4(d)
         case Self.oneNegate.opCode:
             return .oneNegate
-        case
-            // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
-            Self.success(80).opCode,
-            Self.success(98).opCode,
-            Self.success(126).opCode ... Self.success(129).opCode,
-            Self.success(131).opCode ... Self.success(134).opCode,
-            Self.success(137).opCode ... Self.success(138).opCode,
-            Self.success(141).opCode ... Self.success(142).opCode,
-            Self.success(149).opCode ... Self.success(153).opCode,
-            Self.success(187).opCode ... Self.success(254).opCode:
-            return .success(opCode)
+        case Self.reserved.opCode:
+            return .reserved
         case Self.constant(1).opCode ... Self.constant(16).opCode:
             return .constant(opCode - 0x50)
         case Self.noOp.opCode:

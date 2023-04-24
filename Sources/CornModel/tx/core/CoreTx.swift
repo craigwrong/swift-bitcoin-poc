@@ -140,7 +140,7 @@ public extension Tx.In {
     func toBCoreInput(witness: Tx.Witness) -> CoreTx.Input {
         isCoinbase
         ? .init(
-            coinbase: scriptSig.data(includeLength: false).hex,
+            coinbase: scriptSig.data().hex,
             scriptSig: .none,
             txid: .none,
             vout: .none,
@@ -151,7 +151,7 @@ public extension Tx.In {
             coinbase: .none,
             scriptSig: .init(
                 asm: scriptSig.asm,
-                hex: scriptSig.data(includeLength: false).hex
+                hex: scriptSig.data().hex
             ),
             txid: txID,
             vout: outIdx,
@@ -169,7 +169,7 @@ public extension Tx.Out {
             scriptPubKey: .init(
                 asm: scriptPubKey.asm,
                 desc: "", // TODO: Create descriptor
-                hex: scriptPubKey.data(includeLength: false).hex,
+                hex: scriptPubKey.data().hex,
                 address: address,
                 type: .init(rawValue: CoreScriptType(scriptPubKey.scriptType).rawValue) ?? .unknown
             )

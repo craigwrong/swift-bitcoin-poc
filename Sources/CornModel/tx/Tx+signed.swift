@@ -2,7 +2,7 @@ import Foundation
 
 public extension Tx {
     
-    func signed(privKey: Data, pubKey: Data, redeemScript: Script? = .none, sigHashType: SigHashType,
+    func signed(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, sigHashType: SigHashType,
                 inIdx: Int, prevOut: Tx.Out) -> Tx {
         let sigHash = sigHash(sigHashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
@@ -10,7 +10,7 @@ public extension Tx {
         
         let input = ins[inIdx]
         
-        let newScriptSig: Script
+        let newScriptSig: ScriptLegacy
         if prevOut.scriptPubKey.scriptType == .pubKey {
             newScriptSig = .init([.pushBytes(sig)])
         } else if prevOut.scriptPubKey.scriptType == .pubKeyHash {
@@ -22,7 +22,7 @@ public extension Tx {
             let currentOps = input.scriptSig.ops
             newScriptSig = .init(
                 [.pushBytes(sig)] +
-                (currentOps.isEmpty ? [.pushBytes(redeemScript!.data(includeLength: false))] : []) +
+                (currentOps.isEmpty ? [.pushBytes(redeemScript!.data())] : []) +
                 currentOps
             )
         }
@@ -46,10 +46,10 @@ public extension Tx {
     }
     
     
-    func sigHash(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: Script, opIdx: Int) -> Data {
+    func sigHash(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Data {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
-        let subScript: Script
+        let subScript: ScriptLegacy
         if prevOut.scriptPubKey.scriptType == .pubKey || prevOut.scriptPubKey.scriptType == .pubKeyHash {
             // TODO: Account for code separators. Find the last executed one and remove anything before it. After that, remove all remaining OP_CODESEPARATOR instances from script code
             var scriptCode = scriptCode
@@ -62,7 +62,7 @@ public extension Tx {
             guard let op = input.scriptSig.ops.last, case let .pushBytes(redeemScriptRaw) = op else {
                 preconditionFailure()
             }
-            subScript = Script(redeemScriptRaw, includesLength: false)
+            subScript = ScriptLegacy(redeemScriptRaw)
         } else {
             fatalError("Invalid legacy previous output or redeem script not provided.")
         }
@@ -71,7 +71,7 @@ public extension Tx {
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func sigMsg(sigHashType: SigHashType, inIdx: Int, subScript: Script) -> Data {
+    func sigMsg(sigHashType: SigHashType, inIdx: Int, subScript: ScriptLegacy) -> Data {
         var newIns = [Tx.In]()
         if sigHashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
@@ -112,7 +112,7 @@ public extension Tx {
                     newOuts.append(out)
                 } else if i < inIdx {
                     // TODO: Verify that "long -1" means  UInt64(bitPattern: -1) aka UInt64.max
-                    newOuts.append(.init(value: UInt64.max, scriptPubKey: .init([])))
+                    newOuts.append(.init(value: UInt64.max, scriptPubKeyData: .init()))
                 }
             }
             
@@ -132,7 +132,7 @@ public extension Tx {
     }
     
     // TODO: Remove once newer implementation was tested.
-    func sigMsgAlt(sigHashType: SigHashType, inIdx: Int, scriptCode subScript: Script) -> Data {
+    func sigMsgAlt(sigHashType: SigHashType, inIdx: Int, scriptCode subScript: ScriptLegacy) -> Data {
         let input = ins[inIdx]
         var txCopy = self
         txCopy.witnessData = []
@@ -148,7 +148,7 @@ public extension Tx {
                 if i == inIdx {
                     txCopy.outs.append(out)
                 } else if i < inIdx {
-                    txCopy.outs.append(.init(value: UInt64.max, scriptPubKey: .init([])))
+                    txCopy.outs.append(.init(value: UInt64.max, scriptPubKeyData: .init()))
                 }
             }
         }

@@ -3,7 +3,7 @@ import Foundation
 public extension Tx {
     
     func signedV0(privKey: Data, pubKey: Data, sigHashType: SigHashType, inIdx: Int, prevOut: Tx.Out) -> Tx {
-        let scriptCode = Script.v0KeyHashScript(hash160(pubKey))
+        let scriptCode = ScriptV0.keyHashScript(hash160(pubKey))
         let sigHash = sigHashV0(sigHashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sigHash, privKey: privKey) + sigHashType.data
         
@@ -21,7 +21,7 @@ public extension Tx {
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
     }
     
-    func sigHashV0(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: Script, opIdx: Int) -> Data {
+    func sigHashV0(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {
         // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
         var scriptCode = scriptCode
         scriptCode.removeSubScripts(before: opIdx)
@@ -30,7 +30,7 @@ public extension Tx {
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
-    func sigMsgV0(sigHashType: SigHashType, inIdx: Int, scriptCode: Script, amount: UInt64) -> Data {
+    func sigMsgV0(sigHashType: SigHashType, inIdx: Int, scriptCode: ScriptV0, amount: UInt64) -> Data {
         
         //If the ANYONECANPAY flag is not set, hashPrevouts is the double SHA256 of the serialization of all input outpoints;
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.
@@ -56,7 +56,7 @@ public extension Tx {
         
         let outpointData = ins[inIdx].prevoutData
         
-        let scriptCodeData = scriptCode.data()
+        let scriptCodeData = scriptCode.data.varLenData
         
         let amountData = withUnsafeBytes(of: amount) { Data($0) }
         let sequenceData = withUnsafeBytes(of: ins[inIdx].sequence) { Data($0) }

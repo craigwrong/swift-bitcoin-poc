@@ -1,12 +1,12 @@
 import Foundation
 
-public extension Script {
+public extension ScriptLegacy {
     enum Op: Equatable {
-        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, success(UInt8), constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
+        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, undefined
     }
 }
 
-extension Script.Op {
+extension ScriptLegacy.Op {
     
     var memSize: Int {
         let additionalSize: Int
@@ -41,11 +41,6 @@ extension Script.Op {
             return 0x4f
         case .reserved:
             return 0x50
-        case .success(let k):
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            return k
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return 0x50 + k
@@ -83,6 +78,8 @@ extension Script.Op {
             return 0xae
         case .checkMultiSigVerify:
             return 0xaf
+        case .undefined:
+            return 0xff
         }
     }
     
@@ -102,11 +99,6 @@ extension Script.Op {
             return "OP_1NEGATE"
         case .reserved:
             return "OP_RESERVED"
-        case .success(let k):
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // These opcodes are renamed to OP_SUCCESS80, ..., OP_SUCCESS254, and collectively known as OP_SUCCESSx[1].
-            return "OP_SUCCESS\(k)"
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return "OP_\(k)"
@@ -144,11 +136,13 @@ extension Script.Op {
             return "OP_CHECKMULTISIG"
         case .checkMultiSigVerify:
             return "OP_CHECKMULTISIGVERIFY"
+        case .undefined:
+            return "undefined"
         }
     }
     
     // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
-    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: Script, opIdx: Int) -> Bool {
+    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -163,9 +157,6 @@ extension Script.Op {
             return opConstant(value: -1, stack: &stack)
         case .reserved:
             return opReserved()
-        case .success(let k):
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            return opSuccess(stack: &stack)
         case .noOp:
             return opNoOp()
         case .return:
@@ -222,7 +213,7 @@ extension Script.Op {
     }
 }
 
-public extension Script.Op {
+public extension ScriptLegacy.Op {
     
     var asm: String {
         if case .pushBytes(let d) = self {
@@ -264,7 +255,7 @@ public extension Script.Op {
         return opCodeData + lengthData + rawData
     }
     
-    static func fromData(_ data: Data, version: Script.Version) -> Self {
+    static func fromData(_ data: Data) -> Self {
         var data = data
         let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: opCode))
@@ -300,30 +291,8 @@ public extension Script.Op {
             return .pushData4(d)
         case Self.oneNegate.opCode:
             return .oneNegate
-        case
-            // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
-            Self.success(80).opCode,
-            Self.success(98).opCode,
-            Self.success(126).opCode ... Self.success(129).opCode,
-            Self.success(131).opCode ... Self.success(134).opCode,
-            Self.success(137).opCode ... Self.success(138).opCode,
-            Self.success(141).opCode ... Self.success(142).opCode,
-            Self.success(149).opCode ... Self.success(153).opCode,
-            Self.success(187).opCode ... Self.success(254).opCode:
-            if (version == .legacy || version == .v0) && opCode == Self.reserved.opCode {
-                return .reserved
-            }
-            if (version == .legacy || version == .v0) && opCode == 98 /* Self.ver.opCode */ {
-                return .reserved // .ver
-            }
-            if (version == .legacy || version == .v0) && opCode == 137  /* Self.reserved1.opCode */ {
-                return .reserved // .reserved1
-            }
-            if (version == .legacy || version == .v0) && opCode == 138  /* Self.reserved2.opCode */ {
-                return .reserved // .reserved2
-            }
-            precondition(version != .legacy && version != .v0)
-            return .success(opCode)
+        case Self.reserved.opCode:
+            return .reserved
         case Self.constant(1).opCode ... Self.constant(16).opCode:
             return .constant(opCode - 0x50)
         case Self.noOp.opCode:
@@ -361,7 +330,8 @@ public extension Script.Op {
         case Self.checkMultiSigVerify.opCode:
             return .checkMultiSigVerify
         default:
-            fatalError("Unknown operation code.")
+            return .undefined
+            // fatalError("Unknown operation code.")
         }
     }
 }

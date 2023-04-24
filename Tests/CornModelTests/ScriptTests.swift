@@ -18,80 +18,80 @@ final class ScriptTests: XCTestCase {
         let two = BigInt(2).serialize()
         let big = (BigInt(UInt64.max) + 1).serialize()
         
-        var script = Script([.pushBytes(zero), .pushBytes(zero), .boolAnd])
+        var script = ScriptLegacy([.pushBytes(zero), .pushBytes(zero), .boolAnd])
         var stack = [Data]()
         var dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
         var result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
 
-        script = Script([.pushBytes(zero), .pushBytes(one), .boolAnd])
+        script = ScriptLegacy([.pushBytes(zero), .pushBytes(one), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(zero), .pushBytes(two), .boolAnd])
+        script = ScriptLegacy([.pushBytes(zero), .pushBytes(two), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(zero), .pushBytes(big), .boolAnd])
+        script = ScriptLegacy([.pushBytes(zero), .pushBytes(big), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(one), .pushBytes(zero), .boolAnd])
+        script = ScriptLegacy([.pushBytes(one), .pushBytes(zero), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(two), .pushBytes(zero), .boolAnd])
+        script = ScriptLegacy([.pushBytes(two), .pushBytes(zero), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        script = ScriptLegacy([.pushBytes(big), .pushBytes(zero), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        script = ScriptLegacy([.pushBytes(big), .pushBytes(zero), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = Script([.pushBytes(one), .pushBytes(one), .boolAnd])
+        script = ScriptLegacy([.pushBytes(one), .pushBytes(one), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = Script([.pushBytes(one), .pushBytes(two), .boolAnd])
+        script = ScriptLegacy([.pushBytes(one), .pushBytes(two), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = Script([.pushBytes(two), .pushBytes(two), .boolAnd])
+        script = ScriptLegacy([.pushBytes(two), .pushBytes(two), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = Script([.pushBytes(big), .pushBytes(one), .boolAnd])
+        script = ScriptLegacy([.pushBytes(big), .pushBytes(one), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = Script([.pushBytes(big), .pushBytes(big), .boolAnd])
+        script = ScriptLegacy([.pushBytes(big), .pushBytes(big), .boolAnd])
         stack = .init()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
@@ -99,28 +99,28 @@ final class ScriptTests: XCTestCase {
     }
 
     func testOpSuccess() {
-        var script = Script([.success(80), .pushBytes(Data(repeating: 0, count: 128))], version: .v1)
+        var script = ScriptV1([.success(80), .pushBytes(Data(repeating: 0, count: 128))])
         var stack = [Data]()
         var dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
         var result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [])
 
-        script = Script([.success(98), .pushBytes(Data(repeating: 1, count: 128))], version: .v1)
+        script = ScriptV1([.success(98), .pushBytes(Data(repeating: 1, count: 128))])
         stack = [Data]()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [])
 
-        script = Script([.success(254)], version: .v1)
+        script = ScriptV1([.success(254)])
         stack = [Data]()
         result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [])
 
-        script = Script([.reserved], version: .legacy)
+        let legacyScript = ScriptLegacy([.reserved])
         stack = [Data]()
-        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        result = legacyScript.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result)
         XCTAssertEqual(stack, [])
     }
@@ -128,7 +128,7 @@ final class ScriptTests: XCTestCase {
     func testDrop() {
         let bigNummber = BigInt(UInt64.max) * 2
         let numberData = bigNummber.serialize()
-        let script = Script([.pushBytes(numberData), .drop])
+        let script = ScriptLegacy([.pushBytes(numberData), .drop])
         var stack = [Data]()
         let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
         let result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
@@ -139,7 +139,7 @@ final class ScriptTests: XCTestCase {
     func testDup() {
         let bigNummber = BigInt(UInt64.max) * 2
         let numberData = bigNummber.serialize()
-        let script = Script([.pushBytes(numberData), .dup])
+        let script = ScriptLegacy([.pushBytes(numberData), .dup])
         var stack = [Data]()
         let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
         let result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
@@ -149,7 +149,7 @@ final class ScriptTests: XCTestCase {
 
     func testCheckSig() {
         let pubKey = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
-        let prevOut = Tx.Out(value: UInt64(0), scriptPubKey: .init(Data(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"), includesLength: false))
+        let prevOut = Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))
 
         let tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022037b8b0c1a33caa83be5eb71f87bce5dbd4890a56a61b98d9d603e754313fadc602201ef00773d2e0b98d558f0a1ac89a1fad1da15f852140fca5f5d737c0025e11ad014104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
 
@@ -161,8 +161,8 @@ final class ScriptTests: XCTestCase {
 
         let pubKeyHash = hash160(pubKey)
 
-        let scriptSig = Script([.pushBytes(sig), .pushBytes(pubKey)])
-        let scriptPubKey = Script([.dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
+        let scriptSig = ScriptLegacy([.pushBytes(sig), .pushBytes(pubKey)])
+        let scriptPubKey = ScriptLegacy([.dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
 
         var stack = [Data]()
         var result = scriptSig.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])

@@ -70,7 +70,7 @@ public extension Tx {
             let shaAmounts = sha256(amounts)
             txData.append(shaAmounts)
             // sha_scriptpubkeys (32): the SHA256 of all spent outputs' scriptPubKeys, serialized as script inside CTxOut.
-            let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.scriptPubKey.data(includeLength: false) } // TODO: Check that script serialization does not need to be prefixed with its length
+            let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.scriptPubKey.data() } // TODO: Check that script serialization does not need to be prefixed with its length
             let shaScriptPubKeys = sha256(scriptPubKeys)
             txData.append(shaScriptPubKeys)
             // sha_sequences (32): the SHA256 of the serialization of all input nSequence.
@@ -112,7 +112,7 @@ public extension Tx {
             let amount = prevOuts[inIdx].valueData
             inputData.append(amount)
             // scriptPubKey (35): scriptPubKey of the previous output spent by this input, serialized as script inside CTxOut. Its size is always 35 bytes.
-            let scriptPubKey = prevOuts[inIdx].scriptPubKey.data(includeLength: false)
+            let scriptPubKey = prevOuts[inIdx].scriptPubKey.data()
             inputData.append(scriptPubKey)
             // nSequence (4): nSequence of this input.
             let sequence = withUnsafeBytes(of: ins[inIdx].sequence) { Data($0) }

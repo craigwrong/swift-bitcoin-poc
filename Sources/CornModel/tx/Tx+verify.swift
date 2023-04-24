@@ -11,7 +11,7 @@ public extension Tx {
         let prevOut = prevOuts[inIdx]
         let scriptPubKey = prevOut.scriptPubKey
         
-        let scriptPubKey2: Script
+        let scriptPubKey2: ScriptLegacy
         switch prevOut.scriptPubKey.scriptType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
@@ -23,7 +23,7 @@ public extension Tx {
             var stack = [Data]()
             guard
                 let op = input.scriptSig.ops.last,
-                Script([op]).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts),
+                ScriptLegacy([op]).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts),
                 prevOut.scriptPubKey.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             else {
                 return false
@@ -31,11 +31,11 @@ public extension Tx {
             guard let lastOp = input.scriptSig.ops.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
                 fatalError()
             }
-            let redeemScript = Script(redeemScriptRaw, includesLength: false)
+            let redeemScript = ScriptLegacy(redeemScriptRaw)
             if redeemScript.scriptType != .witnessV0KeyHash && redeemScript.scriptType != .witnessV0ScriptHash {
                 var stack2 = [Data]()
                 guard
-                    Script(input.scriptSig.ops.dropLast()).run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+                    ScriptLegacy(input.scriptSig.ops.dropLast()).run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
                 else {
                     return false
                 }
@@ -57,7 +57,7 @@ public extension Tx {
         case .witnessV0KeyHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the public key
             var stack = witnessData[inIdx].stack
-            return Script.v0KeyHashScript(witnessProgram).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            return ScriptV0.keyHashScript(witnessProgram).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
             var stack = witnessData[inIdx].stack
@@ -67,7 +67,7 @@ public extension Tx {
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 return false
             }
-            let witnessScript = Script(witnessScriptRaw, version: .v0, includesLength: false)
+            let witnessScript = ScriptV0(witnessScriptRaw)
             return witnessScript.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             // P2SH-wrapped version 1 outputs, remain unencumbered.
@@ -112,7 +112,7 @@ public extension Tx {
                 // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig)[20], where Verify is defined in BIP340.
                 // If the sig is 65 bytes long, return sig[64] ≠ 0x00[21] and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
                 // Otherwise, fail[22].
-                return Script.v1KeyHashScript(outputKey).run(stack: &newStack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+                return ScriptV1.keyHashScript(outputKey).run(stack: &newStack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             }
             
             // If there are at least two witness elements left, script path spending is used:

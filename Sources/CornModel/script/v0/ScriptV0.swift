@@ -1,23 +1,18 @@
 import Foundation
 
-public struct ScriptV1: Equatable {
+public struct ScriptV0: Equatable {
     
-    public init(_ ops: [ScriptV1.Op]) {
+    public init(_ ops: [ScriptV0.Op]) {
         self.ops = ops
     }
     
     public var ops: [Op]
 }
 
-public extension ScriptV1 {
+public extension ScriptV0{
 
-    init(_ data: Data, includesLength: Bool = true) {
+    init(_ data: Data) {
         var data = data
-        if includesLength {
-            let length = data.varInt
-            data = data.dropFirst(length.varIntSize)
-            data = data[..<(data.startIndex + Int(length))]
-        }
         var newOps = [Op]()
         while data.count > 0 {
             let op = Op.fromData(data)
@@ -73,14 +68,12 @@ public extension ScriptV1 {
         }
     }
     
-    func data(includeLength: Bool = true) -> Data {
-        let opsData = ops.reduce(Data()) { $0 + $1.data }
-        let lengthData = includeLength ? Data(varInt: UInt64(opsData.count)) : Data()
-        return lengthData + opsData
+    var data: Data {
+        ops.reduce(Data()) { $0 + $1.data }
     }
 }
 
-extension ScriptV1 {
+extension ScriptV0 {
     
     var memSize: Int {
         let opsSize = ops.reduce(0) { $0 + $1.memSize }
@@ -97,5 +90,17 @@ extension ScriptV1 {
     
     mutating func removeCodeSeparators() {
         ops.removeAll { $0 == .codeSeparator }
+    }
+
+    static func keyHashScript(_ pubKeyHash: Data) -> Self {
+        // For P2WPKH witness program, the scriptCode is 0x1976a914{20-byte-pubkey-hash}88ac.
+        // OP_DUP OP_HASH160 1d0f172a0ecb48aee1be1f2687d2963ae33f71a1 OP_EQUALVERIFY OP_CHECKSIG
+        .init([
+            .dup,
+            .hash160,
+            .pushBytes(pubKeyHash), // prevOut.scriptPubKey.ops[1], // pushBytes 20
+            .equalVerify,
+            .checkSig
+        ])
     }
 }

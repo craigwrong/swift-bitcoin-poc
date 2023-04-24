@@ -1,23 +1,17 @@
 import Foundation
 
-public protocol ScriptP: Equatable {
-    func run(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out]) -> Bool
-}
-
-public struct Script: Equatable {
+public struct ScriptV1: Equatable {
     
-    public init(_ ops: [Script.Op], version: Version = .legacy) {
+    public init(_ ops: [ScriptV1.Op]) {
         self.ops = ops
-        self.version = version
     }
     
     public var ops: [Op]
-    public var version: Version
 }
 
-public extension Script {
+public extension ScriptV1 {
 
-    init(_ data: Data, version: Version = .legacy, includesLength: Bool = true) {
+    init(_ data: Data, includesLength: Bool = true) {
         var data = data
         if includesLength {
             let length = data.varInt
@@ -26,12 +20,11 @@ public extension Script {
         }
         var newOps = [Op]()
         while data.count > 0 {
-            let op = Op.fromData(data, version: version)
+            let op = Op.fromData(data)
             newOps.append(op)
             data = data.dropFirst(op.memSize)
         }
         ops = newOps
-        self.version = version
     }
 
     var witnessProgram: Data {
@@ -87,7 +80,7 @@ public extension Script {
     }
 }
 
-extension Script {
+extension ScriptV1 {
     
     var memSize: Int {
         let opsSize = ops.reduce(0) { $0 + $1.memSize }

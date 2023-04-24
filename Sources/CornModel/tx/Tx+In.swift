@@ -3,11 +3,17 @@ import Foundation
 public extension Tx {
     
     struct In: Equatable {
-        
         public var txID: String // 32 bytes hex
         public var outIdx: UInt32 // Index of vout
         public var scriptSig: Script
         public var sequence: UInt32 // Index of vout
+
+        public init(txID: String, outIdx: UInt32, scriptSig: Script, sequence: UInt32) {
+            self.txID = txID
+            self.outIdx = outIdx
+            self.scriptSig = scriptSig
+            self.sequence = sequence
+        }
     }
 }
 

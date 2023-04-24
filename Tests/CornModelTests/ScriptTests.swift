@@ -12,6 +12,119 @@ final class ScriptTests: XCTestCase {
         eccStop()
     }
     
+    func testBoolAnd() {
+        let zero = BigInt(0).serialize()
+        let one = BigInt(1).serialize()
+        let two = BigInt(2).serialize()
+        let big = (BigInt(UInt64.max) + 1).serialize()
+        
+        var script = Script([.pushBytes(zero), .pushBytes(zero), .boolAnd])
+        var stack = [Data]()
+        var dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
+        var result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+
+        script = Script([.pushBytes(zero), .pushBytes(one), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(zero), .pushBytes(two), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(zero), .pushBytes(big), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(one), .pushBytes(zero), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(two), .pushBytes(zero), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result) // Zero at the end of script execution
+        XCTAssertEqual(stack, [zero])
+        
+        script = Script([.pushBytes(one), .pushBytes(one), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [one])
+        
+        script = Script([.pushBytes(one), .pushBytes(two), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [one])
+        
+        script = Script([.pushBytes(two), .pushBytes(two), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [one])
+        
+        script = Script([.pushBytes(big), .pushBytes(one), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [one])
+        
+        script = Script([.pushBytes(big), .pushBytes(big), .boolAnd])
+        stack = .init()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [one])
+    }
+
+    func testOpSuccess() {
+        var script = Script([.success(80), .pushBytes(Data(repeating: 0, count: 128))], version: .v1)
+        var stack = [Data]()
+        var dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
+        var result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [])
+
+        script = Script([.success(98), .pushBytes(Data(repeating: 1, count: 128))], version: .v1)
+        stack = [Data]()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [])
+
+        script = Script([.success(254)], version: .v1)
+        stack = [Data]()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssert(result)
+        XCTAssertEqual(stack, [])
+
+        script = Script([.reserved], version: .legacy)
+        stack = [Data]()
+        result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
+        XCTAssertFalse(result)
+        XCTAssertEqual(stack, [])
+    }
+
     func testDrop() {
         let bigNummber = BigInt(UInt64.max) * 2
         let numberData = bigNummber.serialize()

@@ -1,12 +1,12 @@
 import Foundation
 
-public extension Script {
+public extension ScriptV1 {
     enum Op: Equatable {
-        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, success(UInt8), constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
+        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, success(UInt8), constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
     }
 }
 
-extension Script.Op {
+extension ScriptV1.Op {
     
     var memSize: Int {
         let additionalSize: Int
@@ -39,8 +39,6 @@ extension Script.Op {
             return 0x4e
         case .oneNegate:
             return 0x4f
-        case .reserved:
-            return 0x50
         case .success(let k):
             // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
             // 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254
@@ -100,8 +98,6 @@ extension Script.Op {
             return "OP_PUSHDATA4"
         case .oneNegate:
             return "OP_1NEGATE"
-        case .reserved:
-            return "OP_RESERVED"
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
             // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
@@ -148,7 +144,7 @@ extension Script.Op {
     }
     
     // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
-    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: Script, opIdx: Int) -> Bool {
+    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptV1, opIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -161,8 +157,6 @@ extension Script.Op {
             return opConstant(value: Int8(k), stack: &stack)
         case .oneNegate:
             return opConstant(value: -1, stack: &stack)
-        case .reserved:
-            return opReserved()
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
             return opSuccess(stack: &stack)
@@ -222,7 +216,7 @@ extension Script.Op {
     }
 }
 
-public extension Script.Op {
+public extension ScriptV1.Op {
     
     var asm: String {
         if case .pushBytes(let d) = self {
@@ -264,7 +258,7 @@ public extension Script.Op {
         return opCodeData + lengthData + rawData
     }
     
-    static func fromData(_ data: Data, version: Script.Version) -> Self {
+    static func fromData(_ data: Data) -> Self {
         var data = data
         let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: opCode))
@@ -310,19 +304,6 @@ public extension Script.Op {
             Self.success(141).opCode ... Self.success(142).opCode,
             Self.success(149).opCode ... Self.success(153).opCode,
             Self.success(187).opCode ... Self.success(254).opCode:
-            if (version == .legacy || version == .v0) && opCode == Self.reserved.opCode {
-                return .reserved
-            }
-            if (version == .legacy || version == .v0) && opCode == 98 /* Self.ver.opCode */ {
-                return .reserved // .ver
-            }
-            if (version == .legacy || version == .v0) && opCode == 137  /* Self.reserved1.opCode */ {
-                return .reserved // .reserved1
-            }
-            if (version == .legacy || version == .v0) && opCode == 138  /* Self.reserved2.opCode */ {
-                return .reserved // .reserved2
-            }
-            precondition(version != .legacy && version != .v0)
             return .success(opCode)
         case Self.constant(1).opCode ... Self.constant(16).opCode:
             return .constant(opCode - 0x50)
@@ -364,24 +345,4 @@ public extension Script.Op {
             fatalError("Unknown operation code.")
         }
     }
-}
-
-enum ScriptError: Error {
-    case invalidScript
-}
-
-func getUnaryParam(_ stack: inout [Data]) throws -> Data {
-    guard stack.count > 0 else {
-        throw ScriptError.invalidScript
-    }
-    return stack.removeLast()
-}
-
-func getBinaryParams(_ stack: inout [Data]) throws -> (Data, Data) {
-    guard stack.count > 1 else {
-        throw ScriptError.invalidScript
-    }
-    let second = stack.removeLast()
-    let first = stack.removeLast()
-    return (first, second)
 }

@@ -1,6 +1,7 @@
 import Foundation
 
 public indirect enum ScriptTree {
+    // leaf_version is 0xc0 (or 0xc1) for BIP342
     case leaf(Int, ScriptV1), branch(Self, Self)
 
     /// Calculates the merkle root as well as some additional tree info for generating control blocks.

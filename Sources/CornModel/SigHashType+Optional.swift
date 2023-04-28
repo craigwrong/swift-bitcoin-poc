@@ -1,9 +1,9 @@
 import Foundation
 
 /// Used to represent BIP 341's `default` signature hash type.
-extension Optional where Wrapped == SigHashType {
+extension Optional where Wrapped == HashType {
     
-    private var assumed: SigHashType { .all }
+    private var assumed: HashType { .all }
 
     var isNone: Bool {
         if case let .some(wrapped) = self {

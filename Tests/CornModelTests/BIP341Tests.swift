@@ -257,7 +257,7 @@ final class BIP341Tests: XCTestCase {
             hashSequences: Data(hex: "18959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957e")
         )
         
-        _ = unsignedTx.sigMsgV1(sigHashType: SigHashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none)
+        _ = unsignedTx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none)
         if let cache = unsignedTx.sigMsgV1Cache, let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
             XCTAssertEqual(shaAmounts, intermediary.hashAmounts)
             XCTAssertEqual(shaOuts, intermediary.hashOutputs)
@@ -274,7 +274,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 0,
                     internalPrivkey: Data(hex: "6b973d88838f27366ed61c9ad6367663045cb456e28335c109e30717ae0c6baa"),
                     merkleRoot: Data?.none,
-                    hashType: SigHashType?.some(.single)
+                    hashType: HashType?.some(.single)
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "d6889cb081036e0faefa3a35157ad71086b123b2b144b649798b494c300a961d"),
@@ -299,7 +299,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 1,
                     internalPrivkey: Data(hex: "1e4da49f6aaf4e5cd175fe08a32bb5cb4863d963921255f33d3bc31e1343907f"),
                     merkleRoot: Data?.some(Data(hex: "5b75adecf53548f3ec6ad7d78383bf84cc57b55a3127c72b9a2481752dd88b21")),
-                    hashType: SigHashType?.some(.singleAnyCanPay) // .init(rawValue: 131)
+                    hashType: HashType?.some(.singleAnyCanPay) // .init(rawValue: 131)
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27"),
@@ -374,7 +374,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 6,
                     internalPrivkey: Data(hex: "415cfe9c15d9cea27d8104d5517c06e9de48e2f986b695e4f5ffebf230e725d8"),
                     merkleRoot: Data?.some(Data(hex: "2f6b2c5397b6d68ca18e09a3f05161668ffe93a988582d55c6f07bd5b3329def")),
-                    hashType: SigHashType.none
+                    hashType: HashType.none
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "55adf4e8967fbd2e29f20ac896e60c3b0f1d5b0efa9d34941b5958c7b0a0312d"),
@@ -450,7 +450,7 @@ final class BIP341Tests: XCTestCase {
             // Given
             let privKey = testCase.given.internalPrivkey
             let merkleRoot = testCase.given.merkleRoot
-            let sigHashType = testCase.given.hashType
+            let hashType = testCase.given.hashType
             let inIdx = testCase.given.txinIndex
             
             // Expected
@@ -470,7 +470,7 @@ final class BIP341Tests: XCTestCase {
             let tweakedPrivKey = createPrivKeyTapTweak(privKey: privKey, merkleRoot: merkleRoot)
             XCTAssertEqual(tweakedPrivKey, expectedTweakedPrivkey)
 
-            let sigMsg = unsignedTx.sigMsgV1(sigHashType: sigHashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none)
+            let sigMsg = unsignedTx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none)
 
             if let cache = unsignedTx.sigMsgV1Cache {
                 XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
@@ -483,16 +483,16 @@ final class BIP341Tests: XCTestCase {
             }
             XCTAssertEqual(sigMsg, expectedSigMsg)
 
-            let sigHash = unsignedTx.sigHashV1(sigHashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none)
+            let sigHash = unsignedTx.sigHashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none)
             XCTAssertEqual(sigHash, expectedSigHash)
             
-            let sigHashTypeSuffix: Data
-            if let sigHashType {
-                sigHashTypeSuffix = sigHashType.data
+            let hashTypeSuffix: Data
+            if let hashType {
+                hashTypeSuffix = hashType.data
             } else {
-                sigHashTypeSuffix = Data()
+                hashTypeSuffix = Data()
             }
-            let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + sigHashTypeSuffix
+            let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + hashTypeSuffix
             XCTAssertEqual([sig], expectedWitness)
         }
 

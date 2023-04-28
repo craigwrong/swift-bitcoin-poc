@@ -1,10 +1,10 @@
 import Foundation
 
-public enum SigHashType: UInt8 {
+public enum HashType: UInt8 {
     case all = 0x01, none = 0x02, single = 0x03, allAnyCanPay = 0x81, noneAnyCanPay = 0x82, singleAnyCanPay = 0x83
 }
 
-public extension SigHashType {
+public extension HashType {
     
     init?(_ uInt32: UInt32) {
         self.init(rawValue: UInt8(uInt32))

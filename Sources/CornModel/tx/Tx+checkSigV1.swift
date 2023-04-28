@@ -7,11 +7,11 @@ public extension Tx {
         // If the sig is 65 bytes long, return sig[64] ≠ 0x00 and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
         // Otherwise, fail.
         var sig = sig
-        let sigHashType: SigHashType?
-        if sig.count == 65, let rawValue = sig.popLast(), let hashType = SigHashType(rawValue: rawValue) {
-            sigHashType = hashType
+        let hashType: HashType?
+        if sig.count == 65, let rawValue = sig.popLast(), let maybeHashType = HashType(rawValue: rawValue) {
+            hashType = maybeHashType
         } else if sig.count == 64 {
-            sigHashType = SigHashType?.none
+            hashType = HashType?.none
         } else {
             return false
         }
@@ -40,7 +40,7 @@ public extension Tx {
         }
         
         var txCopy = self
-        let sigHash = txCopy.sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
+        let sigHash = txCopy.sigHashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
         let result = verifySchnorr(sig: sig, msg: sigHash, pubKey: pubKey)
         return result
     }

@@ -2,18 +2,18 @@ import Foundation
 
 public extension Tx {
     
-    mutating func signedV1(privKey: Data, pubKey: Data, sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
+    mutating func signedV1(privKey: Data, pubKey: Data, hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
         
-        let sigHash = sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0, annex: .none)
+        let sigHash = sigHashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0, annex: .none)
         let aux = getRandBytes(32)
         
-        let sigHashTypeSuffix: Data
-        if let sigHashType {
-            sigHashTypeSuffix = sigHashType.data
+        let hashTypeSuffix: Data
+        if let hashType {
+            hashTypeSuffix = hashType.data
         } else {
-            sigHashTypeSuffix = Data()
+            hashTypeSuffix = Data()
         }
-        let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: .none, aux: aux) + sigHashTypeSuffix
+        let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: .none, aux: aux) + hashTypeSuffix
         
         // TODO: this is only for keyPath spending
         var newWitnesses = [Witness]()
@@ -29,18 +29,18 @@ public extension Tx {
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
     }
 
-    mutating func sigHashV1(_ type: SigHashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {
-        let sigMsg = sigMsgV1(sigHashType: type, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
+    mutating func sigHashV1(_ type: HashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {
+        let sigMsg = sigMsgV1(hashType: type, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
         return taggedHash(tag: "TapSighash", payload: sigMsg)
     }
     
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .
     /// https://github.com/bitcoin/bitcoin/blob/58da1619be7ac13e686cb8bbfc2ab0f836eb3fa5/src/script/interpreter.cpp#L1477
     /// https://bitcoin.stackexchange.com/questions/115328/how-do-you-calculate-a-taproot-sighash
-    mutating func sigMsgV1(sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {
+    mutating func sigMsgV1(hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {
         
         precondition(prevOuts.count == ins.count, "The corresponding (aligned) UTXO for each transaction input is required.")
-        precondition(!sigHashType.isSingle || inIdx < outs.count, "For single hash type, the selected input needs to have a matching output.")
+        precondition(!hashType.isSingle || inIdx < outs.count, "For single hash type, the selected input needs to have a matching output.")
 
         // Set up precomputation cache
         var cache = sigMsgV1Cache ?? .init()
@@ -51,7 +51,7 @@ public extension Tx {
         
         // Control:
         // hash_type (1).
-        let controlData = sigHashType.data
+        let controlData = hashType.data
         
         // Transaction data:
         // nVersion (4): the nVersion of the transaction.
@@ -61,7 +61,7 @@ public extension Tx {
         txData.append(lockTimeData)
         
         //If the hash_type & 0x80 does not equal SIGHASH_ANYONECANPAY:
-        if !sigHashType.isAnyCanPay {
+        if !hashType.isAnyCanPay {
             // sha_prevouts (32): the SHA256 of the serialization of all input outpoints.
             let shaPrevouts: Data
             if let cached = cache.shaPrevouts {
@@ -117,7 +117,7 @@ public extension Tx {
         }
         
         // If hash_type & 3 does not equal SIGHASH_NONE or SIGHASH_SINGLE:
-        if !sigHashType.isNone && !sigHashType.isSingle {
+        if !hashType.isNone && !hashType.isSingle {
         // sha_outputs (32): the SHA256 of the serialization of all outputs in CTxOut format.
         let shaOuts: Data
             if let cached = cache.shaOuts {
@@ -140,7 +140,7 @@ public extension Tx {
         inputData.append(spendType)
         
         // If hash_type & 0x80 equals SIGHASH_ANYONECANPAY:
-        if sigHashType.isAnyCanPay {
+        if hashType.isAnyCanPay {
             // outpoint (36): the COutPoint of this input (32-byte hash + 4-byte little-endian).
             let outpoint = ins[inIdx].prevoutData
             inputData.append(outpoint)
@@ -169,7 +169,7 @@ public extension Tx {
         //Data about this output:
         //If hash_type & 3 equals SIGHASH_SINGLE:
         var outputData = Data()
-        if sigHashType.isSingle {
+        if hashType.isSingle {
             //sha_single_output (32): the SHA256 of the corresponding output in CTxOut format.
             let shaSingleOutput = sha256(outs[inIdx].data)
             outputData.append(shaSingleOutput)

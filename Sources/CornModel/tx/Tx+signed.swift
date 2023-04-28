@@ -2,11 +2,11 @@ import Foundation
 
 public extension Tx {
     
-    func signed(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, sigHashType: SigHashType,
+    func signed(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, hashType: HashType,
                 inIdx: Int, prevOut: Tx.Out) -> Tx {
-        let sigHash = sigHash(sigHashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
+        let sigHash = sigHash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
-        let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + sigHashType.data
+        let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + hashType.data
         
         let input = ins[inIdx]
         
@@ -46,7 +46,7 @@ public extension Tx {
     }
     
     
-    func sigHash(_ type: SigHashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Data {
+    func sigHash(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Data {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: ScriptLegacy
@@ -66,14 +66,14 @@ public extension Tx {
         } else {
             fatalError("Invalid legacy previous output or redeem script not provided.")
         }
-        let sigMsg = sigMsg(sigHashType: type, inIdx: inIdx, subScript: subScript)
+        let sigMsg = sigMsg(hashType: type, inIdx: inIdx, subScript: subScript)
         return hash256(sigMsg)
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func sigMsg(sigHashType: SigHashType, inIdx: Int, subScript: ScriptLegacy) -> Data {
+    func sigMsg(hashType: HashType, inIdx: Int, subScript: ScriptLegacy) -> Data {
         var newIns = [Tx.In]()
-        if sigHashType.isAnyCanPay {
+        if hashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
             // The current transaction input (with scriptPubKey modified to subScript) is set as the first and only member of this vector.
@@ -87,19 +87,19 @@ public extension Tx {
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
                     scriptSig: i == inIdx ? subScript : .init([]),
                     // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
-                    sequence: i == inIdx || sigHashType.isAll ? input.sequence : 0
+                    sequence: i == inIdx || hashType.isAll ? input.sequence : 0
                 ))
             }
         }
         var newOuts: [Tx.Out]
         // Procedure for Hashtype SIGHASH_SINGLE
         
-        //if sigHashType.isSingle && inIdx >= outs.count {
+        //if hashType.isSingle && inIdx >= outs.count {
         // uint256 of 0x0000......0001 is committed if the input index for a SINGLE signature is greater than or equal to the number of outputs.
         //outs = Data(repeating: 0, count: 255) + [0x01]
         // TODO: figure out this
         //} else
-        if sigHashType.isSingle {
+        if hashType.isSingle {
             // The output of txCopy is resized to the size of the current input index+1.
             // All other txCopy outputs aside from the output that is the same as the current input index are set to a blank script and a value of (long) -1.
             newOuts = []
@@ -116,7 +116,7 @@ public extension Tx {
                 }
             }
             
-        } else if sigHashType.isNone {
+        } else if hashType.isNone {
             newOuts = []
         } else {
             newOuts = outs
@@ -128,11 +128,11 @@ public extension Tx {
             witnessData: [],
             lockTime: lockTime
         )
-        return txCopy.data + sigHashType.data32
+        return txCopy.data + hashType.data32
     }
     
     // TODO: Remove once newer implementation was tested.
-    func sigMsgAlt(sigHashType: SigHashType, inIdx: Int, scriptCode subScript: ScriptLegacy) -> Data {
+    func sigMsgAlt(hashType: HashType, inIdx: Int, scriptCode subScript: ScriptLegacy) -> Data {
         let input = ins[inIdx]
         var txCopy = self
         txCopy.witnessData = []
@@ -140,9 +140,9 @@ public extension Tx {
             txCopy.ins[$0].scriptSig = .init([])
         }
         txCopy.ins[inIdx].scriptSig = subScript
-        if sigHashType.isNone {
+        if hashType.isNone {
             txCopy.outs = []
-        } else if sigHashType.isSingle {
+        } else if hashType.isSingle {
             txCopy.outs = []
             outs.enumerated().forEach { (i, out) in
                 if i == inIdx {
@@ -152,17 +152,17 @@ public extension Tx {
                 }
             }
         }
-        if sigHashType.isNone || sigHashType.isSingle {
+        if hashType.isNone || hashType.isSingle {
             txCopy.ins.indices.forEach {
                 if $0 != inIdx {
                     txCopy.ins[$0].sequence = 0
                 }
             }
         }
-        if sigHashType.isAnyCanPay {
+        if hashType.isAnyCanPay {
             txCopy.ins = [input]
             txCopy.ins[0].scriptSig = subScript
         }
-        return txCopy.data + sigHashType.data32
+        return txCopy.data + hashType.data32
     }
 }

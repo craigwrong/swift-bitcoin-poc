@@ -67,7 +67,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let input = tx.ins[0]
         let witness = tx.witnessData[0]
         XCTAssertEqual(input.sequence, UInt32(bCoreInput.sequence))
-        XCTAssertEqual(input.scriptSig.data().hex, bCoreInput.coinbase!)
+        XCTAssertEqual(input.scriptSig.data.hex, bCoreInput.coinbase!)
         XCTAssertEqual(witness.stack.map(\.hex), bCoreInput.txinwitness)
         
         let segWitInput = CoreTx.Sample.segwit1.vin[0]
@@ -75,7 +75,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let inputSegwit = txSegwit.ins[0]
         let witnessSegwit = txSegwit.witnessData[0]
         XCTAssertEqual(inputSegwit.sequence, UInt32(segWitInput.sequence))
-        XCTAssertEqual(inputSegwit.scriptSig.data().hex, segWitInput.scriptSig!.hex)
+        XCTAssertEqual(inputSegwit.scriptSig.data.hex, segWitInput.scriptSig!.hex)
         XCTAssertEqual(witnessSegwit.stack.map(\.hex), segWitInput.txinwitness!)
         
     }
@@ -85,11 +85,11 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let bCoreOutput = CoreTx.Sample.coinbase1.vout[0]
         let output = tx.outs[0]
         XCTAssertEqual(output.value, UInt64(bCoreOutput.value) * 100_000_000)
-        XCTAssertEqual(output.scriptPubKey.data().hex, bCoreOutput.scriptPubKey.hex)
+        XCTAssertEqual(output.scriptPubKey.data.hex, bCoreOutput.scriptPubKey.hex)
         let bCoreOutput2 = CoreTx.Sample.coinbase1.vout[1]
         let output2 = tx.outs[1]
         XCTAssertEqual(output2.value, UInt64(bCoreOutput2.value) * 100_000_000)
-        XCTAssertEqual(output2.scriptPubKey.data().hex, bCoreOutput2.scriptPubKey.hex)
+        XCTAssertEqual(output2.scriptPubKey.data.hex, bCoreOutput2.scriptPubKey.hex)
     }
     
     func testTxID2() {

@@ -2,9 +2,9 @@ import Foundation
 
 public extension Tx {
     
-    func signedV1(privKey: Data, pubKey: Data, sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
+    mutating func signedV1(privKey: Data, pubKey: Data, sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
         
-        let sigHash = sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts)
+        let sigHash = sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0, annex: .none)
         let aux = getRandBytes(32)
         
         let sigHashTypeSuffix: Data
@@ -29,21 +29,22 @@ public extension Tx {
         return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
     }
 
-    func sigHashV1(_ type: SigHashType?, inIdx: Int, prevOuts: [Tx.Out]) -> Data {
-        let sigMsg = sigMsgV1(sigHashType: type, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0)
-        // TODO: Produce ext_flag for either sigversion taproot (ext_flag = 0) or tapscript (ext_flag = 1). Also produce key_version ( key_version = 0) for BIP 342 signatures.
-        
+    mutating func sigHashV1(_ type: SigHashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {
+        let sigMsg = sigMsgV1(sigHashType: type, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
         return taggedHash(tag: "TapSighash", payload: sigMsg)
     }
     
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .
     /// https://github.com/bitcoin/bitcoin/blob/58da1619be7ac13e686cb8bbfc2ab0f836eb3fa5/src/script/interpreter.cpp#L1477
     /// https://bitcoin.stackexchange.com/questions/115328/how-do-you-calculate-a-taproot-sighash
-    func sigMsgV1(sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8) -> Data {
+    mutating func sigMsgV1(sigHashType: SigHashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {
         
         precondition(prevOuts.count == ins.count, "The corresponding (aligned) UTXO for each transaction input is required.")
         precondition(!sigHashType.isSingle || inIdx < outs.count, "For single hash type, the selected input needs to have a matching output.")
 
+        // Set up precomputation cache
+        var cache = sigMsgV1Cache ?? .init()
+        
         // Epoch:
         // epoch (0).
         let epochData = withUnsafeBytes(of: UInt8(0)) { Data($0) }
@@ -62,45 +63,80 @@ public extension Tx {
         //If the hash_type & 0x80 does not equal SIGHASH_ANYONECANPAY:
         if !sigHashType.isAnyCanPay {
             // sha_prevouts (32): the SHA256 of the serialization of all input outpoints.
-            let prevouts = ins.reduce(Data()) { $0 + $1.prevoutData }
-            let shaPrevouts = sha256(prevouts)
+            let shaPrevouts: Data
+            if let cached = cache.shaPrevouts {
+                shaPrevouts = cached
+            } else {
+                let prevouts = ins.reduce(Data()) { $0 + $1.prevoutData }
+                shaPrevouts = sha256(prevouts)
+                cache.shaPrevouts = shaPrevouts
+            }
+            cache.shaPrevoutsUsed = true
             txData.append(shaPrevouts)
+
             // sha_amounts (32): the SHA256 of the serialization of all spent output amounts.
-            let amounts = prevOuts.reduce(Data()) { $0 + $1.valueData}
-            let shaAmounts = sha256(amounts)
+            let shaAmounts: Data
+            if let cached = cache.shaAmounts {
+                shaAmounts = cached
+            } else {
+                let amounts = prevOuts.reduce(Data()) { $0 + $1.valueData }
+                shaAmounts = sha256(amounts)
+                cache.shaAmounts = shaAmounts
+            }
+            cache.shaAmountsUsed = true
             txData.append(shaAmounts)
+            
             // sha_scriptpubkeys (32): the SHA256 of all spent outputs' scriptPubKeys, serialized as script inside CTxOut.
-            let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.scriptPubKey.data() } // TODO: Check that script serialization does not need to be prefixed with its length
-            let shaScriptPubKeys = sha256(scriptPubKeys)
+            let shaScriptPubKeys: Data
+            if let cached = cache.shaScriptPubKeys {
+                shaScriptPubKeys = cached
+            } else {
+                let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.scriptPubKey.data.varLenData }
+                shaScriptPubKeys = sha256(scriptPubKeys)
+                cache.shaScriptPubKeys = shaScriptPubKeys
+            }
+            cache.shaScriptPubKeysUsed = true
             txData.append(shaScriptPubKeys)
+
             // sha_sequences (32): the SHA256 of the serialization of all input nSequence.
-            let sequences = ins.reduce(Data()) { $0 + $1.sequenceData }
-            let shaSequences = sha256(sequences)
+            let shaSequences: Data
+            if let cached = cache.shaSequences {
+                shaSequences = cached
+            } else {
+                let sequences = ins.reduce(Data()) { $0 + $1.sequenceData }
+                shaSequences = sha256(sequences)
+                cache.shaSequences = shaSequences
+            }
+            cache.shaSequencesUsed = true
             txData.append(shaSequences)
+        } else {
+            cache.shaPrevoutsUsed = false
+            cache.shaAmountsUsed = false
+            cache.shaScriptPubKeysUsed = false
+            cache.shaSequencesUsed = false
         }
+        
         // If hash_type & 3 does not equal SIGHASH_NONE or SIGHASH_SINGLE:
         if !sigHashType.isNone && !sigHashType.isSingle {
-            // sha_outputs (32): the SHA256 of the serialization of all outputs in CTxOut format.
-            let outsData = outs.reduce(Data()) { $0 + $1.data }
-            let shaOuts = sha256(outsData)
+        // sha_outputs (32): the SHA256 of the serialization of all outputs in CTxOut format.
+        let shaOuts: Data
+            if let cached = cache.shaOuts {
+                shaOuts = cached
+            } else {
+                let outsData = outs.reduce(Data()) { $0 + $1.data }
+                shaOuts = sha256(outsData)
+                cache.shaOuts = shaOuts
+            }
+            cache.shaOutsUsed = true
             txData.append(shaOuts)
+        } else {
+            cache.shaOutsUsed = false
         }
         
         // Data about this input:
         // spend_type (1): equal to (ext_flag * 2) + annex_present, where annex_present is 0 if no annex is present, or 1 otherwise (the original witness stack has two or more witness elements, and the first byte of the last element is 0x50)
         var inputData = Data()
-        let originalWitnessStack = witnessData[inIdx].stack // TODO: Check this witness stack is the original (and not a modified version by the execution of OP_CHECKSIG)
-        let firstByteOfLastElement: UInt8?
-        // TODO: Investigate why we were using `lastElement.count > 3` and `lastElement[1]` in the first place
-        // if let lastElement = originalWitnessStack.last, lastElement.count > 3 {
-            // firstByteOfLastElement = lastElement[1]
-        if let lastElement = originalWitnessStack.last, lastElement.count > 0 {
-            firstByteOfLastElement = lastElement[0]
-        } else {
-            firstByteOfLastElement = .none
-        }
-        let annexPresent: UInt8 = originalWitnessStack.count > 1 && firstByteOfLastElement == 0x50 ? 1 : 0
-        let spendType = (extFlag * 2) + annexPresent
+        let spendType = (extFlag * 2) + (annex == .none ? 0 : 1)
         inputData.append(spendType)
         
         // If hash_type & 0x80 equals SIGHASH_ANYONECANPAY:
@@ -112,7 +148,7 @@ public extension Tx {
             let amount = prevOuts[inIdx].valueData
             inputData.append(amount)
             // scriptPubKey (35): scriptPubKey of the previous output spent by this input, serialized as script inside CTxOut. Its size is always 35 bytes.
-            let scriptPubKey = prevOuts[inIdx].scriptPubKey.data()
+            let scriptPubKey = prevOuts[inIdx].scriptPubKey.data.varLenData
             inputData.append(scriptPubKey)
             // nSequence (4): nSequence of this input.
             let sequence = withUnsafeBytes(of: ins[inIdx].sequence) { Data($0) }
@@ -123,11 +159,8 @@ public extension Tx {
             inputData.append(inputIndexData)
         }
         //If an annex is present (the lowest bit of spend_type is set):
-        if annexPresent == 1 {
+        if let annex {
             //sha_annex (32): the SHA256 of (compact_size(size of annex) || annex), where annex includes the mandatory 0x50 prefix.
-            guard let annex = originalWitnessStack.last else {
-                fatalError("Annex is supposed to be present.")
-            }
             // TODO: Review and make sure it includes the varInt prefix (length)
             let shaAnnex = sha256(annex)
             inputData.append(shaAnnex)
@@ -142,6 +175,8 @@ public extension Tx {
             outputData.append(shaSingleOutput)
         }
         
-        return epochData + controlData + txData + inputData + outputData
+        let sigMsg = epochData + controlData + txData + inputData + outputData
+        sigMsgV1Cache = cache
+        return sigMsg
     }
 }

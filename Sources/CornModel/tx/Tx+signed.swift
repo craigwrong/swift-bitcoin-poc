@@ -22,7 +22,7 @@ public extension Tx {
             let currentOps = input.scriptSig.ops
             newScriptSig = .init(
                 [.pushBytes(sig)] +
-                (currentOps.isEmpty ? [.pushBytes(redeemScript!.data())] : []) +
+                (currentOps.isEmpty ? [.pushBytes(redeemScript!.data)] : []) +
                 currentOps
             )
         }

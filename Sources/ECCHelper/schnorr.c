@@ -14,6 +14,20 @@ const size_t SIG_LEN = 64;
 extern secp256k1_context* secp256k1_context_static;
 extern secp256k1_context* secp256k1_context_sign;
 
+const int getInternalKey(u_char* internalKeyOut32, u_char* internalKeyLenOut, const u_char* privKey32) {
+    secp256k1_keypair keypair;
+    assert(secp256k1_context_static != NULL);
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, privKey32)) return 0;
+    secp256k1_xonly_pubkey pubKey;
+    if (!secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubKey, NULL, &keypair)) return 0;
+    u_char* internalKey32 = malloc(KEY_LEN);
+    int result = secp256k1_xonly_pubkey_serialize(secp256k1_context_static, internalKey32, &pubKey);
+    if (!result) return 0;
+    memcpy(internalKeyOut32, internalKey32, KEY_LEN);
+    *internalKeyLenOut = KEY_LEN;
+    return result;
+}
+
 const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigLenOut, const u_char* msg32, const u_char* merkleRoot32, const u_char forceTweak, const u_char* aux32, const u_char* privKey32) {
     secp256k1_keypair keypair;
     assert(secp256k1_context_sign != NULL);
@@ -51,6 +65,33 @@ const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const 
     memset(sigOutTmp64, 0, SIG_LEN);
     memset(&keypair, 0, sizeof(keypair));
     return result;
+}
+
+const int createPrivKeyTapTweak(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* tweakedKeyOut, u_char* tweakedKeyOutLen, const u_char* privKey32, const u_char* merkleRoot32) {
+    secp256k1_keypair keypair;
+    assert(secp256k1_context_sign != NULL);
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, privKey32)) return 0;
+    
+    // Find out the internal key
+    secp256k1_xonly_pubkey pubKey;
+    if (!secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubKey, NULL, &keypair)) return 0;
+    u_char* internalKey32 = malloc(KEY_LEN);
+    if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_static, internalKey32, &pubKey)) return 0;
+    
+    // Calculate the tweak hash
+    u_char* tweak = malloc(32);
+    computeTapTweakHash(tweak, internalKey32, merkleRoot32);
+    
+    // Tweak the keypair
+    if (!secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, &keypair, tweak)) return 0;
+    
+    u_char* tweakedPrivKey32 = malloc(KEY_LEN);
+    if (!secp256k1_keypair_sec(secp256k1_context_static, tweakedPrivKey32, &keypair)) return 0;
+
+    // Result output
+    memcpy(tweakedKeyOut, tweakedPrivKey32, KEY_LEN);
+    *tweakedKeyOutLen = KEY_LEN;
+    return 1;
 }
 
 const int createTapTweak(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* tweakedKeyOut, u_char* tweakedKeyOutLen, int* parityOut, const u_char* pubKey32, const u_char* merkleRoot32) {
@@ -94,18 +135,6 @@ const char* toHex(const u_char* bytes, long int count) {
     }
     converted[count * 2] = '\x00';
     return converted;
-}
-
-const char* computeInternalKey(const u_char privKey[32]) {
-    // u_char privKey32 = "\x41\xf4\x1d\x69\x26\x0d\xf4\xcf\x27\x78\x26\xa9\xb6\x5a\x37\x17\xe4\xee\xdd\xbe\xed\xf6\x37\xf2\x12\xca\x09\x65\x76\x47\x93\x61";
-    const secp256k1_context *context = secp256k1_context_static;
-    secp256k1_keypair keypair;
-    secp256k1_xonly_pubkey internalKey;
-    u_char internalKeyBytes[32];
-    if (!secp256k1_keypair_create(context, &keypair, privKey)) { return NULL; };
-    if (!secp256k1_keypair_xonly_pub(context, &internalKey, NULL, &keypair)) { return NULL; };
-    if (!secp256k1_xonly_pubkey_serialize(context, internalKeyBytes, &internalKey)) { return NULL; }
-    return toHex(internalKeyBytes, 32);
 }
 
 const char* computeOutputKey(const u_char internalKeyBytes[32], const u_char tweak[32]) {

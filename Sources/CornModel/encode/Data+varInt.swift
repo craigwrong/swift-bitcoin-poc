@@ -2,6 +2,7 @@ import Foundation
 
 extension Data {
     
+    /// Converts a 64-bit integer into its compact integer representation – i.e. variable length data.
     init(varInt value: UInt64) {
         if value < 0xfd {
             var valueVar = UInt8(value)
@@ -15,6 +16,7 @@ extension Data {
         }
     }
     
+    /// Parses bytes interpreted as variable length – i.e. compact integer – data into a 64-bit integer.
     var varInt: UInt64 {
         guard let firstByte = first else {
             fatalError("Data is empty.")

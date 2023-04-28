@@ -68,7 +68,7 @@ public extension ScriptLegacy {
         }
     }
     
-    func data() -> Data {
+    var data: Data {
         ops.reduce(Data()) { $0 + $1.data }
     }
 }

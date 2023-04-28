@@ -15,7 +15,32 @@ public extension Tx {
         } else {
             return false
         }
-        let sigHash = sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts)
+
+        // TODO: Produce ext_flag for either sigversion taproot (ext_flag = 0) or tapscript (ext_flag = 1)
+        let extFlag = UInt8(0)
+        // TODO: produce key_version ( key_version = 0) for BIP 342 signatures.
+        
+        // Annex extraction
+        let originalWitnessStack = witnessData[inIdx].stack // TODO: Check this witness stack is the original (and not a modified version by the execution of OP_CHECKSIG)
+        
+        let firstByteOfLastElement: UInt8?
+        // TODO: Investigate why we were using `lastElement.count > 3` and `lastElement[1]` in the first place
+        // if let lastElement = originalWitnessStack.last, lastElement.count > 3 { firstByteOfLastElement = lastElement[1] … }
+        if let lastElement = originalWitnessStack.last, lastElement.count > 0 {
+            firstByteOfLastElement = lastElement[0]
+        } else {
+            firstByteOfLastElement = .none
+        }
+        let annexPresent = originalWitnessStack.count > 1 && firstByteOfLastElement == 0x50
+        let annex: Data?
+        if let lastElement = originalWitnessStack.last, annexPresent {
+            annex = lastElement
+        } else {
+            annex = .none
+        }
+        
+        var txCopy = self
+        let sigHash = txCopy.sigHashV1(sigHashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
         let result = verifySchnorr(sig: sig, msg: sigHash, pubKey: pubKey)
         return result
     }

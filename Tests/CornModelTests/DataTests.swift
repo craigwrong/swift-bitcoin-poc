@@ -19,7 +19,7 @@ final class DataTests: XCTestCase {
                 .pushBytes(Data(hex: "b44afd6e2b4dd224e3eb7050c46dd11f9be78a96")),
                 .equalVerify,
                 .checkSig
-            ]).data()
+            ]).data
         )
         let unsigned = Tx(
             version: .v1,
@@ -40,7 +40,7 @@ final class DataTests: XCTestCase {
                         .pushBytes(Data(hex: "b44afd6e2b4dd224e3eb7050c46dd11f9be78a96")),
                         .equalVerify,
                         .checkSig
-                    ]).data()
+                    ]).data
                 )
             ],
             witnessData: [],

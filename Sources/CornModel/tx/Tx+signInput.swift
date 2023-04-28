@@ -9,7 +9,7 @@ public extension Tx {
             if redeemScript.scriptType == .witnessV0KeyHash {
                 // TODO: Pass redeem script on to add to input's script sig
                 var withScriptSig = self
-                withScriptSig.ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data())])
+                withScriptSig.ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data)])
                 return withScriptSig.signedV0(privKey: privKey, pubKey: pubKey, sigHashType: sigHashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
             }
             // TODO: Handle P2SH-P2WSH
@@ -20,7 +20,7 @@ public extension Tx {
     }
 
     /// Populates unlocking script / witness with signatures.
-    func signInput(privKey: Data, pubKey: Data, sigHashType: SigHashType, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
+    mutating func signInput(privKey: Data, pubKey: Data, sigHashType: SigHashType, inIdx: Int, prevOuts: [Tx.Out]) -> Tx {
         // TODO: Get pubKey from privKey
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .pubKey, .pubKeyHash:

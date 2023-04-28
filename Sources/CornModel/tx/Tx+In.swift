@@ -58,7 +58,7 @@ extension Tx.In {
     var data: Data {
         let txIDData = Data(hex: txID).reversed()
         let outputData = withUnsafeBytes(of: outIdx) { Data($0) }
-        return txIDData + outputData + scriptSig.data().varLenData + sequenceData
+        return txIDData + outputData + scriptSig.data.varLenData + sequenceData
     }
 
     var prevoutData: Data {

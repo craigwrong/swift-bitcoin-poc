@@ -3,6 +3,26 @@ import CryptoKit
 import ECCHelper
 
 public struct Tx: Equatable {
+    public static func == (lhs: Tx, rhs: Tx) -> Bool {
+        lhs.version == rhs.version && lhs.ins == rhs.ins && lhs.outs == rhs.outs && lhs.witnessData == rhs.witnessData && lhs.lockTime == rhs.lockTime
+    }
+    
+
+    public struct SigMsgV1Cache {
+        public internal(set) var shaPrevouts: Data?
+        public internal(set) var shaPrevoutsUsed: Bool = false
+        public internal(set) var shaAmounts: Data?
+        public internal(set) var shaAmountsUsed: Bool = false
+        public internal(set) var shaScriptPubKeys: Data?
+        public internal(set) var shaScriptPubKeysUsed: Bool = false
+        public internal(set) var shaSequences: Data?
+        public internal(set) var shaSequencesUsed: Bool = false
+        public internal(set) var shaOuts: Data?
+        public internal(set) var shaOutsUsed: Bool = false
+    }
+
+    public internal(set) var sigMsgV1Cache = SigMsgV1Cache?.none
+
     public init(version: Tx.Version, ins: [Tx.In], outs: [Tx.Out], witnessData: [Tx.Witness], lockTime: UInt32) {
         self.version = version
         self.ins = ins

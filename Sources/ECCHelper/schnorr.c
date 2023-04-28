@@ -28,12 +28,12 @@ const int getInternalKey(u_char* internalKeyOut32, u_char* internalKeyLenOut, co
     return result;
 }
 
-const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigLenOut, const u_char* msg32, const u_char* merkleRoot32, const u_char forceTweak, const u_char* aux32, const u_char* privKey32) {
+const int signSchnorr(void (*computeTapTweakHash)(u_char*, const u_char*, const u_char*), u_char* sigOut64, u_char* sigLenOut, const u_char* msg32, const u_char* merkleRoot32, const u_char skipTweak, const u_char* aux32, const u_char* privKey32) {
     secp256k1_keypair keypair;
     assert(secp256k1_context_sign != NULL);
     if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, privKey32)) return 0;
 
-    if (merkleRoot32 != NULL || forceTweak) {
+    if (!skipTweak) {
         secp256k1_xonly_pubkey pubKey;
         if (!secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubKey, NULL, &keypair)) return 0;
         

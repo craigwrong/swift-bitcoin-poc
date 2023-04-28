@@ -492,7 +492,7 @@ final class BIP341Tests: XCTestCase {
             } else {
                 sigHashTypeSuffix = Data()
             }
-            let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: merkleRoot, forceTweak: merkleRoot == .none, aux: Data(repeating: 0, count: 256)) + sigHashTypeSuffix
+            let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + sigHashTypeSuffix
             XCTAssertEqual([sig], expectedWitness)
         }
 

@@ -3,8 +3,8 @@ import Foundation
 public extension Tx {
     
     struct In: Equatable {
-        public var txID: String // 32 bytes hex
-        public var outIdx: UInt32 // Index of vout
+        public let txID: String // 32 bytes hex
+        public let outIdx: UInt32 // Index of vout
         public var scriptSig: ScriptLegacy
         public var sequence: UInt32 // Index of vout
 

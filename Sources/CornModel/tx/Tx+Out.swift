@@ -9,9 +9,9 @@ public extension Tx {
             self.scriptPubKeyData = scriptPubKeyData
         }
         
-        public var network: Network
-        public var value: UInt64 // Sats
-        public var scriptPubKeyData: Data
+        public let network: Network
+        public let value: UInt64 // Sats
+        public let scriptPubKeyData: Data
     }
 }
 

@@ -56,12 +56,13 @@ public extension Tx {
         switch scriptPubKey2.scriptType {
         case .witnessV0KeyHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the public key
-            var stack = witnessData[inIdx].stack
+            guard var stack = ins[inIdx].witness else {
+                fatalError()
+            }
             return ScriptV0.keyHashScript(witnessProgram).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
-            var stack = witnessData[inIdx].stack
-            guard let witnessScriptRaw = stack.popLast() else {
+            guard var stack = ins[inIdx].witness, let witnessScriptRaw = stack.popLast() else {
                 fatalError()
             }
             guard sha256(witnessScriptRaw) == witnessProgram else {
@@ -83,7 +84,9 @@ public extension Tx {
             // }
             
             // Immutable copy to us as reference to the original witness stack
-            let originalStack = witnessData[inIdx].stack
+            guard let originalStack = ins[inIdx].witness else {
+                fatalError()
+            }
             
             // Fail if the witness stack has 0 elements.
             if originalStack.count == 0 {

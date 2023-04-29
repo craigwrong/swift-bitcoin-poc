@@ -4,7 +4,7 @@ import ECCHelper
 
 public struct Tx: Equatable {
     public static func == (lhs: Tx, rhs: Tx) -> Bool {
-        lhs.version == rhs.version && lhs.ins == rhs.ins && lhs.outs == rhs.outs && lhs.witnessData == rhs.witnessData && lhs.lockTime == rhs.lockTime
+        lhs.version == rhs.version && lhs.ins == rhs.ins && lhs.outs == rhs.outs && lhs.lockTime == rhs.lockTime
     }
     
 
@@ -23,11 +23,10 @@ public struct Tx: Equatable {
 
     public internal(set) var sigMsgV1Cache = SigMsgV1Cache?.none
 
-    public init(version: Tx.Version, ins: [Tx.In], outs: [Tx.Out], witnessData: [Tx.Witness], lockTime: UInt32) {
+    public init(version: Tx.Version, ins: [Tx.In], outs: [Tx.Out], lockTime: UInt32) {
         self.version = version
         self.ins = ins
         self.outs = outs
-        self.witnessData = witnessData
         self.lockTime = lockTime
     }
     
@@ -45,9 +44,6 @@ public struct Tx: Equatable {
     
     /// Transaction outputs.
     public var outs: [Out]
-    
-    /// Witness data. When not empty, it contains the same number of elements as ther are inputs in the transaction.
-    public var witnessData: [Witness]
     
     /// Transaction lock time.
     public var lockTime: UInt32
@@ -67,23 +63,20 @@ public extension Tx {
     }
     
     var data: Data {
-        let markerAndFlagData: Data
-        if witnessData.count == ins.count {
-            markerAndFlagData = Data([Tx.segwitMarker, Tx.segwitFlag])
-        } else {
-            markerAndFlagData = Data()
+        var ret = Data()
+        ret += version.data
+        if hasWitness {
+            ret += Data([Tx.segwitMarker, Tx.segwitFlag])
         }
-        
-        let insLenData = Data(varInt: insLen)
-        let inputsData = ins.reduce(Data()) { $0 + $1.data }
-        
-        let outsLenData = Data(varInt: outsLen)
-        let outsData = outs.reduce(Data()) { $0 + $1.data }
-        
-        let witnessesData = witnessData.reduce(Data()) { $0 + $1.data }
-        let lockTimeData = withUnsafeBytes(of: lockTime) { Data($0) }
-
-        return version.data + markerAndFlagData + insLenData + inputsData + outsLenData + outsData + witnessesData + lockTimeData
+        ret += Data(varInt: insLen)
+        ret += ins.reduce(Data()) { $0 + $1.data }
+        ret += Data(varInt: outsLen)
+        ret += outs.reduce(Data()) { $0 + $1.data }
+        if hasWitness {
+            ret += ins.reduce(Data()) { $0 + $1.witnessData }
+        }
+        ret += withUnsafeBytes(of: lockTime) { Data($0) }
+        return ret
     }
     
     var idData: Data {
@@ -136,12 +129,10 @@ public extension Tx {
             data = data.dropFirst(out.memSize)
         }
 
-        var witnesses = [Witness]()
         if isSegwit {
-            for _ in 0 ..< insLen {
-                let witness = Witness(data)
-                witnesses.append(witness)
-                data = data.dropFirst(witness.memSize)
+            for i in ins.indices {
+                ins[i].populateWitness(from: data)
+                data = data.dropFirst(ins[i].witnessMemSize)
             }
         }
 
@@ -150,7 +141,7 @@ public extension Tx {
         }
         data = data.dropFirst(MemoryLayout<UInt32>.size)
         
-        self.init(version: version, ins: ins, outs: outs, witnessData: witnesses, lockTime: lockTime)
+        self.init(version: version, ins: ins, outs: outs, lockTime: lockTime)
     }
 
     var size: Int {
@@ -175,6 +166,11 @@ public extension Tx {
 }
 
 extension Tx {
+
+    var hasWitness: Bool {
+        ins.contains { $0.witness != .none }
+    }
+
     var insLen: UInt64 {
         .init(ins.count)
     }
@@ -188,6 +184,6 @@ extension Tx {
     }
     
     var witnessSize: Int {
-        (witnessData.isEmpty ? 0 : (MemoryLayout.size(ofValue: Tx.segwitMarker) + MemoryLayout.size(ofValue: Tx.segwitFlag))) + witnessData.reduce(0) { $0 + $1.memSize }
+        hasWitness ? (MemoryLayout.size(ofValue: Tx.segwitMarker) + MemoryLayout.size(ofValue: Tx.segwitFlag)) + ins.reduce(0) { $0 + $1.witnessMemSize } : 0
     }
 }

@@ -20,7 +20,7 @@ final class ScriptTests: XCTestCase {
         
         var script = ScriptLegacy([.pushBytes(zero), .pushBytes(zero), .boolAnd])
         var stack = [Data]()
-        var dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
+        var dummyTx = Tx(version: .v1, ins: [], outs: [], lockTime: 0)
         var result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
@@ -101,7 +101,7 @@ final class ScriptTests: XCTestCase {
     func testOpSuccess() {
         var script = ScriptV1([.success(80), .pushBytes(Data(repeating: 0, count: 128))])
         var stack = [Data]()
-        var dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
+        var dummyTx = Tx(version: .v1, ins: [], outs: [], lockTime: 0)
         var result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [])
@@ -130,7 +130,7 @@ final class ScriptTests: XCTestCase {
         let numberData = bigNummber.serialize()
         let script = ScriptLegacy([.pushBytes(numberData), .drop])
         var stack = [Data]()
-        let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
+        let dummyTx = Tx(version: .v1, ins: [], outs: [], lockTime: 0)
         let result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssert(stack.isEmpty)
@@ -141,7 +141,7 @@ final class ScriptTests: XCTestCase {
         let numberData = bigNummber.serialize()
         let script = ScriptLegacy([.pushBytes(numberData), .dup])
         var stack = [Data]()
-        let dummyTx = Tx(version: .v1, ins: [], outs: [], witnessData: [], lockTime: 0)
+        let dummyTx = Tx(version: .v1, ins: [], outs: [], lockTime: 0)
         let result = script.run(stack: &stack, tx: dummyTx, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [numberData, numberData])

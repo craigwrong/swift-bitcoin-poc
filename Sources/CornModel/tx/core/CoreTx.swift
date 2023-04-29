@@ -121,8 +121,8 @@ public extension Tx {
             vsize: vsize,
             weight: weight,
             locktime: lockTime,
-            vin: zip(ins, witnessData).map { (input, witness) in
-                input.toBCoreInput(witness: witness)
+            vin: ins.map {
+                $0.bCoreInput
             },
             vout: outs.enumerated().map { (i, output) in
                 output.toBCoreOutput(outIdx: i)
@@ -137,14 +137,14 @@ public extension Tx {
 }
 
 public extension Tx.In {
-    func toBCoreInput(witness: Tx.Witness) -> CoreTx.Input {
+    var bCoreInput: CoreTx.Input {
         isCoinbase
         ? .init(
             coinbase: scriptSig.data.hex,
             scriptSig: .none,
             txid: .none,
             vout: .none,
-            txinwitness: witness.stack.map(\.hex),
+            txinwitness: witness?.map(\.hex),
             sequence: sequence
         )
         : .init(
@@ -155,7 +155,7 @@ public extension Tx.In {
             ),
             txid: txID,
             vout: outIdx,
-            txinwitness: witness.stack.map(\.hex),
+            txinwitness: witness?.map(\.hex),
             sequence: sequence
         )
     }

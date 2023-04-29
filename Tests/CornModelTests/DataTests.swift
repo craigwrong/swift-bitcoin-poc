@@ -43,7 +43,6 @@ final class DataTests: XCTestCase {
                     ]).data
                 )
             ],
-            witnessData: [],
             lockTime: .zero
         )
     }

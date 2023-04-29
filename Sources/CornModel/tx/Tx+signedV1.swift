@@ -16,17 +16,9 @@ public extension Tx {
         let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: .none, aux: aux) + hashTypeSuffix
         
         // TODO: this is only for keyPath spending
-        var newWitnesses = [Witness]()
-        ins.enumerated().forEach { i, _ in
-            if i == inIdx {
-                newWitnesses.append(.init(stack: [
-                    sig
-                ]))
-            } else {
-                newWitnesses.append(.init(stack: []))
-            }
-        }
-        return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
+        var newIns = ins
+        newIns[inIdx].witness = [sig]
+        return .init(version: version, ins: newIns, outs: outs, lockTime: lockTime)
     }
 
     mutating func sigHashV1(_ type: HashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?) -> Data {

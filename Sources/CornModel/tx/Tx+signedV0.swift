@@ -7,18 +7,9 @@ public extension Tx {
         let sigHash = sigHashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sigHash, privKey: privKey) + hashType.data
         
-        var newWitnesses = [Witness]()
-        ins.enumerated().forEach { i, _ in
-            if i == inIdx {
-                newWitnesses.append(.init(stack: [
-                    sig,
-                    pubKey
-                ]))
-            } else {
-                newWitnesses.append(.init(stack: []))
-            }
-        }
-        return .init(version: version, ins: ins, outs: outs, witnessData: newWitnesses, lockTime: lockTime)
+        var newIns = ins
+        newIns[inIdx].witness = [sig, pubKey]
+        return .init(version: version, ins: newIns, outs: outs, lockTime: lockTime)
     }
     
     func sigHashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {

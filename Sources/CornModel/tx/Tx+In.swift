@@ -7,12 +7,14 @@ public extension Tx {
         public let outIdx: UInt32 // Index of vout
         public var scriptSig: ScriptLegacy
         public var sequence: UInt32 // Index of vout
+        public var witness: [Data]?
 
-        public init(txID: String, outIdx: UInt32, scriptSig: ScriptLegacy, sequence: UInt32) {
+        public init(txID: String, outIdx: UInt32, scriptSig: ScriptLegacy, sequence: UInt32, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.scriptSig = scriptSig
             self.sequence = sequence
+            self.witness = witness
         }
     }
 }
@@ -59,6 +61,32 @@ extension Tx.In {
         let txIDData = Data(hex: txID).reversed()
         let outputData = withUnsafeBytes(of: outIdx) { Data($0) }
         return txIDData + outputData + scriptSig.data.varLenData + sequenceData
+    }
+
+    var witnessData: Data {
+        var ret = Data()
+        ret += Data(varInt: UInt64(witness?.count ?? 0))
+        if let witness {
+            ret += witness.reduce(Data()) { $0 + $1.varLenData }
+        }
+        return ret
+    }
+
+    var witnessMemSize: Int {
+        UInt64(witness?.count ?? 0).varIntSize + (witness?.varLenSize ?? 0)
+    }
+
+    mutating func populateWitness(from data: Data) {
+        var data = data
+        let witnessLen = data.varInt
+        data = data.dropFirst(witnessLen.varIntSize)
+        var witness = [Data]()
+        for _ in 0 ..< witnessLen {
+            let element = Data(varLenData: data)
+            witness.append(element)
+            data = data.dropFirst(element.varLenSize)
+        }
+        self.witness = witness
     }
 
     var prevoutData: Data {

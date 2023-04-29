@@ -2,8 +2,7 @@ import Foundation
 
 public extension Tx {
     
-    func signed(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, hashType: HashType,
-                inIdx: Int, prevOut: Tx.Out) -> Tx {
+    func signed(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) -> Tx {
         let sigHash = sigHash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
         let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + hashType.data
@@ -42,7 +41,7 @@ public extension Tx {
                 newIns.append(input)
             }
         }
-        return .init(version: version, ins: newIns, outs: outs, witnessData: witnessData, lockTime: lockTime)
+        return .init(version: version, ins: newIns, outs: outs, lockTime: lockTime)
     }
     
     
@@ -125,7 +124,6 @@ public extension Tx {
             version: version,
             ins: newIns,
             outs: newOuts,
-            witnessData: [],
             lockTime: lockTime
         )
         return txCopy.data + hashType.data32
@@ -135,9 +133,9 @@ public extension Tx {
     func sigMsgAlt(hashType: HashType, inIdx: Int, scriptCode subScript: ScriptLegacy) -> Data {
         let input = ins[inIdx]
         var txCopy = self
-        txCopy.witnessData = []
         txCopy.ins.indices.forEach {
             txCopy.ins[$0].scriptSig = .init([])
+            txCopy.ins[$0].witness = .none
         }
         txCopy.ins[inIdx].scriptSig = subScript
         if hashType.isNone {

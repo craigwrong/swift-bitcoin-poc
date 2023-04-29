@@ -21,7 +21,10 @@ public extension Tx {
         // TODO: produce key_version ( key_version = 0) for BIP 342 signatures.
         
         // Annex extraction
-        let originalWitnessStack = witnessData[inIdx].stack // TODO: Check this witness stack is the original (and not a modified version by the execution of OP_CHECKSIG)
+        guard let originalWitnessStack = ins[inIdx].witness else {
+            fatalError()
+        }
+        // TODO: Check this witness stack is the original (and not a modified version by the execution of OP_CHECKSIG)
         
         let firstByteOfLastElement: UInt8?
         // TODO: Investigate why we were using `lastElement.count > 3` and `lastElement[1]` in the first place

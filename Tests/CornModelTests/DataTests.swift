@@ -23,12 +23,13 @@ final class DataTests: XCTestCase {
         )
         let unsigned = Tx(
             version: .v1,
+            lockTime: .zero,
             ins: [
                 .init(
                     txID: "0000000000000000000000000000000000000000000000000000000000000000",
                     outIdx: 0,
-                    scriptSig: .init([]),
-                    sequence: 0
+                    sequence: 0,
+                    scriptSig: .init([])
                 )
             ],
             outs: [
@@ -42,8 +43,7 @@ final class DataTests: XCTestCase {
                         .checkSig
                     ]).data
                 )
-            ],
-            lockTime: .zero
+            ]
         )
     }
 }

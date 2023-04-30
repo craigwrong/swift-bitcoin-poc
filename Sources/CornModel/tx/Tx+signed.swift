@@ -29,8 +29,8 @@ public extension Tx {
         let signedIn = Tx.In(
             txID: input.txID,
             outIdx: input.outIdx,
-            scriptSig: newScriptSig,
-            sequence: input.sequence
+            sequence: input.sequence,
+            scriptSig: newScriptSig
         )
         
         var newIns = [In]()
@@ -41,7 +41,7 @@ public extension Tx {
                 newIns.append(input)
             }
         }
-        return .init(version: version, ins: newIns, outs: outs, lockTime: lockTime)
+        return .init(version: version, lockTime: lockTime, ins: newIns, outs: outs)
     }
     
     
@@ -76,17 +76,17 @@ public extension Tx {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
             // The current transaction input (with scriptPubKey modified to subScript) is set as the first and only member of this vector.
-            newIns.append(.init(txID: ins[inIdx].txID, outIdx: ins[inIdx].outIdx, scriptSig: subScript, sequence: ins[inIdx].sequence))
+            newIns.append(.init(txID: ins[inIdx].txID, outIdx: ins[inIdx].outIdx, sequence: ins[inIdx].sequence, scriptSig: subScript))
         } else {
             ins.enumerated().forEach { i, input in
                 newIns.append(.init(
                     txID: input.txID,
                     outIdx: input.outIdx,
+                    // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
+                    sequence: i == inIdx || hashType.isAll ? input.sequence : 0,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
-                    scriptSig: i == inIdx ? subScript : .init([]),
-                    // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
-                    sequence: i == inIdx || hashType.isAll ? input.sequence : 0
+                    scriptSig: i == inIdx ? subScript : .init([])
                 ))
             }
         }
@@ -122,9 +122,9 @@ public extension Tx {
         }
         let txCopy = Tx(
             version: version,
+            lockTime: lockTime,
             ins: newIns,
-            outs: newOuts,
-            lockTime: lockTime
+            outs: newOuts
         )
         return txCopy.data + hashType.data32
     }

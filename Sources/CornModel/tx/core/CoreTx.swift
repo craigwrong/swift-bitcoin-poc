@@ -112,7 +112,7 @@ public extension CoreTx {
 }
 
 public extension Tx {
-    var toBCoreTransaction: CoreTx {
+    func toBCoreTransaction(network: Network = .main) -> CoreTx {
         .init(
             txid: txid,
             hash: wtxid,
@@ -125,7 +125,7 @@ public extension Tx {
                 $0.bCoreInput
             },
             vout: outs.enumerated().map { (i, output) in
-                output.toBCoreOutput(outIdx: i)
+                output.toBCoreOutput(outIdx: i, network: network)
             },
             hex: data.hex,
             blockhash: .none,
@@ -162,7 +162,7 @@ public extension Tx.In {
 }
 
 public extension Tx.Out {
-    func toBCoreOutput(outIdx: Int) -> CoreTx.Output {
+    func toBCoreOutput(outIdx: Int, network: Network = .main) -> CoreTx.Output {
         .init(
             value: doubleValue,
             n: outIdx,
@@ -170,7 +170,7 @@ public extension Tx.Out {
                 asm: scriptPubKey.asm,
                 desc: "", // TODO: Create descriptor
                 hex: scriptPubKey.data.hex,
-                address: address,
+                address: address(network: network),
                 type: .init(rawValue: CoreScriptType(scriptPubKey.scriptType).rawValue) ?? .unknown
             )
         )

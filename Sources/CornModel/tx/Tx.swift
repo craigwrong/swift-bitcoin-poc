@@ -2,32 +2,39 @@ import Foundation
 import CryptoKit
 import ECCHelper
 
-public struct Tx: Equatable {
-    public static func == (lhs: Tx, rhs: Tx) -> Bool {
-        lhs.version == rhs.version && lhs.ins == rhs.ins && lhs.outs == rhs.outs && lhs.lockTime == rhs.lockTime
+public struct SigMsgV1Cache {
+    public init(shaPrevouts: Data? = nil, shaPrevoutsUsed: Bool = false, shaAmounts: Data? = nil, shaAmountsUsed: Bool = false, shaScriptPubKeys: Data? = nil, shaScriptPubKeysUsed: Bool = false, shaSequences: Data? = nil, shaSequencesUsed: Bool = false, shaOuts: Data? = nil, shaOutsUsed: Bool = false) {
+        self.shaPrevouts = shaPrevouts
+        self.shaPrevoutsUsed = shaPrevoutsUsed
+        self.shaAmounts = shaAmounts
+        self.shaAmountsUsed = shaAmountsUsed
+        self.shaScriptPubKeys = shaScriptPubKeys
+        self.shaScriptPubKeysUsed = shaScriptPubKeysUsed
+        self.shaSequences = shaSequences
+        self.shaSequencesUsed = shaSequencesUsed
+        self.shaOuts = shaOuts
+        self.shaOutsUsed = shaOutsUsed
     }
     
+    public internal(set) var shaPrevouts: Data?
+    public internal(set) var shaPrevoutsUsed: Bool = false
+    public internal(set) var shaAmounts: Data?
+    public internal(set) var shaAmountsUsed: Bool = false
+    public internal(set) var shaScriptPubKeys: Data?
+    public internal(set) var shaScriptPubKeysUsed: Bool = false
+    public internal(set) var shaSequences: Data?
+    public internal(set) var shaSequencesUsed: Bool = false
+    public internal(set) var shaOuts: Data?
+    public internal(set) var shaOutsUsed: Bool = false
+}
 
-    public struct SigMsgV1Cache {
-        public internal(set) var shaPrevouts: Data?
-        public internal(set) var shaPrevoutsUsed: Bool = false
-        public internal(set) var shaAmounts: Data?
-        public internal(set) var shaAmountsUsed: Bool = false
-        public internal(set) var shaScriptPubKeys: Data?
-        public internal(set) var shaScriptPubKeysUsed: Bool = false
-        public internal(set) var shaSequences: Data?
-        public internal(set) var shaSequencesUsed: Bool = false
-        public internal(set) var shaOuts: Data?
-        public internal(set) var shaOutsUsed: Bool = false
-    }
+public struct Tx: Equatable {
 
-    public internal(set) var sigMsgV1Cache = SigMsgV1Cache?.none
-
-    public init(version: Tx.Version, ins: [Tx.In], outs: [Tx.Out], lockTime: UInt32) {
+    public init(version: Tx.Version, lockTime: UInt32, ins: [Tx.In], outs: [Tx.Out]) {
         self.version = version
+        self.lockTime = lockTime
         self.ins = ins
         self.outs = outs
-        self.lockTime = lockTime
     }
     
     /// Its presence withn transaction data indicates the inclusion of seggregated witness (SegWit) data.
@@ -57,6 +64,9 @@ extension Tx: CustomStringConvertible {
 }
 
 public extension Tx {
+
+    static let empty = Self(version: .v1, lockTime: 0, ins: [], outs: [])
+    
     /// Whether this is the coinbase transaction of any given block. Based of whether the first and only input is a coinbase input.
     var isCoinbase: Bool {
         ins.first?.isCoinbase ?? false
@@ -141,7 +151,7 @@ public extension Tx {
         }
         data = data.dropFirst(MemoryLayout<UInt32>.size)
         
-        self.init(version: version, ins: ins, outs: outs, lockTime: lockTime)
+        self.init(version: version, lockTime: lockTime, ins: ins, outs: outs)
     }
 
     var size: Int {

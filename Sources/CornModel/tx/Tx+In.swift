@@ -5,15 +5,15 @@ public extension Tx {
     struct In: Equatable {
         public let txID: String // 32 bytes hex
         public let outIdx: UInt32 // Index of vout
-        public var scriptSig: ScriptLegacy
         public var sequence: UInt32 // Index of vout
+        public var scriptSig: ScriptLegacy
         public var witness: [Data]?
 
-        public init(txID: String, outIdx: UInt32, scriptSig: ScriptLegacy, sequence: UInt32, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: UInt32, sequence: UInt32, scriptSig: ScriptLegacy, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
-            self.scriptSig = scriptSig
             self.sequence = sequence
+            self.scriptSig = scriptSig
             self.witness = witness
         }
     }
@@ -43,7 +43,7 @@ public extension Tx.In {
         }
         offset += sequenceData.count
         
-        self.init(txID: txID, outIdx: outIdx, scriptSig: scriptSig, sequence: sequence)
+        self.init(txID: txID, outIdx: outIdx, sequence: sequence, scriptSig: scriptSig)
     }
     
     var isCoinbase: Bool {

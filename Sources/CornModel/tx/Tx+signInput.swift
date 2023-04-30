@@ -34,7 +34,7 @@ public extension Tx {
         case .witnessV0KeyHash:
             return signedV0(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
         case .witnessV1TapRoot:
-            return signedV1(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOuts: prevOuts)
+            return signedV1(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdxs: [inIdx], prevOuts: prevOuts)
         default:
             fatalError()
         }

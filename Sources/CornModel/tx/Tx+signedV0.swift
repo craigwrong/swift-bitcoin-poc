@@ -9,7 +9,7 @@ public extension Tx {
         
         var newIns = ins
         newIns[inIdx].witness = [sig, pubKey]
-        return .init(version: version, ins: newIns, outs: outs, lockTime: lockTime)
+        return .init(version: version, lockTime: lockTime, ins: newIns, outs: outs)
     }
     
     func sigHashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {

@@ -257,8 +257,9 @@ final class BIP341Tests: XCTestCase {
             hashSequences: Data(hex: "18959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957e")
         )
         
-        _ = unsignedTx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none)
-        if let cache = unsignedTx.sigMsgV1Cache, let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
+        var cache = SigMsgV1Cache?.some(.init())
+        _ = unsignedTx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
+        if let cache, let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
             XCTAssertEqual(shaAmounts, intermediary.hashAmounts)
             XCTAssertEqual(shaOuts, intermediary.hashOutputs)
             XCTAssertEqual(shaPrevouts, intermediary.hashPrevouts)
@@ -470,9 +471,9 @@ final class BIP341Tests: XCTestCase {
             let tweakedPrivKey = createPrivKeyTapTweak(privKey: privKey, merkleRoot: merkleRoot)
             XCTAssertEqual(tweakedPrivKey, expectedTweakedPrivkey)
 
-            let sigMsg = unsignedTx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none)
+            let sigMsg = unsignedTx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
 
-            if let cache = unsignedTx.sigMsgV1Cache {
+            if let cache {
                 XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
                 XCTAssertEqual(cache.shaOutsUsed, testCase.intermediary.precomputedUsed.hashOutputs)
                 XCTAssertEqual(cache.shaPrevoutsUsed, testCase.intermediary.precomputedUsed.hashPrevouts)
@@ -483,7 +484,7 @@ final class BIP341Tests: XCTestCase {
             }
             XCTAssertEqual(sigMsg, expectedSigMsg)
 
-            let sigHash = unsignedTx.sigHashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none)
+            let sigHash = unsignedTx.sigHashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
             XCTAssertEqual(sigHash, expectedSigHash)
             
             let hashTypeSuffix: Data

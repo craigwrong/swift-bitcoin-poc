@@ -43,7 +43,8 @@ public extension Tx {
         }
         
         var txCopy = self
-        let sigHash = txCopy.sigHashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex)
+        var cache = SigMsgV1Cache?.none // TODO: Use cache.
+        let sigHash = txCopy.sigHashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex, cache: &cache)
         let result = verifySchnorr(sig: sig, msg: sigHash, pubKey: pubKey)
         return result
     }

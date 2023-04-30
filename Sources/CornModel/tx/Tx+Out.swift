@@ -3,13 +3,11 @@ import Foundation
 public extension Tx {
     
     struct Out: Equatable {
-        public init(network: Network = .main, value: UInt64, scriptPubKeyData: Data) {
-            self.network = network
+        public init(value: UInt64, scriptPubKeyData: Data) {
             self.value = value
             self.scriptPubKeyData = scriptPubKeyData
         }
         
-        public var network: Network
         public let value: UInt64 // Sats
         public let scriptPubKeyData: Data
     }
@@ -39,7 +37,7 @@ public extension Tx.Out {
         withUnsafeBytes(of: value) { Data($0) }
     }
     
-    var address: String {
+    func address(network: Network = .main) -> String {
         if scriptPubKey.scriptType == .witnessV0KeyHash || scriptPubKey.scriptType == .witnessV0ScriptHash {
             return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: scriptPubKey.witnessProgram)) ?? ""
         } else if scriptPubKey.scriptType == .witnessV1TapRoot {

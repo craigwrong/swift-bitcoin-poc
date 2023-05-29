@@ -7,7 +7,6 @@
 
 #include <secp256k1_schnorrsig.h>
 
-const size_t KEY_LEN = 32;
 const size_t HASH_LEN = 32;
 const size_t SIG_LEN = 64;
 

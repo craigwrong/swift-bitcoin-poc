@@ -8,7 +8,7 @@ public extension ScriptLegacy {
 
 extension ScriptLegacy.Op {
     
-    var memSize: Int {
+    var dataLen: Int {
         let additionalSize: Int
         switch(self) {
         case .pushBytes(let d):

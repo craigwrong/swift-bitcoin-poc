@@ -17,7 +17,7 @@ public extension ScriptV0{
         while data.count > 0 {
             let op = Op.fromData(data)
             newOps.append(op)
-            data = data.dropFirst(op.memSize)
+            data = data.dropFirst(op.dataLen)
         }
         ops = newOps
     }
@@ -35,8 +35,8 @@ public extension ScriptV0{
 
 extension ScriptV0 {
     
-    var memSize: Int {
-        let opsSize = ops.reduce(0) { $0 + $1.memSize }
+    var dataLen: Int {
+        let opsSize = ops.reduce(0) { $0 + $1.dataLen }
         return UInt64(opsSize).varIntSize + opsSize
     }
 

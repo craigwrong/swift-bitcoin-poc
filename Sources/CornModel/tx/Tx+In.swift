@@ -3,13 +3,13 @@ import Foundation
 public extension Tx {
     
     struct In: Equatable {
-        public let txID: String // 32 bytes hex
-        public let outIdx: UInt32 // Index of vout
-        public var sequence: UInt32 // Index of vout
+        public let txID: String
+        public let outIdx: Int
+        public var sequence: UInt32
         public var scriptSig: ScriptLegacy
         public var witness: [Data]?
-
-        public init(txID: String, outIdx: UInt32, sequence: UInt32, scriptSig: ScriptLegacy, witness: [Data]? = .none) {
+        
+        public init(txID: String, outIdx: Int, sequence: UInt32, scriptSig: ScriptLegacy, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
@@ -28,9 +28,9 @@ public extension Tx.In {
         offset += txIDData.count
         
         let outIdxData = data[offset ..< offset + MemoryLayout<UInt32>.size]
-        let outIdx = outIdxData.withUnsafeBytes {
+        let outIdx = Int(outIdxData.withUnsafeBytes {
             $0.loadUnaligned(as: UInt32.self)
-        }
+        })
         offset += outIdxData.count
         
         let scriptSigData = Data(varLenData: data[offset...])
@@ -53,29 +53,6 @@ public extension Tx.In {
 
 extension Tx.In {
     
-    var memSize: Int {
-        txID.count / 2 + MemoryLayout.size(ofValue: outIdx) + scriptSig.memSize +  MemoryLayout.size(ofValue: sequence)
-    }
-    
-    var data: Data {
-        let txIDData = Data(hex: txID).reversed()
-        let outputData = withUnsafeBytes(of: outIdx) { Data($0) }
-        return txIDData + outputData + scriptSig.data.varLenData + sequenceData
-    }
-
-    var witnessData: Data {
-        var ret = Data()
-        ret += Data(varInt: UInt64(witness?.count ?? 0))
-        if let witness {
-            ret += witness.reduce(Data()) { $0 + $1.varLenData }
-        }
-        return ret
-    }
-
-    var witnessMemSize: Int {
-        UInt64(witness?.count ?? 0).varIntSize + (witness?.varLenSize ?? 0)
-    }
-
     mutating func populateWitness(from data: Data) {
         var data = data
         let witnessLen = data.varInt
@@ -88,14 +65,41 @@ extension Tx.In {
         }
         self.witness = witness
     }
-
-    var prevoutData: Data {
-        let txIDData = Data(hex: txID).reversed()
-        let outputData = withUnsafeBytes(of: outIdx) { Data($0) }
-        return txIDData + outputData
+    
+    var data: Data {
+        var ret = Data()
+        ret += Data(hex: txID).reversed()
+        ret += withUnsafeBytes(of: UInt32(outIdx)) { Data($0) }
+        ret += scriptSig.data.varLenData
+        ret += sequenceData
+        return ret
     }
-
+    
+    var witnessData: Data {
+        var ret = Data()
+        ret += Data(varInt: UInt64(witness?.count ?? 0))
+        if let witness {
+            ret += witness.reduce(Data()) { $0 + $1.varLenData }
+        }
+        return ret
+    }
+    
+    var prevoutData: Data {
+        var ret = Data()
+        ret += Data(hex: txID).reversed()
+        ret += withUnsafeBytes(of: UInt32(outIdx)) { Data($0) }
+        return ret
+    }
+    
     var sequenceData: Data {
         withUnsafeBytes(of: sequence) { Data($0) }
+    }
+    
+    var dataLen: Int {
+        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + scriptSig.dataLen +  MemoryLayout.size(ofValue: sequence)
+    }
+    
+    var witnessDataLen: Int {
+        UInt64(witness?.count ?? 0).varIntSize + (witness?.varLenSize ?? 0)
     }
 }

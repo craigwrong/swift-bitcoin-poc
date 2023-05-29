@@ -43,7 +43,7 @@ public extension CoreTx {
     
     struct Input: Equatable, Decodable {
         
-        public  init(coinbase: String? = nil, scriptSig: CoreTx.Input.UnlockScript? = nil, txid: String? = nil, vout: UInt32? = nil, txinwitness: [String]? = nil, sequence: UInt32) {
+        public  init(coinbase: String? = nil, scriptSig: CoreTx.Input.UnlockScript? = nil, txid: String? = nil, vout: Int? = nil, txinwitness: [String]? = nil, sequence: UInt32) {
             self.coinbase = coinbase
             self.scriptSig = scriptSig
             self.txid = txid
@@ -69,7 +69,7 @@ public extension CoreTx {
         // Either scriptsig
         public let scriptSig: UnlockScript?
         public let txid: String?
-        public let vout: UInt32?
+        public let vout: Int?
         
         public let txinwitness: [String]?
         

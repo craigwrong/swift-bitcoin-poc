@@ -13,13 +13,26 @@ public extension Tx {
     }
 }
 
-extension Tx.Out {
-    var memSize: Int {
-        MemoryLayout.size(ofValue: value) + scriptPubKeyData.varLenSize
-    }
-}
-
 public extension Tx.Out {
+
+    init(_ data: Data) {
+        var data = data
+        let value = data.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) }
+        data = data.dropFirst(MemoryLayout.size(ofValue: value))
+        let scriptPubKeyData = Data(varLenData: data)
+        self.init(value: value, scriptPubKeyData: scriptPubKeyData)
+    }
+
+    var data: Data {
+        var ret = Data()
+        ret += valueData
+        ret += scriptPubKeyData.varLenData
+        return ret
+    }
+
+    var valueData: Data {
+        withUnsafeBytes(of: value) { Data($0) }
+    }
 
     var scriptPubKey: ScriptLegacy {
         ScriptLegacy(scriptPubKeyData)
@@ -27,14 +40,6 @@ public extension Tx.Out {
     
     var doubleValue: Double {
         Double(value) / 100_000_000
-    }
-
-    var data: Data {
-        return valueData + scriptPubKeyData.varLenData
-    }
-
-    var valueData: Data {
-        withUnsafeBytes(of: value) { Data($0) }
     }
     
     func address(network: Network = .main) -> String {
@@ -45,12 +50,10 @@ public extension Tx.Out {
         }
         return ""
     }
-    
-    init(_ data: Data) {
-        var data = data
-        let value = data.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) }
-        data = data.dropFirst(MemoryLayout.size(ofValue: value))
-        let scriptPubKeyData = Data(varLenData: data)
-        self.init(value: value, scriptPubKeyData: scriptPubKeyData)
+}
+
+extension Tx.Out {
+    var dataLen: Int {
+        MemoryLayout.size(ofValue: value) + scriptPubKeyData.varLenSize
     }
 }

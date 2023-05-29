@@ -8,7 +8,7 @@ public extension ScriptV0 {
 
 extension ScriptV0.Op {
     
-    var memSize: Int {
+    var dataLen: Int {
         let additionalSize: Int
         switch(self) {
         case .pushBytes(let d):

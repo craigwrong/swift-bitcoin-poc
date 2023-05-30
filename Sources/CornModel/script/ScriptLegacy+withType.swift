@@ -1,6 +1,6 @@
 import Foundation
 
-extension ScriptLegacy {
+public extension ScriptLegacy {
     
     static func withType(_ type: LockScriptType, data: [Data]) -> Self {
         switch type {
@@ -46,13 +46,13 @@ extension ScriptLegacy {
         case .witnessV0KeyHash:
             precondition(data.count == 1 && data[0].count == 20)
             return .init([
-                .constant(0),
+                .zero,
                 .pushBytes(data[0])
             ])
         case .witnessV0ScriptHash:
             precondition(data.count == 1 && data[0].count == 32)
             return .init([
-                .constant(0),
+                .zero,
                 .pushBytes(data[0])
             ])
         case .witnessV1TapRoot:

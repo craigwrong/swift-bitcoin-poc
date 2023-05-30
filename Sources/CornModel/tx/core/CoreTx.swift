@@ -140,7 +140,7 @@ public extension Tx.In {
     var bCoreInput: CoreTx.Input {
         isCoinbase
         ? .init(
-            coinbase: scriptSig.data.hex,
+            coinbase: scriptSig?.data.hex ?? "",
             scriptSig: .none,
             txid: .none,
             vout: .none,
@@ -150,8 +150,8 @@ public extension Tx.In {
         : .init(
             coinbase: .none,
             scriptSig: .init(
-                asm: scriptSig.asm,
-                hex: scriptSig.data.hex
+                asm: scriptSig?.asm ?? "",
+                hex: scriptSig?.data.hex ?? ""
             ),
             txid: txID,
             vout: outIdx,

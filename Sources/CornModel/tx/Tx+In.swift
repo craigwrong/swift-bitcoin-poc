@@ -6,10 +6,10 @@ public extension Tx {
         public let txID: String
         public let outIdx: Int
         public var sequence: UInt32
-        public var scriptSig: ScriptLegacy
+        public var scriptSig: ScriptLegacy?
         public var witness: [Data]?
         
-        public init(txID: String, outIdx: Int, sequence: UInt32, scriptSig: ScriptLegacy, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: Int, sequence: UInt32, scriptSig: ScriptLegacy? = .none, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
@@ -70,7 +70,9 @@ extension Tx.In {
         var ret = Data()
         ret += Data(hex: txID).reversed()
         ret += withUnsafeBytes(of: UInt32(outIdx)) { Data($0) }
-        ret += scriptSig.data.varLenData
+        if let scriptSig {
+            ret += scriptSig.data.varLenData
+        }
         ret += sequenceData
         return ret
     }
@@ -96,7 +98,7 @@ extension Tx.In {
     }
     
     var dataLen: Int {
-        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + scriptSig.dataLen +  MemoryLayout.size(ofValue: sequence)
+        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (scriptSig?.dataLen ?? 0) +  MemoryLayout.size(ofValue: sequence)
     }
     
     var witnessDataLen: Int {

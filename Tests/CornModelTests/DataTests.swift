@@ -17,68 +17,124 @@ final class DataTests: XCTestCase {
         let privKey1 = createPrivKey()
         let pubKey1 = getPubKey(privKey: privKey1)
         let pubKeyHash1 = hash160(pubKey1)
-        let spentOut0 = Tx.Out(
-            value: 1_000_000,
-            scriptPubKeyData: ScriptLegacy([
-                .dup,
-                .hash160,
-                .pushBytes(pubKeyHash0),
-                .equalVerify,
-                .checkSig
-            ]).data
+        let spentOut0 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.pubKeyHash, data: [pubKeyHash0]).data)
+        let spentOut1 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.pubKeyHash, data: [pubKeyHash1]).data)
+        var tx = Tx(version: .v1, lockTime: .zero,
+            ins: [.init(txID: "", outIdx: 0, sequence: 0)],
+            outs: [.init(value: 0, scriptPubKeyData: Data())]
         )
-        let spentOut1 = Tx.Out(
-            value: 500_000,
-            scriptPubKeyData: ScriptLegacy([
-                .dup,
-                .hash160,
-                .pushBytes(pubKeyHash1),
-                .equalVerify,
-                .checkSig
-            ]).data
-        )
-        let unsigned = Tx(
+        tx.sign(privKey: privKey0, pubKey: pubKey0, hashType: .singleAnyCanPay, inIdx: 0, prevOut: spentOut0)
+        var res = tx.verify(prevOuts: [spentOut0])
+        XCTAssert(res)
+        //signed.outs.removeAll()
+        tx.outs.append(.init(value: 0, scriptPubKeyData: .init()))
+        res = tx.verify(prevOuts: [spentOut0])
+        XCTAssert(res)
+
+        tx.ins.append(Tx.In(txID: "", outIdx: 0, sequence: 0))
+        tx.sign(privKey: privKey1, pubKey: pubKey1, hashType: .all, inIdx: 1, prevOut: spentOut1)
+        res = tx.verify(prevOuts: [spentOut0, spentOut1])
+        XCTAssert(res)
+    }
+
+    func testSigHashAll() {
+        // Some keys
+        let privKey0 = createPrivKey()
+        let pubKey0 = getPubKey(privKey: privKey0)
+        let pubKeyHash0 = hash160(pubKey0)
+        let privKey1 = createPrivKey()
+        let pubKey1 = getPubKey(privKey: privKey1)
+        let pubKeyHash1 = hash160(pubKey1)
+        let privKey2 = createPrivKey()
+        let pubKey2 = getPubKey(privKey: privKey2)
+        let pubKeyHash2 = hash160(pubKey2)
+
+        // Some previous outputs
+        let spentOut0 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.pubKeyHash, data: [pubKeyHash0]).data)
+
+        let spentOut1 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.pubKeyHash, data: [pubKeyHash1]).data)
+        let spentOut2 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.pubKeyHash, data: [pubKeyHash2]).data)
+        
+        // Our transaction with 2 ins and 2 outs
+        var tx = Tx(
             version: .v1,
             lockTime: .zero,
             ins: [
-                .init(
-                    txID: "0000000000000000000000000000000000000000000000000000000000000000",
-                    outIdx: 0,
-                    sequence: 0,
-                    scriptSig: .init([])
-                )
+                .init(txID: "", outIdx: 0, sequence: 0),
+                .init(txID: "", outIdx: 0, sequence: 0),
             ],
             outs: [
-                .init(
-                    value: 1_000_000,
-                    scriptPubKeyData: ScriptLegacy([
-                        .dup,
-                        .hash160,
-                        .pushBytes(Data(hex: "b44afd6e2b4dd224e3eb7050c46dd11f9be78a96")),
-                        .equalVerify,
-                        .checkSig
-                    ]).data
-                )
+                .init(value: 0, scriptPubKeyData: Data()),
+                .init(value: 0, scriptPubKeyData: Data())
             ]
         )
-        var signed = unsigned.signed(privKey: privKey0, pubKey: pubKey0, hashType: .singleAnyCanPay, inIdx: 0, prevOut: spentOut0)
-        let verificationResult = signed.verify(prevOuts: [spentOut0])
-        XCTAssert(verificationResult)
-        //signed.outs.removeAll()
-        signed.outs.append(.init(value: 500, scriptPubKeyData: .init()))
-        let verificationResult2 = signed.verify(prevOuts: [spentOut0])
-        XCTAssert(verificationResult2)
+        
+        // Sign both inputs
+        tx.sign(privKey: privKey0, pubKey: pubKey0, hashType: .allAnyCanPay, inIdx: 0, prevOut: spentOut0)
+        tx.sign(privKey: privKey1, pubKey: pubKey1, hashType: .noneAnyCanPay, inIdx: 1, prevOut: spentOut1)
+        
+        // Verify the signed transaction as is
+        var res = tx.verify(prevOuts: [spentOut0, spentOut1])
+        XCTAssert(res)
+        
+        // Appending an additional output
+        var signedOneMoreOut = tx
+        signedOneMoreOut.outs.append(.init(value: 0, scriptPubKeyData: .init()))
+        res = signedOneMoreOut.verify(prevOuts: [spentOut0, spentOut1])
+        XCTAssertFalse(res)
+        
+        // Removing one of the outputs
+        var signedOutRemoved = tx
+        signedOutRemoved.outs.remove(at: 0)
+        res = signedOutRemoved.verify(prevOuts: [spentOut0, spentOut1])
+        XCTAssertFalse(res)
+        
+        // Appending an additional input
+        var signedOneMoreIn = tx
+        signedOneMoreIn.ins.append(.init(txID: "", outIdx: 0, sequence: 0))
+        signedOneMoreIn.sign(privKey: privKey2, pubKey: pubKey2, hashType: .noneAnyCanPay, inIdx: 2, prevOut: spentOut2)
+        res = signedOneMoreIn.verify(prevOuts: [spentOut0, spentOut1, spentOut2])
+        XCTAssert(res)
+        
+        // Removing the last one of the ins
+        var signedInRemoved = tx
+        signedInRemoved.ins.remove(at: 1)
+        res = signedInRemoved.verify(prevOuts: [spentOut0])
+        XCTAssert(res)
+    }
+    
+    func testTxV0() {
+        let privKeys = (0...2).map { _ in createPrivKey() }
+        let pubKeys = privKeys.map { getPubKey(privKey: $0) }
+        let pubKeyHashes = pubKeys.map { hash160($0) }
 
-        signed.ins.append(
-            Tx.In(
-                txID: "0000000000000000000000000000000000000000000000000000000000000000",
-                outIdx: 0,
-                sequence: 0,
-                scriptSig: .init([])
-            )
+        // Some previous outputs
+        let spentOut0 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.witnessV0KeyHash, data: [pubKeyHashes[0]]).data)
+        let spentOut1 = Tx.Out(value: 0,
+            scriptPubKeyData: ScriptLegacy.withType(.pubKeyHash, data: [pubKeyHashes[1]]).data)
+
+        // Our transaction with 2 ins and 2 outs
+        var tx = Tx(
+            version: .v1,
+            lockTime: .zero,
+            ins: [
+                .init(txID: "", outIdx: 0, sequence: 0),
+                .init(txID: "", outIdx: 0, sequence: 0),
+            ],
+            outs: [
+                .init(value: 0, scriptPubKeyData: Data()),
+                .init(value: 0, scriptPubKeyData: Data())
+            ]
         )
-        signed = signed.signed(privKey: privKey1, pubKey: pubKey1, hashType: .all, inIdx: 1, prevOut: spentOut1)
-        let verificationResult3 = signed.verify(prevOuts: [spentOut0, spentOut1])
-        XCTAssert(verificationResult3)
+        tx.signV0(privKey: privKeys[0], pubKey: pubKeys[0], hashType: .all, inIdx: 0, prevOut: spentOut0)
+        tx.sign(privKey: privKeys[1], pubKey: pubKeys[1], hashType: .all, inIdx: 1, prevOut: spentOut1)
+        var res = tx.verify(prevOuts: [spentOut0, spentOut1])
+        XCTAssert(res)
     }
 }

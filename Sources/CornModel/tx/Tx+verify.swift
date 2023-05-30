@@ -15,39 +15,39 @@ public extension Tx {
         switch prevOut.scriptPubKey.scriptType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
-            guard input.scriptSig.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts) else {
+            guard let scriptSig = input.scriptSig, scriptSig.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts) else {
                 return false
             }
             return prevOut.scriptPubKey.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .scriptHash:
             var stack = [Data]()
             guard
-                let op = input.scriptSig.ops.last,
+                let scriptSig = input.scriptSig, let op = scriptSig.ops.last,
                 ScriptLegacy([op]).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts),
                 prevOut.scriptPubKey.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             else {
                 return false
             }
-            guard let lastOp = input.scriptSig.ops.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
+            guard let lastOp = scriptSig.ops.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
                 fatalError()
             }
             let redeemScript = ScriptLegacy(redeemScriptRaw)
             if redeemScript.scriptType != .witnessV0KeyHash && redeemScript.scriptType != .witnessV0ScriptHash {
                 var stack2 = [Data]()
                 guard
-                    ScriptLegacy(input.scriptSig.ops.dropLast()).run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+                    ScriptLegacy(scriptSig.ops.dropLast()).run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
                 else {
                     return false
                 }
                 return redeemScript.run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             }
-            guard input.scriptSig.ops.count == 1 else {
+            guard scriptSig.ops.count == 1 else {
                 // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
                 return false
             }
             scriptPubKey2 = redeemScript
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
-            guard input.scriptSig.ops.count == 0 else {
+            guard input.scriptSig == .none else {
                 // The scriptSig must be exactly empty or validation fails. ("native witness program")
                 return false
             }

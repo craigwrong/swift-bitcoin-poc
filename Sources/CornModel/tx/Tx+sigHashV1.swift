@@ -2,8 +2,8 @@ import Foundation
 
 public extension Tx {
     
-    mutating func signedV1(privKey: Data, pubKey: Data, hashType: HashType?, inIdxs: [Int], prevOuts: [Tx.Out]) -> Tx {
-        var newIns = ins
+    mutating func signV1(privKey: Data, pubKey: Data? = .none, hashType: HashType?, inIdxs: [Int], prevOuts: [Tx.Out]) {
+        let pubKey = pubKey ?? getPubKey(privKey: privKey)
         var cache = SigMsgV1Cache?.some(.init())
         for inIdx in inIdxs {
             let sigHash = sigHashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0, annex: .none, cache: &cache)
@@ -17,9 +17,8 @@ public extension Tx {
             }
             let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: .none, aux: aux) + hashTypeSuffix
             // TODO: this is only for keyPath spending
-            newIns[inIdx].witness = [sig]
+            ins[inIdx].witness = [sig]
         }
-        return .init(version: version, lockTime: lockTime, ins: newIns, outs: outs)
     }
 
     mutating func sigHashV1(_ type: HashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?, cache: inout SigMsgV1Cache?) -> Data {

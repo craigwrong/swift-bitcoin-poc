@@ -2,14 +2,12 @@ import Foundation
 
 public extension Tx {
     
-    func signedV0(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Tx.Out) -> Tx {
+    mutating func signV0(privKey: Data, pubKey: Data? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
+        let pubKey = pubKey ?? getPubKey(privKey: privKey)
         let scriptCode = ScriptV0.keyHashScript(hash160(pubKey))
         let sigHash = sigHashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
-        let sig = signECDSA(msg: sigHash, privKey: privKey) + hashType.data
-        
-        var newIns = ins
-        newIns[inIdx].witness = [sig, pubKey]
-        return .init(version: version, lockTime: lockTime, ins: newIns, outs: outs)
+        let sig = signECDSA(msg: sigHash, privKey: privKey) + hashType.data        
+        ins[inIdx].witness = [sig, pubKey]
     }
     
     func sigHashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {

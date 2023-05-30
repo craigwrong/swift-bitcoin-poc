@@ -24,7 +24,7 @@ public extension Tx {
         let pubKey = pubKey ?? getPubKey(privKey: privKey)
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .pubKey, .pubKeyHash:
-            sign(privKey: privKey, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
+            sign(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
         case .multiSig:
             // TODO: Receive array of privKey instead and fill scriptSig with corresponding signatures
             fatalError("Signing of legacy multisig transactions is not yet implemented.")

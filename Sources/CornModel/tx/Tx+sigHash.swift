@@ -2,8 +2,8 @@ import Foundation
 
 public extension Tx {
     
-    mutating func sign(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
-        let pubKey = pubKey ?? getPubKey(privKey: privKey)
+    mutating func sign(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
+        //let pubKey = pubKey ?? getPubKey(privKey: privKey)
         let sigHash = sigHash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
         let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + hashType.data

@@ -153,34 +153,34 @@ final class RegtestTests: XCTestCase {
     }
 
     func testLegacy_1to1_all() {
-        var unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
+        var tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOut0 = Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125") // 03ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e mrVceFBXfu9MJwdbiWFB2A6cpiWb4j1n27
         
-        let sigMsg = unsignedTx.sigMsg(hashType: .all, inIdx: 0, subScript: prevOut0.scriptPubKey)
+        let sigMsg = tx.sigMsg(hashType: .all, inIdx: 0, subScript: prevOut0.scriptPubKey)
         XCTAssertEqual(sigMsg.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000001000000")
-        let sigHash = unsignedTx.sigHash(.all, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0)
+        let sigHash = tx.sigHash(.all, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0)
         let sig = signECDSA(msg: sigHash, privKey: privKey0)
-        XCTAssertTrue(unsignedTx.checkSig(sig + HashType.all.data, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0))
+        XCTAssertTrue(tx.checkSig(sig + HashType.all.data, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0))
         
 
         // Since Core generates a different signature, let's at least make sure that their signature also verifies our hash.
         let coreHex = "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022037b8b0c1a33caa83be5eb71f87bce5dbd4890a56a61b98d9d603e754313fadc602201ef00773d2e0b98d558f0a1ac89a1fad1da15f852140fca5f5d737c0025e11ad014104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"
         let coreTx = Tx(Data(hex: coreHex))
         if  let coreOp = coreTx.ins[0].scriptSig?.ops[0], case .pushBytes(let hashType) = coreOp {
-            XCTAssertTrue(unsignedTx.checkSig(hashType, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0))
+            XCTAssertTrue(tx.checkSig(hashType, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0))
         } else {
             XCTFail("Could not extract signature from transaction.")
         }
 
-        // let signedTx = unsignedTx.signed(privKey: privKey0, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, hashType: .all)
+        //tx.sign(privKey: privKey0, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, hashType: .all)
         //XCTAssertEqual(signedTx.data.hex, coreHex)
     }
     
     func testLegacy_1to1_allAny() {
-        var unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
+        var tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOuts = [
             Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))
@@ -188,13 +188,13 @@ final class RegtestTests: XCTestCase {
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
-        let sigMsg = unsignedTx.sigMsg(hashType: .allAnyCanPay, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
+        let sigMsg = tx.sigMsg(hashType: .allAnyCanPay, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
         XCTAssertEqual(sigMsg.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000081000000")
 
 
-        let signedTx = unsignedTx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .allAnyCanPay, inIdx: 0, prevOuts: prevOuts)
+        tx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .allAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         
-        //XCTAssertEqual(signedTx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022071d3102292c188fb2be5878ac2a34241f49538352435642087ff2350fd5a05040220755797e78c480a4c8fdd47e1dd37ff6e8e343a188d2056ceb894a681d72d7b7c814104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
+        //XCTAssertEqual(tx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022071d3102292c188fb2be5878ac2a34241f49538352435642087ff2350fd5a05040220755797e78c480a4c8fdd47e1dd37ff6e8e343a188d2056ceb894a681d72d7b7c814104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
     }
 
     func testLegacy_1to1_none() {
@@ -212,47 +212,47 @@ final class RegtestTests: XCTestCase {
     }
     
     func testLegacy_1to1_noneAny() {
-        var unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
+        var tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
-        let sigMsg = unsignedTx.sigMsg(hashType: .noneAnyCanPay, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
+        let sigMsg = tx.sigMsg(hashType: .noneAnyCanPay, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
         XCTAssertEqual(sigMsg.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff000000000082000000")
 
-        let signedTx = unsignedTx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .noneAnyCanPay, inIdx: 0, prevOuts: prevOuts)
+        tx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .noneAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         
-        // XCTAssertEqual(signedTx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a4730440220452a9f5a9352adf18b9c0655e522fa12b4129ede95313f0466f5e295bed6d5fa02201fd4122dba88b10e0b9340ff51dafb3c16333cc7e7ce4c7c71d6455487b53360824104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
+        // XCTAssertEqual(tx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a4730440220452a9f5a9352adf18b9c0655e522fa12b4129ede95313f0466f5e295bed6d5fa02201fd4122dba88b10e0b9340ff51dafb3c16333cc7e7ce4c7c71d6455487b53360824104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
     }
     
     func testLegacy_1to1_single() {
-        var unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
+        var tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOuts = [Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
-        let sigMsg = unsignedTx.sigMsg(hashType: .single, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
+        let sigMsg = tx.sigMsg(hashType: .single, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
         XCTAssertEqual(sigMsg.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000003000000")
 
-        let signedTx = unsignedTx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .single, inIdx: 0, prevOuts: prevOuts)
+        tx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .single, inIdx: 0, prevOuts: prevOuts)
         
-        // XCTAssertEqual(signedTx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022001ae1405bb1d058d34eed774ff8f8dcd0ba02f422f37308b9860c5d19838757902203e28313c6f0f558e1965770ae7ff377377de67e293ed21db113b7bf49738e816034104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
+        // XCTAssertEqual(tx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022001ae1405bb1d058d34eed774ff8f8dcd0ba02f422f37308b9860c5d19838757902203e28313c6f0f558e1965770ae7ff377377de67e293ed21db113b7bf49738e816034104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
     }
 
     func testLegacy_1to1_singleAny() {
-        var unsignedTx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
+        var tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da20000000000fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
         
         let prevOuts = [Tx.Out(value: UInt64(312500000), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))]
         let privKey0 = Data(hex: "828748ccadd3792f39841749da9618389dcce35ace39d94b131ae8d8a359804c") // 92aQLXE8yvQ1qHoXvPCSSoLP3AM65g98Pavxsb53MTdTv1BgKXE
         let pubKey0 = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         
-        let sigMsg = unsignedTx.sigMsg(hashType: .singleAnyCanPay, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
+        let sigMsg = tx.sigMsg(hashType: .singleAnyCanPay, inIdx: 0, subScript: prevOuts[0].scriptPubKey)
         XCTAssertEqual(sigMsg.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000083000000")
 
-        let signedTx = unsignedTx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
+        tx.signInput(privKey: privKey0, pubKey: pubKey0, hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         
-        //XCTAssertEqual(signedTx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022032bfe478986429ea3b74df0115385c87567ec0637bef8565f7245d3177212c4d022015826bd4764633d00a17f61a439c462ff5ec978acfbd6e94c6146153ac252d80834104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
+        // XCTAssertEqual(tx.data.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022032bfe478986429ea3b74df0115385c87567ec0637bef8565f7245d3177212c4d022015826bd4764633d00a17f61a439c462ff5ec978acfbd6e94c6146153ac252d80834104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000")
     }
 }

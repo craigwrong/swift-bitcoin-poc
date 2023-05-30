@@ -22,7 +22,7 @@ public extension ScriptLegacy {
                 .checkSig
             ])
         case .scriptHash:
-            precondition(data.count == 3 && data[0].count == 20)
+            precondition(data.count == 1 && data[0].count == 20)
             return .init([
                 .hash160,
                 .pushBytes(data[0]),

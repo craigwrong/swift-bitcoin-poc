@@ -235,7 +235,7 @@ final class BIP341Tests: XCTestCase {
 
     func testKeyPathSpending() {
         
-        var unsignedTx = Tx(.init(hex: "02000000097de20cbff686da83a54981d2b9bab3586f4ca7e48f57f5b55963115f3b334e9c010000000000000000d7b7cab57b1393ace2d064f4d4a2cb8af6def61273e127517d44759b6dafdd990000000000fffffffff8e1f583384333689228c5d28eac13366be082dc57441760d957275419a418420000000000fffffffff0689180aa63b30cb162a73c6d2a38b7eeda2a83ece74310fda0843ad604853b0100000000feffffffaa5202bdf6d8ccd2ee0f0202afbbb7461d9264a25e5bfd3c5a52ee1239e0ba6c0000000000feffffff956149bdc66faa968eb2be2d2faa29718acbfe3941215893a2a3446d32acd050000000000000000000e664b9773b88c09c32cb70a2a3e4da0ced63b7ba3b22f848531bbb1d5d5f4c94010000000000000000e9aa6b8e6c9de67619e6a3924ae25696bb7b694bb677a632a74ef7eadfd4eabf0000000000ffffffffa778eb6a263dc090464cd125c466b5a99667720b1c110468831d058aa1b82af10100000000ffffffff0200ca9a3b000000001976a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac807840cb0000000020ac9a87f5594be208f8532db38cff670c450ed2fea8fcdefcc9a663f78bab962b0065cd1d"))
+        var tx = Tx(.init(hex: "02000000097de20cbff686da83a54981d2b9bab3586f4ca7e48f57f5b55963115f3b334e9c010000000000000000d7b7cab57b1393ace2d064f4d4a2cb8af6def61273e127517d44759b6dafdd990000000000fffffffff8e1f583384333689228c5d28eac13366be082dc57441760d957275419a418420000000000fffffffff0689180aa63b30cb162a73c6d2a38b7eeda2a83ece74310fda0843ad604853b0100000000feffffffaa5202bdf6d8ccd2ee0f0202afbbb7461d9264a25e5bfd3c5a52ee1239e0ba6c0000000000feffffff956149bdc66faa968eb2be2d2faa29718acbfe3941215893a2a3446d32acd050000000000000000000e664b9773b88c09c32cb70a2a3e4da0ced63b7ba3b22f848531bbb1d5d5f4c94010000000000000000e9aa6b8e6c9de67619e6a3924ae25696bb7b694bb677a632a74ef7eadfd4eabf0000000000ffffffffa778eb6a263dc090464cd125c466b5a99667720b1c110468831d058aa1b82af10100000000ffffffff0200ca9a3b000000001976a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac807840cb0000000020ac9a87f5594be208f8532db38cff670c450ed2fea8fcdefcc9a663f78bab962b0065cd1d"))
 
         let utxosSpent = [
             Tx.Out(value: 420000000, scriptPubKeyData: Data(hex: "512053a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343")),
@@ -258,7 +258,7 @@ final class BIP341Tests: XCTestCase {
         )
         
         var cache = SigMsgV1Cache?.some(.init())
-        _ = unsignedTx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
+        _ = tx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
         if let cache, let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
             XCTAssertEqual(shaAmounts, intermediary.hashAmounts)
             XCTAssertEqual(shaOuts, intermediary.hashOutputs)
@@ -471,7 +471,7 @@ final class BIP341Tests: XCTestCase {
             let tweakedPrivKey = createPrivKeyTapTweak(privKey: privKey, merkleRoot: merkleRoot)
             XCTAssertEqual(tweakedPrivKey, expectedTweakedPrivkey)
 
-            let sigMsg = unsignedTx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
+            let sigMsg = tx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
 
             if let cache {
                 XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
@@ -484,7 +484,7 @@ final class BIP341Tests: XCTestCase {
             }
             XCTAssertEqual(sigMsg, expectedSigMsg)
 
-            let sigHash = unsignedTx.sigHashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
+            let sigHash = tx.sigHashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
             XCTAssertEqual(sigHash, expectedSigHash)
             
             let hashTypeSuffix: Data

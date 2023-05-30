@@ -2,8 +2,8 @@ import Foundation
 
 public extension Tx {
     
-    mutating func sign(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
-        //let pubKey = pubKey ?? getPubKey(privKey: privKey)
+    mutating func sign(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
+        let pubKey = pubKey ?? getPubKey(privKey: privKey)
         let sigHash = sigHash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
         let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + hashType.data
@@ -37,11 +37,11 @@ public extension Tx {
             subScript = scriptCode
             // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).
         } else if prevOut.scriptPubKey.scriptType == .scriptHash {
-            let input = ins[inIdx]
-            guard let op = input.scriptSig?.ops.last, case let .pushBytes(redeemScriptRaw) = op else {
+            // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
+            if let op = ins[inIdx].scriptSig?.ops.last, case let .pushBytes(redeemScriptRaw) = op, ScriptLegacy(redeemScriptRaw) != scriptCode {
                 preconditionFailure()
             }
-            subScript = ScriptLegacy(redeemScriptRaw)
+            subScript = scriptCode
         } else {
             fatalError("Invalid legacy previous output or redeem script not provided.")
         }

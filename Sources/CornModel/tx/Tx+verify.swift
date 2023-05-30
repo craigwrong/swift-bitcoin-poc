@@ -83,7 +83,7 @@ public extension Tx {
                 // return true
             // }
             
-            // Immutable copy to us as reference to the original witness stack
+            // Immutable copy to use as reference to the original witness stack
             guard let originalStack = ins[inIdx].witness else {
                 fatalError()
             }

@@ -41,6 +41,7 @@ public extension Tx {
                 }
                 return redeemScript.run(stack: &stack2, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             }
+            // Redeem script is a p2wkh or p2wsh, just need to verify there are no more operations
             guard scriptSig.ops.count == 1 else {
                 // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
                 return false

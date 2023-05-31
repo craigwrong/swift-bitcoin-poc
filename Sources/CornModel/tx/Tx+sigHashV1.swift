@@ -2,8 +2,7 @@ import Foundation
 
 public extension Tx {
     
-    mutating func signV1(privKey: Data, pubKey: Data? = .none, hashType: HashType?, inIdxs: [Int], prevOuts: [Tx.Out]) {
-        let pubKey = pubKey ?? getPubKey(privKey: privKey)
+    mutating func signV1(privKey: Data, hashType: HashType?, inIdxs: [Int], prevOuts: [Tx.Out]) {
         var cache = SigMsgV1Cache?.some(.init())
         for inIdx in inIdxs {
             let sigHash = sigHashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, extFlag: 0, annex: .none, cache: &cache)

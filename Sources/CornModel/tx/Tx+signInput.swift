@@ -2,8 +2,18 @@ import Foundation
 
 public extension Tx {
 
+    mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptV0, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+        let pubKey = pubKey ?? getPubKey(privKey: privKey)
+        switch(prevOuts[inIdx].scriptPubKey.scriptType) {
+        case .witnessV0ScriptHash:
+            signV0(privKey: privKey, pubKey: pubKey, redeemScript: redeemScript, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
+        default:
+            fatalError()
+        }
+    }
+
     /// Populates unlocking script / witness with signatures and provided redeem script.
-    mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+    mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy, redeemScriptV0: ScriptV0? = .none, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
         let pubKey = pubKey ?? getPubKey(privKey: privKey)
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .scriptHash:
@@ -13,7 +23,14 @@ public extension Tx {
                 signV0(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOut: Tx.Out(value: prevOuts[inIdx].value, scriptPubKeyData: redeemScript.data))
                 return
             }
-            // TODO: Handle P2SH-P2WSH
+            if redeemScript.scriptType == .witnessV0ScriptHash {
+                guard let redeemScriptV0 else {
+                    fatalError("Second redeem script (Witness V0) not provided.")
+                }
+                ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data)])
+                signV0(privKey: privKey, pubKey: pubKey, redeemScript: redeemScriptV0, hashType: hashType, inIdx: inIdx, prevOut: Tx.Out(value: prevOuts[inIdx].value, scriptPubKeyData: redeemScript.data))
+                return
+            }
             sign(privKey: privKey, pubKey: pubKey, redeemScript: redeemScript, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
         default:
             fatalError()
@@ -35,7 +52,7 @@ public extension Tx {
         case .witnessV0KeyHash:
             signV0(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
         case .witnessV1TapRoot:
-            signV1(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdxs: [inIdx], prevOuts: prevOuts)
+            signV1(privKey: privKey, hashType: hashType, inIdxs: [inIdx], prevOuts: prevOuts)
         default:
             fatalError()
         }

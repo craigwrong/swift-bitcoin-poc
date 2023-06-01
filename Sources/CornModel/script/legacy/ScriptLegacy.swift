@@ -9,7 +9,7 @@ public struct ScriptLegacy: Equatable {
     public var ops: [Op]
 }
 
-public extension ScriptLegacy {
+extension ScriptLegacy {
 
     init(_ data: Data) {
         var data = data

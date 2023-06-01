@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
     
 final class BitcoinTransactionTests: XCTestCase {
     override class func setUp() {

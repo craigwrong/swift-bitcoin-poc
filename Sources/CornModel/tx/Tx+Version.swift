@@ -1,9 +1,9 @@
 import Foundation
 
-public extension Tx {
+extension Tx {
     
     /// The version of this bitcoin transaction. Either v1 or v2.
-    enum Version: Int {
+    public enum Version: Int {
         case v1 = 1, v2
         
         init?(_ data: Data) {

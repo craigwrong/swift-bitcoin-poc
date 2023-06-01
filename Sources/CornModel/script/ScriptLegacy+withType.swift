@@ -1,7 +1,38 @@
 import Foundation
 
-public extension ScriptLegacy {
+extension ScriptLegacy {
+
+    public static func makeNullData(_ message: String) -> Self {
+        guard let messageData = message.data(using: .utf8) else {
+            fatalError()
+        }
+        return .withType(.nullData, data: [messageData])
+    }
+
+    public static func makeP2PK(pubKey: Data) -> Self {
+        .withType(.pubKey, data: [pubKey])
+    }
     
+    public static func makeP2PKH(pubKey: Data) -> Self {
+        .withType(.pubKeyHash, data: [hash160(pubKey)])
+    }
+    
+    public static func makeP2SH(redeemScript: ScriptLegacy) -> Self {
+        .withType(.scriptHash, data: [hash160(redeemScript.data)])
+    }
+
+    public static func makeP2WKH(pubKey: Data) -> Self {
+        .withType(.witnessV0KeyHash, data: [hash160(pubKey)])
+    }
+    
+    public static func makeP2WSH(redeemScriptV0: ScriptV0) -> Self {
+        .withType(.witnessV0ScriptHash, data: [sha256(redeemScriptV0.data)])
+    }
+
+    public static func makeP2TR(outputKey: Data) -> Self {
+        .withType(.witnessV1TapRoot, data: [outputKey])
+    }
+
     static func withType(_ type: LockScriptType, data: [Data]) -> Self {
         switch type {
         case .nonStandard, .witnessUnknown:

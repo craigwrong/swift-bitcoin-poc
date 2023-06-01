@@ -1,7 +1,7 @@
 import Foundation
 import ECCHelper
 
-public func getInternalKey(privKey: Data) -> Data {
+func getInternalKey(privKey: Data) -> Data {
     let privKeyPtr = privKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     
     let internalKey: [UInt8] = .init(unsafeUninitializedCapacity: 32) { buf, len in

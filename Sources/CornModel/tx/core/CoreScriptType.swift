@@ -1,6 +1,6 @@
 import Foundation
 
-public enum CoreScriptType: String, Equatable, Decodable {
+enum CoreScriptType: String, Equatable, Decodable {
     case nonStandard = "nonstandard",
          pubKey = "pubkey",
          pubKeyHash = "pubkeyhash",
@@ -13,7 +13,7 @@ public enum CoreScriptType: String, Equatable, Decodable {
          witnessUnknown = "witness_unknown"
 }
 
-public extension CoreScriptType {
+extension CoreScriptType {
     
     init(_ scriptType: LockScriptType) {
         switch scriptType {

@@ -1,7 +1,7 @@
 import Foundation
 import ECCHelper
 
-public func createPrivKeyTapTweak(privKey: Data, merkleRoot: Data?) -> Data {
+func createPrivKeyTapTweak(privKey: Data, merkleRoot: Data?) -> Data {
     let privKeyPtr = privKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     let merkleRootPtr = merkleRoot?.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     let tweakedKey: [u_char] = .init(unsafeUninitializedCapacity: 32) { buf, len in

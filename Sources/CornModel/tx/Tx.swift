@@ -35,7 +35,7 @@ extension Tx: CustomStringConvertible {
     public var description: String { txid }
 }
 
-public extension Tx {
+extension Tx {
     
     static let empty = Self(version: .v1, lockTime: 0, ins: [], outs: [])
     static let coinbaseID = String(repeating: "0", count: 64)
@@ -121,8 +121,6 @@ public extension Tx {
         return ret
     }
     
-    /// Whether this is the coinbase transaction of any given block. Based of whether the first and only input is a coinbase input.
-    var isCoinbase: Bool { ins.first?.isCoinbase ?? false }
     var size: Int { nonWitnessSize + witnessSize }
     var weight: Int { nonWitnessSize * 4 + witnessSize }
     var vsize: Int { Int((Double(weight) / 4).rounded(.up)) }
@@ -132,6 +130,8 @@ public extension Tx {
 
 extension Tx {
     
+    /// Whether this is the coinbase transaction of any given block. Based of whether the first and only input is a coinbase input.
+    var isCoinbase: Bool { ins.first?.isCoinbase ?? false }
     var hasWitness: Bool { ins.contains { $0.witness != .none } }
     var insLen: UInt64 { .init(ins.count) }
     var outsLen: UInt64 { .init(outs.count) }

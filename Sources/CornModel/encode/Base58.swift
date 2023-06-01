@@ -3,7 +3,7 @@ import CommonCrypto
 import Foundation
 
 /// A static utility class which provides Base58 encoding and decoding functionality.
-public enum Base58 {
+enum Base58 {
   /// Length of checksum appended to Base58Check encoded strings.
   private static let checksumLength = 4
 
@@ -14,7 +14,7 @@ public enum Base58 {
   /// Encode the given bytes into a Base58Check encoded string.
   /// - Parameter bytes: The bytes to encode.
   /// - Returns: A base58check encoded string representing the given bytes, or nil if encoding failed.
-  public static func base58CheckEncode(_ bytes: [UInt8]) -> String {
+  static func base58CheckEncode(_ bytes: [UInt8]) -> String {
     let checksum = calculateChecksum(bytes)
     let checksummedBytes = bytes + checksum
     return Base58.base58Encode(checksummedBytes)
@@ -23,7 +23,7 @@ public enum Base58 {
   /// Decode the given Base58Check encoded string to bytes.
   /// - Parameter input: A base58check encoded input string to decode.
   /// - Returns: Bytes representing the decoded input, or nil if decoding failed.
-  public static func base58CheckDecode(_ input: String) -> [UInt8]? {
+  static func base58CheckDecode(_ input: String) -> [UInt8]? {
     guard let decodedChecksummedBytes = base58Decode(input) else {
       return nil
     }
@@ -41,7 +41,7 @@ public enum Base58 {
   /// Encode the given bytes to a Base58 encoded string.
   /// - Parameter bytes: The bytes to encode.
   /// - Returns: A base58 encoded string representing the given bytes, or nil if encoding failed.
-  public static func base58Encode(_ bytes: [UInt8]) -> String {
+  static func base58Encode(_ bytes: [UInt8]) -> String {
     var answer: [UInt8] = []
     var integerBytes = BigUInt(Data(bytes))
 
@@ -63,7 +63,7 @@ public enum Base58 {
   /// Decode the given base58 encoded string to bytes.
   /// - Parameter input: The base58 encoded input string to decode.
   /// - Returns: Bytes representing the decoded input, or nil if decoding failed.
-  public static func base58Decode(_ input: String) -> [UInt8]? {
+  static func base58Decode(_ input: String) -> [UInt8]? {
     var answer = zero
     var i = BigUInt(1)
     let byteString = [UInt8](input.utf8)

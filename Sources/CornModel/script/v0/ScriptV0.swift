@@ -6,10 +6,10 @@ public struct ScriptV0: Equatable {
         self.ops = ops
     }
     
-    public var ops: [Op]
+    var ops: [Op]
 }
 
-public extension ScriptV0{
+extension ScriptV0 {
 
     init(_ data: Data) {
         var data = data

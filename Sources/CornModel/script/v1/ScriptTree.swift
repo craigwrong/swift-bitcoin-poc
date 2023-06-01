@@ -1,11 +1,11 @@
 import Foundation
 
-public indirect enum ScriptTree {
+indirect enum ScriptTree {
     // leaf_version is 0xc0 (or 0xc1) for BIP342
     case leaf(Int, ScriptV1), branch(Self, Self)
 
     /// Calculates the merkle root as well as some additional tree info for generating control blocks.
-    public func calcMerkleRoot() -> ([(ScriptTree, Data)], Data) {
+    func calcMerkleRoot() -> ([(ScriptTree, Data)], Data) {
         switch self {
         case .leaf(_, _):
             return ([(self, Data())], leafHash)
@@ -21,7 +21,7 @@ public indirect enum ScriptTree {
         }
     }
 
-    public func leafs() -> [(Int, ScriptTree)] {
+    func leafs() -> [(Int, ScriptTree)] {
         var count = 0
         return leafs(partialResult: [], counter: &count)
     }
@@ -37,7 +37,7 @@ public indirect enum ScriptTree {
         }
     }
     
-    public var leafHash: Data {
+    var leafHash: Data {
         guard case .leaf(let version, let script) = self else {
             preconditionFailure("Needs to be a leaf.")
         }

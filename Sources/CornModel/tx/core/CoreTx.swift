@@ -1,8 +1,8 @@
 import Foundation
 
-public struct CoreTx: Equatable, Decodable {
+struct CoreTx: Equatable, Decodable {
     
-    public init(txid: String, hash: String, version: UInt32, size: Int, vsize: Int, weight: Int, locktime: UInt32, vin: [CoreTx.Input], vout: [CoreTx.Output], hex: String, blockhash: String?, confirmations: Int?, time: Date?, blocktime: Int?) {
+    init(txid: String, hash: String, version: UInt32, size: Int, vsize: Int, weight: Int, locktime: UInt32, vin: [CoreTx.Input], vout: [CoreTx.Output], hex: String, blockhash: String?, confirmations: Int?, time: Date?, blocktime: Int?) {
         self.txid = txid
         self.hash = hash
         self.version = version
@@ -19,23 +19,23 @@ public struct CoreTx: Equatable, Decodable {
         self.blocktime = blocktime
     }
 
-    public let txid: String
-    public let hash: String
-    public let version: UInt32
-    public let size: Int
-    public let vsize: Int
-    public let weight: Int
-    public let locktime: UInt32
-    public let vin: [Input]
-    public let vout: [Output]
-    public let hex: String
-    public let blockhash: String?
-    public let confirmations: Int?
-    public let time: Date?
-    public let blocktime: Int?
+    let txid: String
+    let hash: String
+    let version: UInt32
+    let size: Int
+    let vsize: Int
+    let weight: Int
+    let locktime: UInt32
+    let vin: [Input]
+    let vout: [Output]
+    let hex: String
+    let blockhash: String?
+    let confirmations: Int?
+    let time: Date?
+    let blocktime: Int?
 }
 
-public extension CoreTx {
+extension CoreTx {
     
     var toBitcoinTransaction: Tx {
         .init(Data(hex: hex))
@@ -43,7 +43,7 @@ public extension CoreTx {
     
     struct Input: Equatable, Decodable {
         
-        public  init(coinbase: String? = nil, scriptSig: CoreTx.Input.UnlockScript? = nil, txid: String? = nil, vout: Int? = nil, txinwitness: [String]? = nil, sequence: UInt32) {
+         init(coinbase: String? = nil, scriptSig: CoreTx.Input.UnlockScript? = nil, txid: String? = nil, vout: Int? = nil, txinwitness: [String]? = nil, sequence: UInt32) {
             self.coinbase = coinbase
             self.scriptSig = scriptSig
             self.txid = txid
@@ -53,40 +53,40 @@ public extension CoreTx {
         }
         
         
-        public struct UnlockScript: Equatable, Decodable {
-            public init(asm: String, hex: String) {
+        struct UnlockScript: Equatable, Decodable {
+            init(asm: String, hex: String) {
                 self.asm = asm
                 self.hex = hex
             }
             
-            public let asm: String
-            public let hex: String
+            let asm: String
+            let hex: String
         }
 
         // Either coinbase (scriptsig)
-        public let coinbase: String?
+        let coinbase: String?
         
         // Either scriptsig
-        public let scriptSig: UnlockScript?
-        public let txid: String?
-        public let vout: Int?
+        let scriptSig: UnlockScript?
+        let txid: String?
+        let vout: Int?
         
-        public let txinwitness: [String]?
+        let txinwitness: [String]?
         
-        public let sequence: UInt32
+        let sequence: UInt32
     }
     
     struct Output: Equatable, Decodable {
         
-        public init(value: Double, n: Int, scriptPubKey: CoreTx.Output.LockScript) {
+        init(value: Double, n: Int, scriptPubKey: CoreTx.Output.LockScript) {
             self.value = value
             self.n = n
             self.scriptPubKey = scriptPubKey
         }
         
-        public struct LockScript: Equatable, Decodable {
+        struct LockScript: Equatable, Decodable {
             
-            public init(asm: String, desc: String, hex: String, address: String? = nil, type: CoreTx.Output.LockScript.ScriptType) {
+            init(asm: String, desc: String, hex: String, address: String? = nil, type: CoreTx.Output.LockScript.ScriptType) {
                 self.asm = asm
                 self.desc = desc
                 self.hex = hex
@@ -94,24 +94,24 @@ public extension CoreTx {
                 self.type = type
             }
             
-            public enum ScriptType: String, Equatable, Decodable {
+            enum ScriptType: String, Equatable, Decodable {
                 case witness_v0_keyhash, pubkeyhash, nulldata, unknown
             }
             
-            public let asm: String
-            public let desc: String
-            public let hex: String
-            public let address: String?
-            public let type: ScriptType
+            let asm: String
+            let desc: String
+            let hex: String
+            let address: String?
+            let type: ScriptType
         }
         
-        public let value: Double
-        public let n: Int
-        public let scriptPubKey: LockScript
+        let value: Double
+        let n: Int
+        let scriptPubKey: LockScript
     }
 }
 
-public extension Tx {
+extension Tx {
     func toBCoreTransaction(network: Network = .main) -> CoreTx {
         .init(
             txid: txid,
@@ -136,7 +136,7 @@ public extension Tx {
     }
 }
 
-public extension Tx.In {
+extension Tx.In {
     var bCoreInput: CoreTx.Input {
         isCoinbase
         ? .init(
@@ -161,7 +161,7 @@ public extension Tx.In {
     }
 }
 
-public extension Tx.Out {
+extension Tx.Out {
     func toBCoreOutput(outIdx: Int, network: Network = .main) -> CoreTx.Output {
         .init(
             value: doubleValue,

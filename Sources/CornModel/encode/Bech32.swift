@@ -5,13 +5,13 @@
 import Foundation
 
 /// Bech32 checksum implementation
-public class Bech32 {
+class Bech32 {
 
     private static let BECH32M_CONST = UInt32(0x2bc830a3)
     private static let BECH32_CONST = UInt32(1)
     private let checksumConst: UInt32
 
-    public init(bech32m: Bool = false) {
+    init(bech32m: Bool = false) {
         checksumConst = bech32m ? Self.BECH32M_CONST : Self.BECH32_CONST
     }
 
@@ -78,7 +78,7 @@ public class Bech32 {
     }
     
     /// Encode Bech32 string
-    public func encode(_ hrp: String, values: Data) -> String {
+    func encode(_ hrp: String, values: Data) -> String {
         let checksum = createChecksum(hrp: hrp, values: values)
         var combined = values
         combined.append(checksum)
@@ -92,7 +92,7 @@ public class Bech32 {
     }
     
     /// Decode Bech32 string
-    public func decode(_ str: String) throws -> (hrp: String, checksum: Data) {
+    func decode(_ str: String) throws -> (hrp: String, checksum: Data) {
         guard let strBytes = str.data(using: .utf8) else {
             throw DecodingError.nonUTF8String
         }
@@ -147,7 +147,7 @@ public class Bech32 {
 }
 
 extension Bech32 {
-    public enum DecodingError: LocalizedError {
+    enum DecodingError: LocalizedError {
         case nonUTF8String
         case nonPrintableCharacter
         case invalidCase
@@ -159,7 +159,7 @@ extension Bech32 {
         case invalidCharacter
         case checksumMismatch
         
-        public var errorDescription: String? {
+        var errorDescription: String? {
             switch self {
             case .checksumMismatch:
                 return "Checksum doesn't match"

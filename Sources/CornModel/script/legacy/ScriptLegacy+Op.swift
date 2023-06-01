@@ -1,7 +1,7 @@
 import Foundation
 
-public extension ScriptLegacy {
-    enum Op: Equatable {
+extension ScriptLegacy {
+    public enum Op: Equatable {
         case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, undefined
     }
 }
@@ -213,7 +213,7 @@ extension ScriptLegacy.Op {
     }
 }
 
-public extension ScriptLegacy.Op {
+extension ScriptLegacy.Op {
     
     var asm: String {
         if case .pushBytes(let d) = self {

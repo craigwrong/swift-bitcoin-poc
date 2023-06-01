@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 import ECCHelper
 
 final class HashTests: XCTestCase {

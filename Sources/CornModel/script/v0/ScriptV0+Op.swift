@@ -1,7 +1,7 @@
 import Foundation
 
-public extension ScriptV0 {
-    enum Op: Equatable {
+extension ScriptV0 {
+    public enum Op: Equatable {
         case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
     }
 }
@@ -209,7 +209,7 @@ extension ScriptV0.Op {
     }
 }
 
-public extension ScriptV0.Op {
+extension ScriptV0.Op {
     
     var asm: String {
         if case .pushBytes(let d) = self {

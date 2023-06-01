@@ -1,6 +1,6 @@
 import Foundation
 
-public extension Data {
+extension Data {
     private static let regex = try! NSRegularExpression(pattern: "([0-9a-fA-F]{2})", options: [])
     
     /// Create instance from string containing hex digits.
@@ -14,7 +14,7 @@ public extension Data {
     
 }
 
-public extension DataProtocol {
+extension DataProtocol {
     
     /// Hexadecimal (Base-16) string representation of data.
     var hex: String {

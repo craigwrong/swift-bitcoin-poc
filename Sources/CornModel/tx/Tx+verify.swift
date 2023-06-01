@@ -1,8 +1,8 @@
 import Foundation
 
-public extension Tx {
+extension Tx {
 
-    func verify(prevOuts: [Tx.Out]) -> Bool {
+    public func verify(prevOuts: [Tx.Out]) -> Bool {
         ins.indices.reduce(true) { result, i in
             result && verify(inIdx: i, prevOuts: prevOuts)
         }
@@ -58,7 +58,7 @@ public extension Tx {
         }
         switch scriptPubKey2.scriptType {
         case .witnessV0KeyHash:
-            let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the public key
+            let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the key
             guard var stack = ins[inIdx].witness else {
                 fatalError()
             }
@@ -114,7 +114,7 @@ public extension Tx {
             
             // If there is exactly one element left in the witness stack, key path spending is used:
             if newStack.count == 1 {
-                let outputKey = scriptPubKey2.witnessProgram // In this case it is the public key (aka taproot output key q)
+                let outputKey = scriptPubKey2.witnessProgram // In this case it is the key (aka taproot output key q)
                 // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig)[20], where Verify is defined in BIP340.
                 // If the sig is 65 bytes long, return sig[64] ≠ 0x00[21] and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
                 // Otherwise, fail[22].

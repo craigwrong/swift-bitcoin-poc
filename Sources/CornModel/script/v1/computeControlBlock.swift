@@ -1,6 +1,6 @@
 import Foundation
 
-public func computeControlBlock(internalPubKey: Data, leafInfo: (ScriptTree, Data), merkleRoot: Data) -> Data {
+func computeControlBlock(internalPubKey: Data, leafInfo: (ScriptTree, Data), merkleRoot: Data) -> Data {
     let (scriptLeaf, path) = leafInfo
     guard case .leaf(let leafVersion, _) = scriptLeaf else {
         fatalError()

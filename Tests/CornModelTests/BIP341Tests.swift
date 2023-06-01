@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 
 /// https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#test-vectors
 /// https://github.com/bitcoin/bips/blob/master/bip-0341/wallet-test-vectors.json

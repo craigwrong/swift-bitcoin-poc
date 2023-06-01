@@ -1,7 +1,7 @@
 import Foundation
 import ECCHelper
 
-public func signSchnorr(msg: Data, privKey: Data, merkleRoot: Data?, skipTweak: Bool = false, aux: Data?) -> Data {
+func signSchnorr(msg: Data, privKey: Data, merkleRoot: Data?, skipTweak: Bool = false, aux: Data?) -> Data {
     let msgPtr = msg.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     let privKeyPtr = privKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     let merkleRootPtr = merkleRoot?.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }

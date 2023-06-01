@@ -1,10 +1,10 @@
 import Foundation
 
 /// Segregated Witness Address encoder/decoder
-public class SegwitAddrCoder {
+class SegwitAddrCoder {
     private let bech32: Bech32
 
-    public init(bech32m: Bool = false) {
+    init(bech32m: Bool = false) {
         bech32 = Bech32(bech32m: bech32m)
     }
 
@@ -34,7 +34,7 @@ public class SegwitAddrCoder {
     }
     
     /// Decode segwit address
-    public func decode(hrp: String, addr: String) throws -> (version: Int, program: Data) {
+    func decode(hrp: String, addr: String) throws -> (version: Int, program: Data) {
         let dec = try bech32.decode(addr)
         guard dec.hrp == hrp else {
             throw CoderError.hrpMismatch(dec.hrp, hrp)
@@ -56,7 +56,7 @@ public class SegwitAddrCoder {
     }
     
     /// Encode segwit address
-    public func encode(hrp: String, version: Int, program: Data) throws -> String {
+    func encode(hrp: String, version: Int, program: Data) throws -> String {
         var enc = Data([UInt8(version)])
         enc.append(try convertBits(from: 8, to: 5, pad: true, idata: program))
         let result = bech32.encode(hrp, values: enc)
@@ -68,7 +68,7 @@ public class SegwitAddrCoder {
 }
 
 extension SegwitAddrCoder {
-    public enum CoderError: LocalizedError {
+    enum CoderError: LocalizedError {
         case bitsConversionFailed
         case hrpMismatch(String, String)
         case checksumSizeTooLow
@@ -79,7 +79,7 @@ extension SegwitAddrCoder {
         
         case encodingCheckFailed
         
-        public var errorDescription: String? {
+        var errorDescription: String? {
             switch self {
             case .bitsConversionFailed:
                 return "Failed to perform bits conversion"

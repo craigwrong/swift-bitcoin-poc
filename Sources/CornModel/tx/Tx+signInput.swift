@@ -1,9 +1,9 @@
 import Foundation
 
-public extension Tx {
+extension Tx {
 
     /// Populates unlocking script / witness with signatures.
-    mutating func signInput(privKey: Data, pubKey: Data? = .none, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+    public mutating func signInput(privKey: Data, pubKey: Data? = .none, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
         let pubKey = pubKey ?? getPubKey(privKey: privKey)
         switch(prevOuts[inIdx].scriptPubKey.scriptType) {
         case .pubKey, .pubKeyHash:
@@ -23,39 +23,34 @@ public extension Tx {
         }
     }
 
-    mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptV0, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+    public mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptV0, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
         precondition(prevOuts[inIdx].scriptPubKey.scriptType == .witnessV0ScriptHash)
         let pubKey = pubKey ?? getPubKey(privKey: privKey)
         signV0(privKey: privKey, pubKey: pubKey, redeemScript: redeemScript, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
     }
 
     /// Populates unlocking script / witness with signatures and provided redeem script.
-    mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy, redeemScriptV0: ScriptV0? = .none, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+    public mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy, redeemScriptV0: ScriptV0, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+        precondition(prevOuts[inIdx].scriptPubKey.scriptType == .scriptHash && redeemScript.scriptType == .witnessV0ScriptHash)
         let pubKey = pubKey ?? getPubKey(privKey: privKey)
-        switch(prevOuts[inIdx].scriptPubKey.scriptType) {
-        case .scriptHash:
-            if redeemScript.scriptType == .witnessV0KeyHash {
-                // TODO: Pass redeem script on to add to input's script sig
-                ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data)])
-                signV0(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOut: Tx.Out(value: prevOuts[inIdx].value, scriptPubKeyData: redeemScript.data))
-                return
-            }
-            if redeemScript.scriptType == .witnessV0ScriptHash {
-                guard let redeemScriptV0 else {
-                    fatalError("Second redeem script (Witness V0) not provided.")
-                }
-                ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data)])
-                signV0(privKey: privKey, pubKey: pubKey, redeemScript: redeemScriptV0, hashType: hashType, inIdx: inIdx, prevOut: Tx.Out(value: prevOuts[inIdx].value, scriptPubKeyData: redeemScript.data))
-                return
-            }
-            sign(privKey: privKey, pubKey: pubKey, redeemScript: redeemScript, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
-        default:
-            fatalError()
+        ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data)])
+        signV0(privKey: privKey, pubKey: pubKey, redeemScript: redeemScriptV0, hashType: hashType, inIdx: inIdx, prevOut: Tx.Out(value: prevOuts[inIdx].value, scriptPubKeyData: redeemScript.data))
+    }
+
+    /// Populates unlocking script / witness with signatures and provided redeem script.
+    public mutating func signInput(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy, hashType: HashType, inIdx: Int, prevOuts: [Tx.Out]) {
+        precondition(prevOuts[inIdx].scriptPubKey.scriptType == .scriptHash && redeemScript.scriptType != .witnessV0ScriptHash)
+        let pubKey = pubKey ?? getPubKey(privKey: privKey)
+        if redeemScript.scriptType == .witnessV0KeyHash {
+            // TODO: Pass redeem script on to add to input's script sig
+            ins[inIdx].scriptSig = .init([.pushBytes(redeemScript.data)])
+            signV0(privKey: privKey, pubKey: pubKey, hashType: hashType, inIdx: inIdx, prevOut: Tx.Out(value: prevOuts[inIdx].value, scriptPubKeyData: redeemScript.data))
+            return
         }
+        sign(privKey: privKey, pubKey: pubKey, redeemScript: redeemScript, hashType: hashType, inIdx: inIdx, prevOut: prevOuts[inIdx])
     }
     
-    mutating func sign(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
-        let pubKey = pubKey ?? getPubKey(privKey: privKey)
+    mutating func sign(privKey: Data, pubKey: Data, redeemScript: ScriptLegacy? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
         let sigHash = sigHash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript ?? prevOut.scriptPubKey, opIdx: 0)
         
         let sig = signECDSA(msg: sigHash, privKey: privKey /*, grind: false)*/) + hashType.data
@@ -76,8 +71,7 @@ public extension Tx {
         ins[inIdx].scriptSig = newScriptSig
     }
 
-    mutating func signV0(privKey: Data, pubKey: Data? = .none, redeemScript: ScriptV0? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
-        let pubKey = pubKey ?? getPubKey(privKey: privKey)
+    mutating func signV0(privKey: Data, pubKey: Data, redeemScript: ScriptV0? = .none, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
         let scriptCode = redeemScript ?? ScriptV0.keyHashScript(hash160(pubKey))
         let sigHash = sigHashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sigHash, privKey: privKey) + hashType.data

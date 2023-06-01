@@ -1,19 +1,24 @@
 import Foundation
 
-public extension Tx {
+extension Tx {
     
-    struct Out: Equatable {
-        public init(value: UInt64, scriptPubKeyData: Data) {
+    public struct Out: Equatable {
+
+        public init(value: UInt64, scriptPubKey: ScriptLegacy) {
+            self.init(value: value, scriptPubKeyData: scriptPubKey.data)
+        }
+        
+        init(value: UInt64, scriptPubKeyData: Data) {
             self.value = value
             self.scriptPubKeyData = scriptPubKeyData
         }
         
-        public let value: UInt64 // Sats
-        public let scriptPubKeyData: Data
+        var value: UInt64 // Sats
+        var scriptPubKeyData: Data
     }
 }
 
-public extension Tx.Out {
+extension Tx.Out {
 
     init(_ data: Data) {
         var data = data

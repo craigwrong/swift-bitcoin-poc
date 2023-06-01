@@ -1,7 +1,7 @@
 import Foundation
 import ECCHelper
 
-public func signECDSA(msg: Data, privKey: Data, grind: Bool = true) -> Data {
+func signECDSA(msg: Data, privKey: Data, grind: Bool = true) -> Data {
    let msgPtr = msg.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
    let privKeyPtr = privKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
    let sig: [u_char] = .init(unsafeUninitializedCapacity: 74) { buf, len in

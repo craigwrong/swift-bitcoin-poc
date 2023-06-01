@@ -1,4 +1,4 @@
-public enum LockScriptType: Equatable {
+enum LockScriptType: Equatable {
     case nonStandard,
          pubKey,
          pubKeyHash,

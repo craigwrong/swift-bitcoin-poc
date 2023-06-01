@@ -1,7 +1,7 @@
 import Foundation
 import ECCHelper
 
-public func createTapTweak(pubKey: Data, merkleRoot: Data?) -> (tweakedKey: Data, parity: Bool) {
+func createTapTweak(pubKey: Data, merkleRoot: Data?) -> (tweakedKey: Data, parity: Bool) {
     let pubKeyPtr = pubKey.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     let merkleRootPtr = merkleRoot?.withUnsafeBytes { $0.bindMemory(to: UInt8.self).baseAddress! }
     var parity: Int32 = -1

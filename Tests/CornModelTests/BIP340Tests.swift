@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 
 func insecureRand256() -> Data {
     let a = UInt64.random(in: 0 ... UInt64.max)

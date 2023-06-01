@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 
 /// https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki#Test_vectors
 final class BIP86Tests: XCTestCase {

@@ -1,7 +1,7 @@
 import Foundation
 
-public struct SigMsgV1Cache {
-    public init(shaPrevouts: Data? = nil, shaPrevoutsUsed: Bool = false, shaAmounts: Data? = nil, shaAmountsUsed: Bool = false, shaScriptPubKeys: Data? = nil, shaScriptPubKeysUsed: Bool = false, shaSequences: Data? = nil, shaSequencesUsed: Bool = false, shaOuts: Data? = nil, shaOutsUsed: Bool = false) {
+struct SigMsgV1Cache {
+    init(shaPrevouts: Data? = nil, shaPrevoutsUsed: Bool = false, shaAmounts: Data? = nil, shaAmountsUsed: Bool = false, shaScriptPubKeys: Data? = nil, shaScriptPubKeysUsed: Bool = false, shaSequences: Data? = nil, shaSequencesUsed: Bool = false, shaOuts: Data? = nil, shaOutsUsed: Bool = false) {
         self.shaPrevouts = shaPrevouts
         self.shaPrevoutsUsed = shaPrevoutsUsed
         self.shaAmounts = shaAmounts
@@ -14,14 +14,14 @@ public struct SigMsgV1Cache {
         self.shaOutsUsed = shaOutsUsed
     }
     
-    public internal(set) var shaPrevouts: Data?
-    public internal(set) var shaPrevoutsUsed: Bool = false
-    public internal(set) var shaAmounts: Data?
-    public internal(set) var shaAmountsUsed: Bool = false
-    public internal(set) var shaScriptPubKeys: Data?
-    public internal(set) var shaScriptPubKeysUsed: Bool = false
-    public internal(set) var shaSequences: Data?
-    public internal(set) var shaSequencesUsed: Bool = false
-    public internal(set) var shaOuts: Data?
-    public internal(set) var shaOutsUsed: Bool = false
+    var shaPrevouts: Data?
+    var shaPrevoutsUsed: Bool = false
+    var shaAmounts: Data?
+    var shaAmountsUsed: Bool = false
+    var shaScriptPubKeys: Data?
+    var shaScriptPubKeysUsed: Bool = false
+    var shaSequences: Data?
+    var shaSequencesUsed: Bool = false
+    var shaOuts: Data?
+    var shaOutsUsed: Bool = false
 }

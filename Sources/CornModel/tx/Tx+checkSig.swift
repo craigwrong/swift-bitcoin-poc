@@ -1,6 +1,6 @@
 import Foundation
 
-public extension Tx {
+extension Tx {
     
     func checkSig(_ hashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
         var sig = hashType

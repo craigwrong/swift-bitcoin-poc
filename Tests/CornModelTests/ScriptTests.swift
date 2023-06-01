@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 import BigInt
 
 /// https://en.bitcoin.it/wiki/Script

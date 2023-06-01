@@ -1,10 +1,10 @@
 import Foundation
 
-public extension Tx {
+extension Tx {
     
-    struct In: Equatable {
-        public let txID: String
-        public let outIdx: Int
+    public struct In: Equatable {
+        public var txID: String
+        public var outIdx: Int
         public var sequence: UInt32
         public var scriptSig: ScriptLegacy?
         public var witness: [Data]?
@@ -19,7 +19,7 @@ public extension Tx {
     }
 }
 
-public extension Tx.In {
+extension Tx.In {
     
     init(_ data: Data) {
         var offset = data.startIndex

@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 
 /// https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki
 /// Tests: https://gist.github.com/gavinandresen/3966071

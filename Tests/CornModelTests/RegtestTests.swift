@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 
 final class RegtestTests: XCTestCase {
     override class func setUp() {

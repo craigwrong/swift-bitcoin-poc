@@ -46,9 +46,7 @@ public extension Tx.In {
         self.init(txID: txID, outIdx: outIdx, sequence: sequence, scriptSig: scriptSig)
     }
     
-    var isCoinbase: Bool {
-        txID == String(repeating: "0", count: 64)
-    }
+    var isCoinbase: Bool { txID == Tx.coinbaseID }
 }
 
 extension Tx.In {

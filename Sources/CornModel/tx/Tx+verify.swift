@@ -1,5 +1,7 @@
 import Foundation
+
 public extension Tx {
+
     func verify(prevOuts: [Tx.Out]) -> Bool {
         ins.indices.reduce(true) { result, i in
             result && verify(inIdx: i, prevOuts: prevOuts)

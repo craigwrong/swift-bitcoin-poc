@@ -115,8 +115,8 @@ final class DataTests: XCTestCase {
         
         let redeemScript2 = ScriptLegacy.withType(.pubKey, data: [pubKeys[2]])
         let redeemScript4 = ScriptLegacy.withType(.witnessV0KeyHash, data: [pubKeyHashes[4]])
-        let redeemScript5 = ScriptV0.init([.drop, .constant(1)])
-        let redeemScriptV06 = ScriptV0.init([.drop, .constant(1)])
+        let redeemScript5 = ScriptV0.init([.pushBytes(pubKeys[5]), .checkSig])
+        let redeemScriptV06 = ScriptV0.init([.pushBytes(pubKeys[6]), .checkSig])
         let redeemScript6 = ScriptLegacy.withType(.witnessV0ScriptHash, data: [
             sha256(redeemScriptV06.data)
         ])

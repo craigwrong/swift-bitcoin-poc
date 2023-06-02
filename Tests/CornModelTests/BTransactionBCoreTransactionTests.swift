@@ -16,7 +16,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         
         // Testnet!
         let coreTx2 = CoreTx.Sample.segwit1NoDescriptor
-        var tx2 = coreTx2.toBitcoinTransaction
+        let tx2 = coreTx2.toBitcoinTransaction
         let coreTx2RoundTrip = tx2.toBCoreTransaction(network: .test)
         XCTAssertEqual(coreTx2.vout[0], coreTx2RoundTrip.vout[0])
         XCTAssertEqual(coreTx2, coreTx2RoundTrip)

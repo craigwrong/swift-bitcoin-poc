@@ -1,6 +1,6 @@
 import Foundation
 
-indirect enum ScriptTree {
+public indirect enum ScriptTree {
     // leaf_version is 0xc0 (or 0xc1) for BIP342
     case leaf(Int, ScriptV1), branch(Self, Self)
 

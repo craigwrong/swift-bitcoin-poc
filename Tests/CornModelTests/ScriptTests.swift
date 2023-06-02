@@ -1,6 +1,5 @@
 import XCTest
 @testable import CornModel
-import BigInt
 
 /// https://en.bitcoin.it/wiki/Script
 final class ScriptTests: XCTestCase {
@@ -13,10 +12,10 @@ final class ScriptTests: XCTestCase {
     }
     
     func testBoolAnd() {
-        let zero = BigInt(0).serialize()
-        let one = BigInt(1).serialize()
-        let two = BigInt(2).serialize()
-        let big = (BigInt(UInt64.max) + 1).serialize()
+        let zero = withUnsafeBytes(of: 0) { Data($0) }
+        let one = withUnsafeBytes(of: 1) { Data($0) }
+        let two = withUnsafeBytes(of: 2) { Data($0) }
+        let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
         
         var script = ScriptLegacy([.pushBytes(zero), .pushBytes(zero), .boolAnd])
         var stack = [Data]()
@@ -124,9 +123,8 @@ final class ScriptTests: XCTestCase {
     }
 
     func testDrop() {
-        let bigNummber = BigInt(UInt64.max) * 2
-        let numberData = bigNummber.serialize()
-        let script = ScriptLegacy([.pushBytes(numberData), .drop])
+        let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
+        let script = ScriptLegacy([.pushBytes(big), .drop])
         var stack = [Data]()
         let result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
@@ -134,13 +132,12 @@ final class ScriptTests: XCTestCase {
     }
 
     func testDup() {
-        let bigNummber = BigInt(UInt64.max) * 2
-        let numberData = bigNummber.serialize()
-        let script = ScriptLegacy([.pushBytes(numberData), .dup])
+        let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
+        let script = ScriptLegacy([.pushBytes(big), .dup])
         var stack = [Data]()
         let result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
-        XCTAssertEqual(stack, [numberData, numberData])
+        XCTAssertEqual(stack, [big, big])
     }
 
     func testCheckSig() {
@@ -163,7 +160,11 @@ final class ScriptTests: XCTestCase {
         var result = scriptSig.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
         result = result && scriptPubKey.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
         XCTAssert(result)
-        XCTAssertEqual(stack, [BigInt(1).serialize()])
+        
+        var expected = [Data]()
+        expected.pushInt(1)
+        XCTAssertEqual(stack, expected)
+
         XCTAssert(tx.verify(prevOuts: [prevOut]))
     }
 }

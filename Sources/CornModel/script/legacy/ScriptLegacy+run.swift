@@ -1,5 +1,4 @@
 import Foundation
-import BigInt
 
 extension ScriptLegacy: Script {
     func run(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out]) -> Bool {
@@ -11,7 +10,7 @@ extension ScriptLegacy: Script {
         }
         guard result else { return false }
         if let last = stack.last {
-            return !BigInt(last).isZero
+            return !last.isZero
         }
         return true
     }

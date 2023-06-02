@@ -147,14 +147,14 @@ extension ScriptLegacy.Op {
         
         // Operations that don't consume any parameters from the stack
         case .zero:
-            return opConstant(value: 0, stack: &stack)
+            return opConstant(0, stack: &stack)
         case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d):
             return opPushData(data: d, stack: &stack)
         case .constant(let k):
             precondition(k > 0 && k < 17)
-            return opConstant(value: Int8(k), stack: &stack)
+            return opConstant(Int(k), stack: &stack)
         case .oneNegate:
-            return opConstant(value: -1, stack: &stack)
+            return opConstant(-1, stack: &stack)
         case .reserved:
             return opReserved()
         case .noOp:
@@ -162,6 +162,17 @@ extension ScriptLegacy.Op {
         case .return:
             return opReturn()
 
+        // Special operations
+        case .checkMultiSig:
+            guard let (n, pubKeys, m, sigs) = try? getCheckMultiSigParams(&stack) else {
+                return false
+            }
+            return opCheckMultiSig(n, m, pubKeys, sigs, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+        case .checkMultiSigVerify:
+            guard let (n, pubKeys, m, sigs) = try? getCheckMultiSigParams(&stack) else {
+                return false
+            }
+            return opCheckMultiSigVerify(n, m, pubKeys, sigs, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
 
         // Unary operations
         case .verify, .drop, .dup, .ripemd160, .sha256, .hash160, .hash256:
@@ -188,7 +199,7 @@ extension ScriptLegacy.Op {
             }
 
         // Binary operations
-        case .equal, .equalVerify, .boolAnd, .checkSig, .checkMultiSigVerify:
+        case .equal, .equalVerify, .boolAnd, .checkSig, .checkSigVerify:
             guard let (first, second) = try? getBinaryParams(&stack) else {
                 return false
             }
@@ -354,4 +365,21 @@ func getBinaryParams(_ stack: inout [Data]) throws -> (Data, Data) {
     let second = stack.removeLast()
     let first = stack.removeLast()
     return (first, second)
+}
+
+func getCheckMultiSigParams(_ stack: inout [Data]) throws -> (Int, [Data], Int, [Data]) {
+    guard stack.count > 4 else {
+        throw ScriptError.invalidScript
+    }
+    let n = stack.popInt()
+    let pubKeys = Array(stack[(stack.endIndex - n)...].reversed())
+    stack.removeLast(n)
+    let m = stack.popInt()
+    let sigs = Array(stack[(stack.endIndex - m)...].reversed())
+    stack.removeLast(m)
+    let nullDummy = stack.removeLast()
+    guard nullDummy.count == 0 else {
+        throw ScriptError.invalidScript
+    }
+    return (n, pubKeys, m, sigs)
 }

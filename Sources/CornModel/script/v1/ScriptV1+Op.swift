@@ -149,14 +149,14 @@ extension ScriptV1.Op {
         
         // Operations that don't consume any parameters from the stack
         case .zero:
-            return opConstant(value: 0, stack: &stack)
+            return opConstant(0, stack: &stack)
         case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d):
             return opPushData(data: d, stack: &stack)
         case .constant(let k):
             precondition(k > 0 && k < 17)
-            return opConstant(value: Int8(k), stack: &stack)
+            return opConstant(Int(k), stack: &stack)
         case .oneNegate:
-            return opConstant(value: -1, stack: &stack)
+            return opConstant(-1, stack: &stack)
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
             return opSuccess(stack: &stack)

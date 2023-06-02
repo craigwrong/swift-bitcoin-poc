@@ -1,8 +1,7 @@
 import Foundation
-import BigInt
 
 func opEqual(_ first: Data, _ second: Data, stack: inout [Data]) -> Bool {
-    let result = BigInt(first) == BigInt(second)
-    stack.append(result ? BigInt(1).serialize() : BigInt.zero.serialize())
+    let result = first == second
+    stack.pushInt(result ? 1 : 0)
     return true
 }

@@ -2,8 +2,10 @@ import Foundation
 
 extension Tx {
     
-    func checkSig(_ hashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
-        var sig = hashType
+    func checkSig(_ sigHashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
+        precondition(sigHashType.count > 69, "Signature too short or missing hash type suffix.")
+        precondition(sigHashType.count < 72, "Signature too long.")
+        var sig = sigHashType
         guard let rawValue = sig.popLast(), let hashType = HashType(rawValue: rawValue) else {
             preconditionFailure()
         }
@@ -12,8 +14,8 @@ extension Tx {
         return result
     }
     
-    func checkSigV0(_ hashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Bool {
-        var sig = hashType
+    func checkSigV0(_ sigHashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Bool {
+        var sig = sigHashType
         guard let hashTypeRaw = sig.popLast(), let hashType = HashType(rawValue: hashTypeRaw) else {
             fatalError()
         }

@@ -8,21 +8,19 @@ extension Tx {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: ScriptLegacy
-        if prevOut.scriptPubKey.scriptType == .pubKey || prevOut.scriptPubKey.scriptType == .pubKeyHash {
-            // TODO: Account for code separators. Find the last executed one and remove anything before it. After that, remove all remaining OP_CODESEPARATOR instances from script code
-            var scriptCode = scriptCode
-            scriptCode.removeSubScripts(before: opIdx)
-            scriptCode.removeCodeSeparators()
-            subScript = scriptCode
-            // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).
-        } else if prevOut.scriptPubKey.scriptType == .scriptHash {
+        if prevOut.scriptPubKey.scriptType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
             if let op = ins[inIdx].scriptSig?.ops.last, case let .pushBytes(redeemScriptRaw) = op, ScriptLegacy(redeemScriptRaw) != scriptCode {
                 preconditionFailure()
             }
             subScript = scriptCode
         } else {
-            fatalError("Invalid legacy previous output or redeem script not provided.")
+            // TODO: Account for code separators. Find the last executed one and remove anything before it. After that, remove all remaining OP_CODESEPARATOR instances from script code
+            var scriptCode = scriptCode
+            scriptCode.removeSubScripts(before: opIdx)
+            scriptCode.removeCodeSeparators()
+            subScript = scriptCode
+            // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).
         }
         let sigMsg = sigMsg(hashType: type, inIdx: inIdx, subScript: subScript)
         return hash256(sigMsg)

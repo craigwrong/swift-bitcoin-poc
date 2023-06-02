@@ -41,7 +41,7 @@ extension ScriptLegacy {
             return .scriptHash
         }
         // TODO: Improve check. Look for "0 ... sigs ... <m> ... addresses ... <n> OP_CHECKMULTISIG".
-        if ops.count > 5, ops[0] == .zero, ops.last == .checkMultiSig {
+        if ops.count > 3, ops.last == .checkMultiSig {
             return .multiSig(-1, -1)
         }
         if ops.count == 2, ops[0] == .return, case .pushBytes(_) = ops[1] {

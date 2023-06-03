@@ -3,7 +3,7 @@ enum LockScriptType: Equatable {
          pubKey,
          pubKeyHash,
          scriptHash,
-         multiSig(Int, Int),
+         multiSig,
          nullData,
          witnessV0KeyHash,
          witnessV0ScriptHash,

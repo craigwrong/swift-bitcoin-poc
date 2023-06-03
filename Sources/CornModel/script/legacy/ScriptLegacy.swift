@@ -40,9 +40,8 @@ extension ScriptLegacy {
         if ops.count == 3, ops[0] == .hash160, ops[2] == .equal, case let .pushBytes(data) = ops[1], data.count == 20 {
             return .scriptHash
         }
-        // TODO: Improve check. Look for "0 ... sigs ... <m> ... addresses ... <n> OP_CHECKMULTISIG".
         if ops.count > 3, ops.last == .checkMultiSig {
-            return .multiSig(-1, -1)
+            return .multiSig
         }
         if ops.count == 2, ops[0] == .return, case .pushBytes(_) = ops[1] {
             return .nullData

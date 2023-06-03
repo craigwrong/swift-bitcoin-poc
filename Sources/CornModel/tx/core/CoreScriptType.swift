@@ -25,7 +25,7 @@ extension CoreScriptType {
             self = .pubKeyHash
         case .scriptHash:
             self = .scriptHash
-        case .multiSig(_, _):
+        case .multiSig:
             self = .multiSig
         case .nullData:
             self = .nullData

@@ -4,7 +4,7 @@ extension Tx {
 
     // - Legacy
 
-    func sigHash(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Data {
+    func sighash(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Data {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: ScriptLegacy
@@ -123,7 +123,7 @@ extension Tx {
 
     // - Witness V0
 
-    func sigHashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {
+    func sighashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {
         // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
         var scriptCode = scriptCode
         scriptCode.removeSubScripts(before: opIdx)
@@ -184,18 +184,24 @@ extension Tx {
 
     // - Witness V1
 
-    mutating func sigHashV1(_ type: HashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?, cache: inout SigMsgV1Cache?) -> Data {
-        let sigMsg = sigMsgV1(hashType: type, inIdx: inIdx, prevOuts: prevOuts, extFlag: extFlag, annex: annex, cache: &cache)
-        return taggedHash(tag: "TapSighash", payload: sigMsg)
+    mutating func sighashV1(_ type: HashType?, inIdx: Int, prevOuts: [Tx.Out], tapscriptExt: TapscriptExt? = .none, cache: inout SigMsgV1Cache?) -> Data {
+        var payload = sigMsgV1(hashType: type, extFlag: tapscriptExt == .none ? 0 : 1, inIdx: inIdx, prevOuts: prevOuts, cache: &cache)
+        if let tapscriptExt {
+            payload += tapscriptExt.data
+        }
+        return taggedHash(tag: "TapSighash", payload: payload)
     }
     
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .
     /// https://github.com/bitcoin/bitcoin/blob/58da1619be7ac13e686cb8bbfc2ab0f836eb3fa5/src/script/interpreter.cpp#L1477
     /// https://bitcoin.stackexchange.com/questions/115328/how-do-you-calculate-a-taproot-sighash
-    func sigMsgV1(hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8, annex: Data?, cache: inout SigMsgV1Cache?) -> Data {
+    func sigMsgV1(hashType: HashType?, extFlag: UInt8 = 0, inIdx: Int, prevOuts: [Tx.Out], cache: inout SigMsgV1Cache?) -> Data {
         
         precondition(prevOuts.count == ins.count, "The corresponding (aligned) UTXO for each transaction input is required.")
         precondition(!hashType.isSingle || inIdx < outs.count, "For single hash type, the selected input needs to have a matching output.")
+
+        // (the original witness stack has two or more witness elements, and the first byte of the last element is 0x50)
+        let annex = ins[inIdx].taprootAnnex
 
         // Epoch:
         // epoch (0).
@@ -286,7 +292,7 @@ extension Tx {
         }
         
         // Data about this input:
-        // spend_type (1): equal to (ext_flag * 2) + annex_present, where annex_present is 0 if no annex is present, or 1 otherwise (the original witness stack has two or more witness elements, and the first byte of the last element is 0x50)
+        // spend_type (1): equal to (ext_flag * 2) + annex_present, where annex_present is 0 if no annex is present, or 1 otherwise
         var inputData = Data()
         let spendType = (extFlag * 2) + (annex == .none ? 0 : 1)
         inputData.append(spendType)

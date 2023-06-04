@@ -36,7 +36,7 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     internalPubkey: Data(hex: "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27"),
-                    scriptTree: ScriptTree?.some(.leaf(192, ScriptV1(Data(hex: "20d85a959b0290bf19bb89ed43c916be835475d013da4b362117393e25a48229b8ac"))))
+                    scriptTree: ScriptTree?.some(.leaf(192, [ScriptV1.Op].fromData(Data(hex: "20d85a959b0290bf19bb89ed43c916be835475d013da4b362117393e25a48229b8ac"))))
                 ),
                 intermediary: (
                     leafHashes: [
@@ -57,7 +57,7 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     internalPubkey: Data(hex: "93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820"),
-                    scriptTree:  ScriptTree?.some(.leaf(192, ScriptV1(Data(hex: "20b617298552a72ade070667e86ca63b8f5789a9fe8731ef91202a91c9f3459007ac"))))
+                    scriptTree:  ScriptTree?.some(.leaf(192, [ScriptV1.Op].fromData(Data(hex: "20b617298552a72ade070667e86ca63b8f5789a9fe8731ef91202a91c9f3459007ac"))))
                 ),
                 intermediary: (
                     leafHashes: [
@@ -79,8 +79,8 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "ee4fe085983462a184015d1f782d6a5f8b9c2b60130aff050ce221ecf3786592"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, ScriptV1(Data(hex: "20387671353e273264c495656e27e39ba899ea8fee3bb69fb2a680e22093447d48ac"))),
-                        .leaf(250, ScriptV1(Data(hex: "06424950333431")))
+                        .leaf(192, [ScriptV1.Op].fromData(Data(hex: "20387671353e273264c495656e27e39ba899ea8fee3bb69fb2a680e22093447d48ac"))),
+                        .leaf(250, [ScriptV1.Op].fromData(Data(hex: "06424950333431")))
                     ))
                 ),
                 intermediary: (
@@ -105,8 +105,8 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "f9f400803e683727b14f463836e1e78e1c64417638aa066919291a225f0e8dd8"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, ScriptV1(Data(hex: "2044b178d64c32c4a05cc4f4d1407268f764c940d20ce97abfd44db5c3592b72fdac"))),
-                        .leaf(192, ScriptV1(Data(hex: "07546170726f6f74")))
+                        .leaf(192, [ScriptV1.Op].fromData(Data(hex: "2044b178d64c32c4a05cc4f4d1407268f764c940d20ce97abfd44db5c3592b72fdac"))),
+                        .leaf(192, [ScriptV1.Op].fromData(Data(hex: "07546170726f6f74")))
                     ))
                 ),
                 intermediary: (
@@ -131,10 +131,10 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "e0dfe2300b0dd746a3f8674dfd4525623639042569d829c7f0eed9602d263e6f"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, ScriptV1(Data(hex: "2072ea6adcf1d371dea8fba1035a09f3d24ed5a059799bae114084130ee5898e69ac"))),
+                        .leaf(192, [ScriptV1.Op].fromData(Data(hex: "2072ea6adcf1d371dea8fba1035a09f3d24ed5a059799bae114084130ee5898e69ac"))),
                         .branch(
-                            .leaf(192, ScriptV1(Data(hex: "202352d137f2f3ab38d1eaa976758873377fa5ebb817372c71e2c542313d4abda8ac"))),
-                            .leaf(192, ScriptV1(Data(hex: "207337c0dd4253cb86f2c43a2351aadd82cccb12a172cd120452b9bb8324f2186aac")))
+                            .leaf(192, [ScriptV1.Op].fromData(Data(hex: "202352d137f2f3ab38d1eaa976758873377fa5ebb817372c71e2c542313d4abda8ac"))),
+                            .leaf(192, [ScriptV1.Op].fromData(Data(hex: "207337c0dd4253cb86f2c43a2351aadd82cccb12a172cd120452b9bb8324f2186aac")))
                         )
                     ))
                 ),
@@ -162,10 +162,10 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "55adf4e8967fbd2e29f20ac896e60c3b0f1d5b0efa9d34941b5958c7b0a0312d"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, ScriptV1(Data(hex: "2071981521ad9fc9036687364118fb6ccd2035b96a423c59c5430e98310a11abe2ac"))),
+                        .leaf(192, [ScriptV1.Op].fromData(Data(hex: "2071981521ad9fc9036687364118fb6ccd2035b96a423c59c5430e98310a11abe2ac"))),
                         .branch(
-                            .leaf(192, ScriptV1(Data(hex: "20d5094d2dbe9b76e2c245a2b89b6006888952e2faa6a149ae318d69e520617748ac"))),
-                            .leaf(192, ScriptV1(Data(hex: "20c440b462ad48c7a77f94cd4532d8f2119dcebbd7c9764557e62726419b08ad4cac")))
+                            .leaf(192, [ScriptV1.Op].fromData(Data(hex: "20d5094d2dbe9b76e2c245a2b89b6006888952e2faa6a149ae318d69e520617748ac"))),
+                            .leaf(192, [ScriptV1.Op].fromData(Data(hex: "20c440b462ad48c7a77f94cd4532d8f2119dcebbd7c9764557e62726419b08ad4cac")))
                         )
                     ))
                 ),
@@ -258,7 +258,7 @@ final class BIP341Tests: XCTestCase {
         )
         
         var cache = SigMsgV1Cache?.some(.init())
-        _ = tx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
+        _ = tx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, cache: &cache)
         if let cache, let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
             XCTAssertEqual(shaAmounts, intermediary.hashAmounts)
             XCTAssertEqual(shaOuts, intermediary.hashOutputs)
@@ -289,7 +289,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: true,
                         hashOutputs: false
                     ),
-                    sigHash: Data(hex: "2514a6272f85cfa0f45eb907fcb0d121b808ed37c6ea160a5a9046ed5526d555")
+                    sighash: Data(hex: "2514a6272f85cfa0f45eb907fcb0d121b808ed37c6ea160a5a9046ed5526d555")
                 ),
                 expectedWitness:[
                     Data(hex: "ed7c1647cb97379e76892be0cacff57ec4a7102aa24296ca39af7541246d8ff14d38958d4cc1e2e478e4d4a764bbfd835b16d4e314b72937b29833060b87276c03")
@@ -314,7 +314,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: false,
                         hashOutputs: false
                     ),
-                    sigHash: Data(hex: "325a644af47e8a5a2591cda0ab0723978537318f10e6a63d4eed783b96a71a4d")
+                    sighash: Data(hex: "325a644af47e8a5a2591cda0ab0723978537318f10e6a63d4eed783b96a71a4d")
                 ),
                 expectedWitness:[
                     Data(hex: "052aedffc554b41f52b521071793a6b88d6dbca9dba94cf34c83696de0c1ec35ca9c5ed4ab28059bd606a4f3a657eec0bb96661d42921b5f50a95ad33675b54f83")
@@ -339,7 +339,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: true,
                         hashOutputs: true
                     ),
-                    sigHash: Data(hex: "bf013ea93474aa67815b1b6cc441d23b64fa310911d991e713cd34c7f5d46669")
+                    sighash: Data(hex: "bf013ea93474aa67815b1b6cc441d23b64fa310911d991e713cd34c7f5d46669")
                 ),
                 expectedWitness:[
                     Data(hex: "ff45f742a876139946a149ab4d9185574b98dc919d2eb6754f8abaa59d18b025637a3aa043b91817739554f4ed2026cf8022dbd83e351ce1fabc272841d2510a01")
@@ -364,7 +364,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: true,
                         hashOutputs: true
                     ),
-                    sigHash: Data(hex: "4f900a0bae3f1446fd48490c2958b5a023228f01661cda3496a11da502a7f7ef")
+                    sighash: Data(hex: "4f900a0bae3f1446fd48490c2958b5a023228f01661cda3496a11da502a7f7ef")
                 ),
                 expectedWitness:[
                     Data(hex: "b4010dd48a617db09926f729e79c33ae0b4e94b79f04a1ae93ede6315eb3669de185a17d2b0ac9ee09fd4c64b678a0b61a0a86fa888a273c8511be83bfd6810f")
@@ -389,7 +389,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: true,
                         hashOutputs: false
                     ),
-                    sigHash: Data(hex: "15f25c298eb5cdc7eb1d638dd2d45c97c4c59dcaec6679cfc16ad84f30876b85")
+                    sighash: Data(hex: "15f25c298eb5cdc7eb1d638dd2d45c97c4c59dcaec6679cfc16ad84f30876b85")
                 ),
                 expectedWitness: [
                     Data(hex: "a3785919a2ce3c4ce26f298c3d51619bc474ae24014bcdd31328cd8cfbab2eff3395fa0a16fe5f486d12f22a9cedded5ae74feb4bbe5351346508c5405bcfee002")
@@ -414,7 +414,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: false,
                         hashOutputs: false
                     ),
-                    sigHash: Data(hex: "cd292de50313804dabe4685e83f923d2969577191a3e1d2882220dca88cbeb10")
+                    sighash: Data(hex: "cd292de50313804dabe4685e83f923d2969577191a3e1d2882220dca88cbeb10")
                 ),
                 expectedWitness: [
                     Data(hex: "ea0c6ba90763c2d3a296ad82ba45881abb4f426b3f87af162dd24d5109edc1cdd11915095ba47c3a9963dc1e6c432939872bc49212fe34c632cd3ab9fed429c482")
@@ -439,7 +439,7 @@ final class BIP341Tests: XCTestCase {
                         hashSequences: false,
                         hashOutputs: true
                     ),
-                    sigHash: Data(hex: "cccb739eca6c13a8a89e6e5cd317ffe55669bbda23f2fd37b0f18755e008edd2")
+                    sighash: Data(hex: "cccb739eca6c13a8a89e6e5cd317ffe55669bbda23f2fd37b0f18755e008edd2")
                 ),
                 expectedWitness: [
                     Data(hex: "bbc9584a11074e83bc8c6759ec55401f0ae7b03ef290c3139814f545b58a9f8127258000874f44bc46db7646322107d4d86aec8e73b8719a61fff761d75b5dd981")
@@ -459,7 +459,7 @@ final class BIP341Tests: XCTestCase {
             let expectedTweak = testCase.intermediary.tweak
             let expectedTweakedPrivkey = testCase.intermediary.tweakedPrivkey
             let expectedSigMsg = testCase.intermediary.sigMsg
-            let expectedSigHash = testCase.intermediary.sigHash
+            let expectedSighash = testCase.intermediary.sighash
             let expectedWitness = testCase.expectedWitness
             
             let internalPubKey = getInternalKey(privKey: privKey)
@@ -471,7 +471,7 @@ final class BIP341Tests: XCTestCase {
             let tweakedPrivKey = createPrivKeyTapTweak(privKey: privKey, merkleRoot: merkleRoot)
             XCTAssertEqual(tweakedPrivKey, expectedTweakedPrivkey)
 
-            let sigMsg = tx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
+            let sigMsg = tx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, cache: &cache)
 
             if let cache {
                 XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
@@ -484,8 +484,8 @@ final class BIP341Tests: XCTestCase {
             }
             XCTAssertEqual(sigMsg, expectedSigMsg)
 
-            let sigHash = tx.sigHashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, extFlag: 0, annex: .none, cache: &cache)
-            XCTAssertEqual(sigHash, expectedSigHash)
+            let sighash = tx.sighashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, cache: &cache)
+            XCTAssertEqual(sighash, expectedSighash)
             
             let hashTypeSuffix: Data
             if let hashType {
@@ -493,7 +493,7 @@ final class BIP341Tests: XCTestCase {
             } else {
                 hashTypeSuffix = Data()
             }
-            let sig = signSchnorr(msg: sigHash, privKey: privKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + hashTypeSuffix
+            let sig = signSchnorr(msg: sighash, privKey: privKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + hashTypeSuffix
             XCTAssertEqual([sig], expectedWitness)
         }
 

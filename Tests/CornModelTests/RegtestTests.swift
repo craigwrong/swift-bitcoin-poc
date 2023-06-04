@@ -161,8 +161,8 @@ final class RegtestTests: XCTestCase {
         
         let sigMsg = tx.sigMsg(hashType: .all, inIdx: 0, subScript: prevOut0.scriptPubKey)
         XCTAssertEqual(sigMsg.hex, "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000001976a914786890276a55f3e6d2f403e3d595b6603964fa0d88acfdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac0000000001000000")
-        let sigHash = tx.sigHash(.all, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0)
-        let sig = signECDSA(msg: sigHash, privKey: privKey0)
+        let sighash = tx.sighash(.all, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0)
+        let sig = signECDSA(msg: sighash, privKey: privKey0)
         XCTAssertTrue(tx.checkSig(sig + HashType.all.data, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, scriptCode: prevOut0.scriptPubKey, opIdx: 0))
         
 

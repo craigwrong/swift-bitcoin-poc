@@ -4,22 +4,25 @@ extension Tx {
     
     public struct Out: Equatable {
 
-        public init(value: UInt64, scriptPubKey: ScriptLegacy) {
-            self.init(value: value, scriptPubKeyData: scriptPubKey.data)
-        }
-        
         init(value: UInt64, scriptPubKeyData: Data) {
             self.value = value
             self.scriptPubKeyData = scriptPubKeyData
         }
         
-        var value: UInt64 // Sats
+        /// Amount in satoshis.
+        var value: UInt64
+        
+        /// Raw content of scriptPubKey. It may contain an invalid / unparsable script.
         var scriptPubKeyData: Data
     }
 }
 
 extension Tx.Out {
 
+    public init(value: UInt64, scriptPubKey: ScriptLegacy) {
+        self.init(value: value, scriptPubKeyData: scriptPubKey.data)
+    }
+        
     init(_ data: Data) {
         var data = data
         let value = data.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) }
@@ -55,9 +58,7 @@ extension Tx.Out {
         }
         return ""
     }
-}
-
-extension Tx.Out {
+    
     var dataLen: Int {
         MemoryLayout.size(ofValue: value) + scriptPubKeyData.varLenSize
     }

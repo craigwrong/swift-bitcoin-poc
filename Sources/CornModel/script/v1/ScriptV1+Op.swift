@@ -143,8 +143,7 @@ extension ScriptV1.Op {
         }
     }
     
-    // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
-    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptV1, opIdx: Int) -> Bool {
+    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], tapscript: ScriptV1, opIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -203,9 +202,9 @@ extension ScriptV1.Op {
             case .boolAnd:
                 return opBoolAnd(first, second, stack: &stack)
             case .checkSig:
-                return opCheckSigV1(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+                return opCheckSigV1(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, tapscript: tapscript, opIdx: opIdx)
             case .checkSigVerify:
-                return opCheckSigVerifyV1(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+                return opCheckSigVerifyV1(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, tapscript: tapscript, opIdx: opIdx)
             default:
                 fatalError()
             }
@@ -344,5 +343,23 @@ extension ScriptV1.Op {
         default:
             fatalError("Unknown operation code.")
         }
+    }
+}
+
+extension Array where Element == ScriptV1.Op {
+
+    static func fromData(_ data: Data) -> Self {
+        var data = data
+        var ops = Self()
+        while data.count > 0 {
+            let op = ScriptV1.Op.fromData(data)
+            ops.append(op)
+            data = data.dropFirst(op.dataLen)
+        }
+        return ops
+    }
+
+    var data: Data {
+        reduce(Data()) { $0 + $1.data }
     }
 }

@@ -33,11 +33,11 @@ final class HashTests: XCTestCase {
         XCTAssertEqual(tx.data.hex, txHex)
         let sigMsg = tx.sigMsgV0(hashType: .all, inIdx: 1, scriptCode: .init(Data(hex: "76a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac")), amount: 600_000_000)
         XCTAssertEqual(sigMsg.hex, "0100000096b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd3752b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3bef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a010000001976a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac0046c32300000000ffffffff863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e51100000001000000")
-        let sigHash = hash256(sigMsg) // Message
-        XCTAssertEqual(sigHash.hex, "c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670")
+        let sighash = hash256(sigMsg) // Message
+        XCTAssertEqual(sighash.hex, "c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670")
         
         let privKey = Data(hex: "619c335025c7f4012e556c2a58b2506e30b8511b53ade95ea316fd8c3286feb9")
-        let sig = signECDSA(msg: sigHash, privKey: privKey)
+        let sig = signECDSA(msg: sighash, privKey: privKey)
         XCTAssertEqual(sig.hex, "304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee")
     }
 

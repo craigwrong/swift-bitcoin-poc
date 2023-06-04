@@ -88,24 +88,16 @@ extension Tx {
             if stack.count == 0 { return false }
             
             let outputKey = scriptPubKey2.witnessProgram // In this case it is the key (aka taproot output key q)
-            
-            // If there are at least two witness elements, and the first byte of the last element is 0x50, this last element is called annex a
-            let annex: Data?
-            if stack.count > 1, let maybeAnnex = stack.last, maybeAnnex.isValidTaprootAnnex {
-                annex = maybeAnnex
-            } else {
-                annex = .none
-            }
-            
+                        
             // this last element is called annex a and is removed from the witness stack
-            if annex != .none { stack.removeLast() }
+            if ins[inIdx].taprootAnnex != .none { stack.removeLast() }
             
             // If there is exactly one element left in the witness stack, key path spending is used:
             if stack.count == 1 {
                 // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig)[20], where Verify is defined in BIP340.
                 // If the sig is 65 bytes long, return sig[64] ≠ 0x00[21] and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
                 // Otherwise, fail[22].
-                return ScriptV1.keyHashScript(outputKey).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+                return checkSigV1(stack[0], pubKey: outputKey, inIdx: inIdx, prevOuts: prevOuts)
             }
             
             // If there are at least two witness elements left, script path spending is used:
@@ -119,16 +111,14 @@ extension Tx {
 
             // Call the second-to-last stack element s, the script.
             // The script as defined in BIP341 (i.e., the penultimate witness stack element after removing the optional annex) is called the tapscript
-            let tapScript = ScriptV1(stack.removeLast())
+            let tapscriptData = stack.removeLast()
 
             // Let p = c[1:33] and let P = lift_x(int(p)) where lift_x and [:] are defined as in BIP340. Fail if this point is not on the curve.
             // q is referred to as taproot output key and p as taproot internal key.
-            
             let internalKey = control[1...33]
-            // TODO: Fail if this point is not on the curve.
-            guard validatePubKey(internalKey) else {
-                return false
-            }
+            
+            // Fail if this point is not on the curve.
+            guard validatePubKey(internalKey) else { return false }
 
             // Let v = c[0] & 0xfe and call it the leaf version
             let leafVersion = control[0] & 0xfe
@@ -138,7 +128,7 @@ extension Tx {
             guard leafVersion == 0xc0 else { return true }
 
             // Let k0 = hashTapLeaf(v || compact_size(size of s) || s); also call it the tapleaf hash.
-            let tapLeafHash = taggedHash(tag: "TapLeaf", payload: Data([leafVersion]) + tapScript.data.varLenData)
+            let tapLeafHash = taggedHash(tag: "TapLeaf", payload: Data([leafVersion]) + tapscriptData.varLenData)
 
             // Compute the Merkle root from the leaf and the provided path.
             let merkleRoot = computeMerkleRoot(controlBlock: control, tapLeafHash: tapLeafHash)
@@ -149,7 +139,8 @@ extension Tx {
                 return false
             }
 
-            return tapScript.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            let tapscript = ScriptV1(tapscriptData, tapLeafHash: tapLeafHash)
+            return tapscript.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         default:
             preconditionFailure()
         }

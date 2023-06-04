@@ -1,8 +1,8 @@
 import Foundation
 
-public indirect enum ScriptTree {
+public indirect enum ScriptTree: Equatable {
     // leaf_version is 0xc0 (or 0xc1) for BIP342
-    case leaf(Int, ScriptV1), branch(Self, Self)
+    case leaf(Int, [ScriptV1.Op]), branch(Self, Self)
 
     /// Calculates the merkle root as well as some additional tree info for generating control blocks.
     func calcMerkleRoot() -> ([(ScriptTree, Data)], Data) {
@@ -13,7 +13,7 @@ public indirect enum ScriptTree {
             let (left, leftHash) = scriptTreeLeft.calcMerkleRoot()
             let (right, rightHash) = scriptTreeRight.calcMerkleRoot()
             let ret = left.map { ($0, $1 + rightHash) } + right.map { ($0, $1 + leftHash) }
-            let invertHashes = rightHash.hex < leftHash.hex // BigInt(rightHash) < BigInt(leftHash)
+            let invertHashes = rightHash.hex < leftHash.hex
             let newLeftHash = invertHashes ? rightHash : leftHash
             let newRightHash = invertHashes ? leftHash : rightHash
             let branchHash = taggedHash(tag: "TapBranch", payload: newLeftHash + newRightHash)

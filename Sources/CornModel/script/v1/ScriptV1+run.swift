@@ -5,7 +5,7 @@ extension ScriptV1: Script {
         var result = true
         var i = 0
         while result && i < ops.count {
-            result = ops[i].execute(stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: self, opIdx: i)
+            result = ops[i].execute(stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, tapscript: self, opIdx: i)
             if case .success(_) = ops[i] {
                break
             }

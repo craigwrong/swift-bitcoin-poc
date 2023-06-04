@@ -47,9 +47,6 @@ extension Tx.In {
     }
     
     var isCoinbase: Bool { txID == Tx.coinbaseID }
-}
-
-extension Tx.In {
     
     mutating func populateWitness(from data: Data) {
         var data = data
@@ -101,5 +98,14 @@ extension Tx.In {
     
     var witnessDataLen: Int {
         UInt64(witness?.count ?? 0).varIntSize + (witness?.varLenSize ?? 0)
+    }
+    
+    var taprootAnnex: Data? {
+        // If there are at least two witness elements, and the first byte of the last element is 0x50, this last element is called annex a
+        if let witness, witness.count > 1, let maybeAnnex = witness.last, let firstElem = maybeAnnex.first, firstElem == 0x50 {
+            return maybeAnnex
+        } else {
+            return .none
+        }
     }
 }

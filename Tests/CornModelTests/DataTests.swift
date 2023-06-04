@@ -39,7 +39,7 @@ final class DataTests: XCTestCase {
         XCTAssert(res)
     }
     
-    func testSigHashAll() {
+    func testSighashAll() {
         // Some keys
         let privKey0 = createPrivKey()
         let pubKey0 = getPubKey(privKey: privKey0)

@@ -122,14 +122,14 @@ final class DataTests: XCTestCase {
         ])
 
         let redeemScript4 = ScriptLegacy.makeP2WKH(pubKey: pubKeys[4])
-        let redeemScript5 = ScriptV0.init([
+        let redeemScript5 = [Op].init([
             .constant(2),
             .pushBytes(pubKeys[6]),
             .pushBytes(pubKeys[5]),
             .constant(2),
             .checkMultiSig
         ])
-        let redeemScriptV06 = ScriptV0.init([
+        let redeemScriptV06 = [Op]([
             .constant(2),
             .pushBytes(pubKeys[7]),
             .pushBytes(pubKeys[6]),

@@ -25,7 +25,7 @@ extension ScriptLegacy {
         .withType(.witnessV0KeyHash, data: [hash160(pubKey)])
     }
     
-    public static func makeP2WSH(redeemScriptV0: ScriptV0) -> Self {
+    public static func makeP2WSH(redeemScriptV0: [CornModel.Op]) -> Self {
         .withType(.witnessV0ScriptHash, data: [sha256(redeemScriptV0.data)])
     }
 

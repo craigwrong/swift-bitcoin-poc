@@ -3,7 +3,7 @@ import Foundation
 extension Tx {
 
     /// Populates unlocking script / witness with signatures.
-    public mutating func signInput(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: ScriptLegacy? = .none, redeemScriptV0: ScriptV0? = .none, scriptTree: ScriptTree? = .none, leaf: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Tx.Out]) {
+    public mutating func signInput(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: ScriptLegacy? = .none, redeemScriptV0: [Op]? = .none, scriptTree: ScriptTree? = .none, leaf: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Tx.Out]) {
         let prevOut = prevOuts.count == 1 ? prevOuts[0] : prevOuts[inIdx]
         switch(prevOut.scriptPubKey.scriptType) {
         case .pubKey:
@@ -81,18 +81,18 @@ extension Tx {
     }
     
     mutating func signP2WKH(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
-        let scriptCode = ScriptV0.keyHashScript(hash160(pubKey))
+        let scriptCode = [Op].makeP2WPKH(hash160(pubKey))
         let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
         ins[inIdx].witness = [sig, pubKey]
     }
 
-    mutating func signP2WSH(privKeys: [Data], redeemScript: ScriptV0, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
+    mutating func signP2WSH(privKeys: [Data], redeemScript: [Op], hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
         let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript, opIdx: 0)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }.reversed()
         
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
-        let nullDummy = redeemScript.ops.last == .checkMultiSig || redeemScript.ops.last == .checkMultiSig ? [Data()] : []
+        let nullDummy = redeemScript.last == .checkMultiSig || redeemScript.last == .checkMultiSig ? [Data()] : []
         ins[inIdx].witness = nullDummy + sigs + [redeemScript.data]
     }
 

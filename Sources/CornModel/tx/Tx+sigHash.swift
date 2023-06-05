@@ -123,7 +123,7 @@ extension Tx {
 
     // - Witness V0
 
-    func sighashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Data {
+    func sighashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
         // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
         var scriptCode = scriptCode
         scriptCode.removeSubScripts(before: opIdx)
@@ -132,7 +132,7 @@ extension Tx {
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
-    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: ScriptV0, amount: UInt64) -> Data {
+    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: [Op], amount: UInt64) -> Data {
         
         //If the ANYONECANPAY flag is not set, hashPrevouts is the double SHA256 of the serialization of all input outpoints;
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.

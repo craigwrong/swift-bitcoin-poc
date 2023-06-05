@@ -14,7 +14,7 @@ extension Tx {
         return result
     }
     
-    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptV0, opIdx: Int) -> Bool {
+    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Bool {
         var sig = sighashType
         guard let hashTypeRaw = sig.popLast(), let hashType = HashType(rawValue: hashTypeRaw) else {
             fatalError()

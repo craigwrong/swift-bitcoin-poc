@@ -1,12 +1,7 @@
 import Foundation
 
-extension ScriptV0 {
-    public enum Op: Equatable {
-        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
-    }
-}
-
-extension ScriptV0.Op {
+public enum Op: Equatable {
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
     
     var dataLen: Int {
         let additionalSize: Int
@@ -138,7 +133,7 @@ extension ScriptV0.Op {
     }
     
     // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
-    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptV0, opIdx: Int) -> Bool {
+    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: [Op], opIdx: Int) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -218,9 +213,6 @@ extension ScriptV0.Op {
         }
         return false
     }
-}
-
-extension ScriptV0.Op {
     
     var asm: String {
         if case .pushBytes(let d) = self {

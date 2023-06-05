@@ -1,6 +1,6 @@
 import Foundation
 
-func opCheckMultiSigV0(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptV0, opIdx: Int) -> Bool {
+func opCheckMultiSigV0(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: [Op], opIdx: Int) -> Bool {
     precondition(m <= n)
     precondition(pubKeys.count == n)
     precondition(sigs.count == m)

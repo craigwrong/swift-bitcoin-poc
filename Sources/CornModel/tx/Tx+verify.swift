@@ -62,7 +62,7 @@ extension Tx {
             guard var stack = ins[inIdx].witness else {
                 fatalError()
             }
-            return ScriptV0.keyHashScript(witnessProgram).run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            return run([Op].makeP2WPKH(witnessProgram), stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
             guard var stack = ins[inIdx].witness, let witnessScriptRaw = stack.popLast() else {
@@ -71,8 +71,8 @@ extension Tx {
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 return false
             }
-            let witnessScript = ScriptV0(witnessScriptRaw)
-            return witnessScript.run(stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            let witnessScript = [Op](witnessScriptRaw)
+            return run(witnessScript, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
 

@@ -115,7 +115,7 @@ extension Tx {
 
             // Let p = c[1:33] and let P = lift_x(int(p)) where lift_x and [:] are defined as in BIP340. Fail if this point is not on the curve.
             // q is referred to as taproot output key and p as taproot internal key.
-            let internalKey = control[1...33]
+            let internalKey = control[1...32]
             
             // Fail if this point is not on the curve.
             guard validatePubKey(internalKey) else { return false }

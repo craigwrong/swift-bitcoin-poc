@@ -126,34 +126,6 @@ const int checkTapTweak(void (*computeTapTweakHash)(u_char*, const u_char*, cons
     return result;
 }
 
-/*
-const char* toHex(const u_char* bytes, long int count) {
-    int i;
-    char *converted = malloc(count * 2 + 1);
-    for (i = 0; i < count; i++) {
-        sprintf(&converted[i * 2], "%02x", bytes[i]);
-    }
-    converted[count * 2] = '\x00';
-    return converted;
-}
-
-
-const char* computeOutputKey(const u_char internalKeyBytes[32], const u_char tweak[32]) {
-    const secp256k1_context *context = secp256k1_context_static;
-    secp256k1_xonly_pubkey internalKey;
-    secp256k1_pubkey outputKey; // Used for non keypair flow
-    secp256k1_xonly_pubkey outputKeyXOnly;
-    u_char outputKeyBytes[32];
-    int keyParity;
-    if (!secp256k1_xonly_pubkey_parse(context, &internalKey, internalKeyBytes)) { return NULL; };
-    if (!secp256k1_xonly_pubkey_tweak_add(context, &outputKey, &internalKey, tweak)) { return NULL; };
-    if (!secp256k1_xonly_pubkey_from_pubkey(context, &outputKeyXOnly, &keyParity, &outputKey)) { return NULL; };
-    if (!secp256k1_xonly_pubkey_serialize(context, outputKeyBytes, &outputKeyXOnly)) { return NULL; };
-    return toHex(outputKeyBytes, 32);
-}
-
-*/
-
 const int validatePubKey(const u_char* pubKey32) {
     const secp256k1_context *context = secp256k1_context_static;
     secp256k1_xonly_pubkey pubKey;
@@ -168,3 +140,31 @@ const int verifySchnorr(const u_char* msg32, const u_char* sigBytes64, const u_c
     
     return secp256k1_schnorrsig_verify(secp256k1_context_static, sigBytes64, msg32, 32, &pubkey);
 }
+
+/*
+const char* toHex(const u_char* bytes, long int count) {
+    int i;
+    char *converted = malloc(count * 2 + 1);
+    for (i = 0; i < count; i++) {
+        sprintf(&converted[i * 2], "%02x", bytes[i]);
+    }
+    converted[count * 2] = '\x00';
+    return converted;
+}
+*/
+
+/*
+const char* computeOutputKey(const u_char internalKeyBytes[32], const u_char tweak[32]) {
+    const secp256k1_context *context = secp256k1_context_static;
+    secp256k1_xonly_pubkey internalKey;
+    secp256k1_pubkey outputKey; // Used for non keypair flow
+    secp256k1_xonly_pubkey outputKeyXOnly;
+    u_char outputKeyBytes[32];
+    int keyParity;
+    if (!secp256k1_xonly_pubkey_parse(context, &internalKey, internalKeyBytes)) { return NULL; };
+    if (!secp256k1_xonly_pubkey_tweak_add(context, &outputKey, &internalKey, tweak)) { return NULL; };
+    if (!secp256k1_xonly_pubkey_from_pubkey(context, &outputKeyXOnly, &keyParity, &outputKey)) { return NULL; };
+    if (!secp256k1_xonly_pubkey_serialize(context, outputKeyBytes, &outputKeyXOnly)) { return NULL; };
+    return toHex(outputKeyBytes, 32);
+}
+*/

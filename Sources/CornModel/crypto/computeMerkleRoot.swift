@@ -5,9 +5,9 @@ func computeMerkleRoot(controlBlock: Data, tapLeafHash: Data) -> Data {
     var k = tapLeafHash
     for i in 0 ..< pathLen {
         let startIdx = controlBlock.startIndex.advanced(by: 33 + 32 * i)
-        let endIdx = startIdx + 32
+        let endIdx = startIdx + 31
         let node = controlBlock[startIdx ... endIdx]
-        let payload = k.hex > node.hex ? k + node : node + k
+        let payload = k.hex < node.hex ? k + node : node + k
         k = taggedHash(tag: "TapBranch", payload: payload)
     }
     return k

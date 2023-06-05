@@ -190,7 +190,7 @@ extension ScriptV1.Op {
             }
 
         // Binary operations
-        case .equal, .equalVerify, .boolAnd, .checkSig, .checkMultiSigVerify:
+        case .equal, .equalVerify, .boolAnd, .checkSig, .checkSigVerify:
             guard let (first, second) = try? getBinaryParams(&stack) else {
                 return false
             }
@@ -211,7 +211,7 @@ extension ScriptV1.Op {
         default:
             break
         }
-        return true
+        return false
     }
 }
 

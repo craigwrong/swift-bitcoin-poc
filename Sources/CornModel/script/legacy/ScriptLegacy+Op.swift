@@ -220,7 +220,7 @@ extension ScriptLegacy.Op {
         default:
             break
         }
-        return true
+        return false
     }
 }
 

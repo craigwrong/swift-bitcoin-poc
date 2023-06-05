@@ -215,7 +215,7 @@ final class DataTests: XCTestCase {
         tx.signInput(privKeys: [privKeys[4]], pubKeys: [pubKeys[4]], redeemScript: redeemScript4, hashType: .all, inIdx: 4, prevOuts: prevOuts)
         tx.signInput(privKeys: [privKeys[5], privKeys[6]], redeemScriptV0: redeemScript5, hashType: .all, inIdx: 5, prevOuts: prevOuts)
         tx.signInput(privKeys: [privKeys[6], privKeys[7]], redeemScript: redeemScript6, redeemScriptV0: redeemScriptV06, hashType: .all, inIdx: 6, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[7]], tapscript: .none, inIdx: 7, prevOuts: prevOuts)
+        tx.signInput(privKeys: [privKeys[7]], inIdx: 7, prevOuts: prevOuts)
         tx.signInput(privKeys: [privKeys[8], privKeys[9]], hashType: .all, inIdx: 8, prevOuts: prevOuts)
         
         let res = tx.verify(prevOuts: prevOuts)

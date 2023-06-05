@@ -44,4 +44,10 @@ public indirect enum ScriptTree: Equatable {
         let leafVersionData = withUnsafeBytes(of: UInt8(version)) { Data($0) }
         return taggedHash(tag: "TapLeaf", payload: leafVersionData + script.data.varLenData)
     }
+    
+    public func getOutputKey(privKey: Data) -> Data {
+        let (_, merkleRoot) = calcMerkleRoot()
+        return CornModel.getOutputKey(privKey: privKey, merkleRoot: merkleRoot)
+    }
+    
 }

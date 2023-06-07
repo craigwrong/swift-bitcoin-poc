@@ -2,6 +2,10 @@ import Foundation
 
 public enum Op: Equatable {
     case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
+        // Legacy only
+        , undefined
+        // Witness V1 only
+        , success(UInt8)
     
     var dataLen: Int {
         let additionalSize: Int
@@ -34,8 +38,11 @@ public enum Op: Equatable {
             return 0x4e
         case .oneNegate:
             return 0x4f
-        case .reserved:
-            return 0x50
+        case .success(let k):
+            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
+            // 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254
+            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
+            return k
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return 0x50 + k
@@ -73,6 +80,10 @@ public enum Op: Equatable {
             return 0xae
         case .checkMultiSigVerify:
             return 0xaf
+        case .undefined:
+            return 0xff
+        case .reserved:
+            return 0x50
         }
     }
     
@@ -129,11 +140,17 @@ public enum Op: Equatable {
             return "OP_CHECKMULTISIG"
         case .checkMultiSigVerify:
             return "OP_CHECKMULTISIGVERIFY"
+        case .success(let k):
+            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
+            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
+            // These opcodes are renamed to OP_SUCCESS80, ..., OP_SUCCESS254, and collectively known as OP_SUCCESSx[1].
+            return "OP_SUCCESS\(k)"
+        case .undefined:
+            return "undefined"
         }
     }
     
-    // TODO:  Why not take the whole script that is being executed, if only to get access to the version. Additionally a "scriptCode" that can be the redeem script for p2sh, the script code for p2wkh and the witness script for p2wsh
-    func execute(stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: [Op], opIdx: Int) -> Bool {
+    func execute(stack: inout [Data], context: ExecutionContext) -> Bool {
         switch(self) {
         
         // Operations that don't consume any parameters from the stack
@@ -148,6 +165,9 @@ public enum Op: Equatable {
             return opConstant(-1, stack: &stack)
         case .reserved:
             return opReserved()
+        case .success(let k):
+            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
+            return opSuccess(stack: &stack)
         case .noOp:
             return opNoOp()
         case .return:
@@ -158,12 +178,12 @@ public enum Op: Equatable {
             guard let (n, pubKeys, m, sigs) = try? getCheckMultiSigParams(&stack) else {
                 return false
             }
-            return opCheckMultiSigV0(n, m, pubKeys, sigs, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+            return opCheckMultiSig(n, m, pubKeys, sigs, stack: &stack, context: context)
         case .checkMultiSigVerify:
             guard let (n, pubKeys, m, sigs) = try? getCheckMultiSigParams(&stack) else {
                 return false
             }
-            return opCheckMultiSigVerifyV0(n, m, pubKeys, sigs, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+            return opCheckMultiSigVerify(n, m, pubKeys, sigs, stack: &stack, context: context)
 
         // Unary operations
         case .verify, .drop, .dup, .ripemd160, .sha256, .hash160, .hash256:
@@ -202,9 +222,9 @@ public enum Op: Equatable {
             case .boolAnd:
                 return opBoolAnd(first, second, stack: &stack)
             case .checkSig:
-                return opCheckSigV0(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+                return opCheckSig(first, second, stack: &stack, context: context)
             case .checkSigVerify:
-                return opCheckSigVerifyV0(first, second, stack: &stack, tx: tx, inIdx: inIdx, prevOuts: prevOuts, scriptCode: scriptCode, opIdx: opIdx)
+                return opCheckSigVerify(first, second, stack: &stack, context: context)
             default:
                 fatalError()
             }
@@ -290,8 +310,17 @@ public enum Op: Equatable {
             return .pushData4(d)
         case Self.oneNegate.opCode:
             return .oneNegate
-        case Self.reserved.opCode:
-            return .reserved
+        case
+            // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
+            Self.success(80).opCode,
+            Self.success(98).opCode,
+            Self.success(126).opCode ... Self.success(129).opCode,
+            Self.success(131).opCode ... Self.success(134).opCode,
+            Self.success(137).opCode ... Self.success(138).opCode,
+            Self.success(141).opCode ... Self.success(142).opCode,
+            Self.success(149).opCode ... Self.success(153).opCode,
+            Self.success(187).opCode ... Self.success(254).opCode:
+            return .success(opCode)
         case Self.constant(1).opCode ... Self.constant(16).opCode:
             return .constant(opCode - 0x50)
         case Self.noOp.opCode:
@@ -328,8 +357,48 @@ public enum Op: Equatable {
             return .checkMultiSig
         case Self.checkMultiSigVerify.opCode:
             return .checkMultiSigVerify
+        case Self.reserved.opCode:
+            return .reserved
         default:
-            fatalError("Unknown operation code.")
+            return .undefined
+            // fatalError("Unknown operation code.")
         }
     }
+}
+
+enum ScriptError: Error {
+    case invalidScript
+}
+
+func getUnaryParam(_ stack: inout [Data]) throws -> Data {
+    guard stack.count > 0 else {
+        throw ScriptError.invalidScript
+    }
+    return stack.removeLast()
+}
+
+func getBinaryParams(_ stack: inout [Data]) throws -> (Data, Data) {
+    guard stack.count > 1 else {
+        throw ScriptError.invalidScript
+    }
+    let second = stack.removeLast()
+    let first = stack.removeLast()
+    return (first, second)
+}
+
+func getCheckMultiSigParams(_ stack: inout [Data]) throws -> (Int, [Data], Int, [Data]) {
+    guard stack.count > 4 else {
+        throw ScriptError.invalidScript
+    }
+    let n = stack.popInt()
+    let pubKeys = Array(stack[(stack.endIndex - n)...].reversed())
+    stack.removeLast(n)
+    let m = stack.popInt()
+    let sigs = Array(stack[(stack.endIndex - m)...].reversed())
+    stack.removeLast(m)
+    let nullDummy = stack.removeLast()
+    guard nullDummy.count == 0 else {
+        throw ScriptError.invalidScript
+    }
+    return (n, pubKeys, m, sigs)
 }

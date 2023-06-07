@@ -17,125 +17,125 @@ final class ScriptTests: XCTestCase {
         let two = withUnsafeBytes(of: 2) { Data($0) }
         let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
         
-        var script = ScriptLegacy([.pushBytes(zero), .pushBytes(zero), .boolAnd])
+        var script = [Op.pushBytes(zero), .pushBytes(zero), .boolAnd]
         var stack = [Data]()
-        var result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        var result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
 
-        script = ScriptLegacy([.pushBytes(zero), .pushBytes(one), .boolAnd])
+        script = [Op.pushBytes(zero), .pushBytes(one), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(zero), .pushBytes(two), .boolAnd])
+        script = [Op.pushBytes(zero), .pushBytes(two), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(zero), .pushBytes(big), .boolAnd])
+        script = [Op.pushBytes(zero), .pushBytes(big), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(one), .pushBytes(zero), .boolAnd])
+        script = [Op.pushBytes(one), .pushBytes(zero), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(two), .pushBytes(zero), .boolAnd])
+        script = [Op.pushBytes(two), .pushBytes(zero), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        script = [Op.pushBytes(big), .pushBytes(zero), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        script = [Op.pushBytes(big), .pushBytes(zero), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ScriptLegacy([.pushBytes(one), .pushBytes(one), .boolAnd])
+        script = [Op.pushBytes(one), .pushBytes(one), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = ScriptLegacy([.pushBytes(one), .pushBytes(two), .boolAnd])
+        script = [Op.pushBytes(one), .pushBytes(two), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = ScriptLegacy([.pushBytes(two), .pushBytes(two), .boolAnd])
+        script = [Op.pushBytes(two), .pushBytes(two), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = ScriptLegacy([.pushBytes(big), .pushBytes(one), .boolAnd])
+        script = [Op.pushBytes(big), .pushBytes(one), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
         
-        script = ScriptLegacy([.pushBytes(big), .pushBytes(big), .boolAnd])
+        script = [Op.pushBytes(big), .pushBytes(big), .boolAnd]
         stack = .init()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [one])
     }
 
     func testOpSuccess() {
-        var script = ScriptV1([.success(80), .pushBytes(Data(repeating: 0, count: 128))])
+        var script = [Op.success(80), .pushBytes(Data(repeating: 0, count: 128))]
         var stack = [Data]()
-        var result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        var result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [], version: .witnessV1)
         XCTAssert(result)
         XCTAssertEqual(stack, [])
 
-        script = ScriptV1([.success(98), .pushBytes(Data(repeating: 1, count: 128))])
+        script = [Op.success(98), .pushBytes(Data(repeating: 1, count: 128))]
         stack = [Data]()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [], version: .witnessV1)
         XCTAssert(result)
         XCTAssertEqual(stack, [])
 
-        script = ScriptV1([.success(254)])
+        script = [Op.success(254)]
         stack = [Data]()
-        result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [], version: .witnessV1)
         XCTAssert(result)
         XCTAssertEqual(stack, [])
 
-        let legacyScript = ScriptLegacy([.reserved])
+        let legacyScript = [Op.reserved]
         stack = [Data]()
-        result = legacyScript.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        result = runScript(legacyScript, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssertFalse(result)
         XCTAssertEqual(stack, [])
     }
 
     func testDrop() {
         let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
-        let script = ScriptLegacy([.pushBytes(big), .drop])
+        let script = [Op.pushBytes(big), .drop]
         var stack = [Data]()
-        let result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        let result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssert(stack.isEmpty)
     }
 
     func testDup() {
         let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
-        let script = ScriptLegacy([.pushBytes(big), .dup])
+        let script = [Op.pushBytes(big), .dup]
         var stack = [Data]()
-        let result = script.run(stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
+        let result = runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [])
         XCTAssert(result)
         XCTAssertEqual(stack, [big, big])
     }
@@ -146,19 +146,19 @@ final class ScriptTests: XCTestCase {
 
         let tx = Tx(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022037b8b0c1a33caa83be5eb71f87bce5dbd4890a56a61b98d9d603e754313fadc602201ef00773d2e0b98d558f0a1ac89a1fad1da15f852140fca5f5d737c0025e11ad014104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
 
-        guard let sigOp = tx.ins[0].scriptSig?.ops[0], case .pushBytes(let sig) = sigOp else {
+        guard let sigOp = tx.ins[0].scriptSig?[0], case .pushBytes(let sig) = sigOp else {
             XCTFail("Could not extract signature from transaction.")
             return
         }
 
         let pubKeyHash = hash160(pubKey)
 
-        let scriptSig = ScriptLegacy([.pushBytes(sig), .pushBytes(pubKey)])
-        let scriptPubKey = ScriptLegacy([.dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig])
+        let scriptSig = [Op.pushBytes(sig), .pushBytes(pubKey)]
+        let scriptPubKey = [Op.dup, .hash160, .pushBytes(pubKeyHash), .equalVerify, .checkSig]
 
         var stack = [Data]()
-        var result = scriptSig.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
-        result = result && scriptPubKey.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
+        var result = runScript(scriptSig, stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
+        result = result && runScript(scriptPubKey, stack: &stack, tx: tx, inIdx: 0, prevOuts: [prevOut])
         XCTAssert(result)
         
         var expected = [Data]()

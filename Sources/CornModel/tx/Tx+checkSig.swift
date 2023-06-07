@@ -2,24 +2,24 @@ import Foundation
 
 extension Tx {
     
-    func checkSig(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
+    func checkSig(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, script: [Op], opIdx: Int) -> Bool {
         precondition(sighashType.count > 69, "Signature too short or missing hash type suffix.")
         precondition(sighashType.count < 72, "Signature too long.")
         var sig = sighashType
         guard let rawValue = sig.popLast(), let hashType = HashType(rawValue: rawValue) else {
             preconditionFailure()
         }
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: opIdx)
+        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: script, opIdx: opIdx)
         let result = verifyECDSA(sig: sig, msg: sighash, pubKey: pubKey)
         return result
     }
     
-    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Bool {
+    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, script: [Op], opIdx: Int) -> Bool {
         var sig = sighashType
         guard let hashTypeRaw = sig.popLast(), let hashType = HashType(rawValue: hashTypeRaw) else {
             fatalError()
         }
-        let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: opIdx)
+        let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: script, opIdx: opIdx)
         let result = verifyECDSA(sig: sig, msg: sighash, pubKey: pubKey)
         return result
     }

@@ -6,10 +6,10 @@ extension Tx {
         public var txID: String
         public var outIdx: Int
         public var sequence: UInt32
-        public var scriptSig: ScriptLegacy?
+        public var scriptSig: [Op]?
         public var witness: [Data]?
         
-        public init(txID: String, outIdx: Int, sequence: UInt32, scriptSig: ScriptLegacy? = .none, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: Int, sequence: UInt32, scriptSig: [Op]? = .none, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
@@ -34,7 +34,7 @@ extension Tx.In {
         offset += outIdxData.count
         
         let scriptSigData = Data(varLenData: data[offset...])
-        let scriptSig = ScriptLegacy(scriptSigData)
+        let scriptSig = [Op](scriptSigData)
         offset += scriptSigData.varLenSize
         
         let sequenceData = data[offset ..< offset + MemoryLayout<UInt32>.size]

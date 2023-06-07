@@ -3,7 +3,7 @@ import Foundation
 extension Tx {
 
     /// Populates unlocking script / witness with signatures.
-    public mutating func signInput(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: ScriptLegacy? = .none, redeemScriptV0: [Op]? = .none, scriptTree: ScriptTree? = .none, leaf: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Tx.Out]) {
+    public mutating func signInput(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: [Op]? = .none, redeemScriptV0: [Op]? = .none, scriptTree: ScriptTree? = .none, leaf: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Tx.Out]) {
         let prevOut = prevOuts.count == 1 ? prevOuts[0] : prevOuts[inIdx]
         switch(prevOut.scriptPubKey.scriptType) {
         case .pubKey:
@@ -63,20 +63,20 @@ extension Tx {
     mutating func signMultiSig(privKeys: [Data], hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.scriptPubKey, opIdx: 0)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
-        let scriptSigOps = sigs.reversed().map { ScriptLegacy.Op.pushBytes($0) }
+        let scriptSigOps = sigs.reversed().map { Op.pushBytes($0) }
 
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
-        let nullDummy = [ScriptLegacy.Op.zero]
+        let nullDummy = [Op.zero]
         ins[inIdx].scriptSig = .init(nullDummy + scriptSigOps)
     }
     
-    mutating func signP2SH(privKeys: [Data], redeemScript: ScriptLegacy, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
+    mutating func signP2SH(privKeys: [Data], redeemScript: [Op], hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript, opIdx: 0)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
-        let scriptSigOps = sigs.reversed().map { ScriptLegacy.Op.pushBytes($0) }
+        let scriptSigOps = sigs.reversed().map { Op.pushBytes($0) }
         
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
-        let nullDummy = redeemScript.ops.last == .checkMultiSig || redeemScript.ops.last == .checkMultiSig ? [ScriptLegacy.Op.zero] : []
+        let nullDummy = redeemScript.last == .checkMultiSig || redeemScript.last == .checkMultiSig ? [Op.zero] : []
         ins[inIdx].scriptSig = .init(nullDummy + scriptSigOps + [.pushBytes(redeemScript.data)])
     }
     
@@ -104,21 +104,23 @@ extension Tx {
         // WARN: We support adding only a single signature for now. Therefore we only take one codesepPos (OP_CODESEPARATOR position)
         ins[inIdx].witness = [Data()] // Placeholder for the signature
         
-        let tapscript: ScriptV1?
+        let tapscript: [Op]?
         let treeInfo: [(ScriptTree, Data)]?
         let merkleRoot: Data?
+        let leafVersion: UInt8?
         if let scriptTree, let leaf {
             let leafs = scriptTree.leafs().map { $0.1 }
-            guard case let .leaf(_, ops) = leafs[leaf] else {
+            guard case let .leaf(leafVersionInt, tapscript1) = leafs[leaf] else {
                 fatalError()
             }
-            
-            tapscript = ScriptV1(ops)
+            leafVersion = UInt8(leafVersionInt)
+            tapscript = tapscript1
             (treeInfo, merkleRoot) = scriptTree.calcMerkleRoot()
         } else {
             tapscript = .none
             treeInfo = .none
             merkleRoot = .none
+            leafVersion = .none
         }
         
         if let leaf, let tapscript, let treeInfo, let merkleRoot {
@@ -137,9 +139,10 @@ extension Tx {
         }
         
         let tapscriptExt: TapscriptExt?
-        if let tapscript {
+        if let tapscript, let leafVersion {
             // Only 1 signature supported for this method so codesepPos and tapscriptExt does not have to vary
-            tapscriptExt = .init(tapLeafHash: tapscript.tapLeafHash, keyVersion: tapscript.keyVersion, codesepPos: codesepPos)
+            let tapLeafHash = taggedHash(tag: "TapLeaf", payload: Data([leafVersion]) + tapscript.data.varLenData)
+            tapscriptExt = .init(tapLeafHash: tapLeafHash, keyVersion: 0, codesepPos: codesepPos)
         } else {
             tapscriptExt = .none
         }

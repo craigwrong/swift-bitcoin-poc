@@ -4,13 +4,13 @@ extension Tx {
 
     // - Legacy
 
-    func sighash(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: ScriptLegacy, opIdx: Int) -> Data {
+    func sighash(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
-        let subScript: ScriptLegacy
+        let subScript: [Op]
         if prevOut.scriptPubKey.scriptType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
-            if let op = ins[inIdx].scriptSig?.ops.last, case let .pushBytes(redeemScriptRaw) = op, ScriptLegacy(redeemScriptRaw) != scriptCode {
+            if let op = ins[inIdx].scriptSig?.last, case let .pushBytes(redeemScriptRaw) = op, [Op](redeemScriptRaw) != scriptCode {
                 preconditionFailure()
             }
             subScript = scriptCode
@@ -27,7 +27,7 @@ extension Tx {
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func sigMsg(hashType: HashType, inIdx: Int, subScript: ScriptLegacy) -> Data {
+    func sigMsg(hashType: HashType, inIdx: Int, subScript: [Op]) -> Data {
         var newIns = [Tx.In]()
         if hashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
@@ -87,7 +87,7 @@ extension Tx {
     }
     
     // TODO: Remove once newer implementation was tested.
-    func sigMsgAlt(hashType: HashType, inIdx: Int, scriptCode subScript: ScriptLegacy) -> Data {
+    func sigMsgAlt(hashType: HashType, inIdx: Int, scriptCode subScript: [Op]) -> Data {
         let input = ins[inIdx]
         var txCopy = self
         txCopy.ins.indices.forEach {

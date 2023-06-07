@@ -27,19 +27,19 @@ final class CheckMultiSigTests: XCTestCase {
             ]
         )
         
-        let script = ScriptLegacy([
-            .constant(1),
+        let script = [
+            Op.constant(1),
             .pushBytes(pubKey),
             .constant(1),
             .checkMultiSig
-        ])
+        ]
         let hashType = HashType.all
         let sig = signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script, opIdx: 0), privKey: privKey) + hashType.data
         var stack = [
             Data(),
             sig
         ]
-        let result = script.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
+        let result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
         XCTAssert(result)
         var expectedStack = [Data]()
         expectedStack.pushInt(1)
@@ -62,14 +62,14 @@ final class CheckMultiSigTests: XCTestCase {
             ]
         )
         
-        let script = ScriptLegacy([
-            .constant(2),
+        let script = [
+            Op.constant(2),
             .pushBytes(pubKeys[2]),
             .pushBytes(pubKeys[1]),
             .pushBytes(pubKeys[0]),
             .constant(3),
             .checkMultiSigVerify
-        ])
+        ]
         let hashType = HashType.all
         let allSigs = privKeys.map {
             signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script, opIdx: 0), privKey: $0) + hashType.data
@@ -80,7 +80,7 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[1],
             allSigs[0]
         ]
-        var result = script.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
+        var result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
         XCTAssert(result)
         
         stack = [
@@ -88,7 +88,7 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[2],
             allSigs[0]
         ]
-        result = script.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
+        result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
         XCTAssert(result)
         
         stack = [
@@ -96,7 +96,7 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[2],
             allSigs[1]
         ]
-        result = script.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
+        result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
         XCTAssert(result)
         
         stack = [
@@ -104,7 +104,7 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[1],
             allSigs[2]
         ]
-        result = script.run(stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
+        result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
         XCTAssert(result)
     }
 }

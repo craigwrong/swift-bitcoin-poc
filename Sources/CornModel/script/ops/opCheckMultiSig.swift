@@ -1,9 +1,10 @@
 import Foundation
 
-func opCheckMultiSig(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], scriptCode: ScriptLegacy, opIdx: Int) -> Bool {
+func opCheckMultiSig(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stack: inout [Data], context: ExecutionContext) -> Bool {
     precondition(m <= n)
     precondition(pubKeys.count == n)
     precondition(sigs.count == m)
+    precondition(context.version == .legacy || context.version == .witnessV0)
     var leftPubKeys = pubKeys
     var leftSigs = sigs
     while leftPubKeys.count > 0 && leftSigs.count > 0 {
@@ -11,7 +12,14 @@ func opCheckMultiSig(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stac
         var result = false
         var i = 0
         while i < leftSigs.count {
-            result = tx.checkSig(leftSigs[i], pubKey: pubKey, inIdx: inIdx, prevOut: prevOuts[inIdx], scriptCode: scriptCode, opIdx: opIdx)
+            switch context.version {
+                case .legacy:
+                result = context.tx.checkSig(leftSigs[i], pubKey: pubKey, inIdx: context.inIdx, prevOut: context.prevOut, script: context.script, opIdx: context.opIdx)
+                case .witnessV0:
+                result = context.tx.checkSigV0(leftSigs[i], pubKey: pubKey, inIdx: context.inIdx, prevOut: context.prevOut, script:  context.script, opIdx: context.opIdx)
+                case .witnessV1:
+                fatalError()
+            }
             if result {
                 break
             }

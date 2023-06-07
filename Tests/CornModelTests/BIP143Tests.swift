@@ -17,7 +17,7 @@ final class BIP143Tests: XCTestCase {
         
         // The input comes from a P2SH-P2WPKH witness program:
         let prevOut0 = Tx.Out(value: UInt64(1_000_000_000), scriptPubKeyData: Data(hex: "a9144733f37cf4db86fbc2efed2500b4f4e49f31202387"))
-        let redeemScript0 = ScriptLegacy(Data(hex: "001479091972186c449eb1ded22b78e40d009bdf0089"))
+        let redeemScript0 = [Op](Data(hex: "001479091972186c449eb1ded22b78e40d009bdf0089"))
         let privKey0 = Data(hex: "eb696a065ef48a2192da5b28b694f87544b30fae8327c4510137a922f32c6dcf")
         let pubKey0 = Data(hex: "03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873")
         

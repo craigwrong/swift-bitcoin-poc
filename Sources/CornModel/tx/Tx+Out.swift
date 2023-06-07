@@ -19,7 +19,7 @@ extension Tx {
 
 extension Tx.Out {
 
-    public init(value: UInt64, scriptPubKey: ScriptLegacy) {
+    public init(value: UInt64, scriptPubKey: [Op]) {
         self.init(value: value, scriptPubKeyData: scriptPubKey.data)
     }
         
@@ -42,8 +42,8 @@ extension Tx.Out {
         withUnsafeBytes(of: value) { Data($0) }
     }
 
-    var scriptPubKey: ScriptLegacy {
-        ScriptLegacy(scriptPubKeyData)
+    var scriptPubKey: [Op] {
+        [Op](scriptPubKeyData)
     }
     
     var doubleValue: Double {

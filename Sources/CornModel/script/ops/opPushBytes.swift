@@ -1,6 +1,5 @@
 import Foundation
 
-func opPushData(data: Data, stack: inout [Data]) -> Bool {
+func opPushData(data: Data, stack: inout [Data]) {
     stack.append(data)
-    return true
 }

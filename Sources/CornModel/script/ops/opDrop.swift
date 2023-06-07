@@ -1,5 +1,5 @@
 import Foundation
 
-func opDrop(_ first: Data) -> Bool {
-    return true
+func opDrop(_ stack: inout [Data]) throws {
+    _ = try getUnaryParam(&stack)
 }

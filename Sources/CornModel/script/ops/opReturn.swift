@@ -1,1 +1,0 @@
-func opReturn() -> Bool { false }

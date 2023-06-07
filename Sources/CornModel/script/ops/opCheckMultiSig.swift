@@ -1,6 +1,7 @@
 import Foundation
 
-func opCheckMultiSig(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stack: inout [Data], context: ExecutionContext) -> Bool {
+func opCheckMultiSig(_ stack: inout [Data], context: ExecutionContext) throws {
+    let (n, pubKeys, m, sigs) = try getCheckMultiSigParams(&stack)
     precondition(m <= n)
     precondition(pubKeys.count == n)
     precondition(sigs.count == m)
@@ -31,5 +32,4 @@ func opCheckMultiSig(_ n: Int, _ m: Int, _ pubKeys: [Data], _ sigs: [Data], stac
     }
     let result = leftSigs.count == 0
     stack.pushInt(result ? 1 : 0)
-    return true
 }

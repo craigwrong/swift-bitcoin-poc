@@ -1,6 +1,6 @@
 import Foundation
 
-func opRIPEMD160(_ first: Data, stack: inout [Data]) -> Bool {
+func opRIPEMD160(_ stack: inout [Data]) throws {
+    let first = try getUnaryParam(&stack)
     stack.append(RIPEMD160.hash(first))
-    return true
 }

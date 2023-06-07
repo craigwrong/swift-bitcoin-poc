@@ -39,8 +39,7 @@ final class CheckMultiSigTests: XCTestCase {
             Data(),
             sig
         ]
-        let result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
-        XCTAssert(result)
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         var expectedStack = [Data]()
         expectedStack.pushInt(1)
         XCTAssertEqual(stack, expectedStack)
@@ -80,31 +79,27 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[1],
             allSigs[0]
         ]
-        var result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
-        XCTAssert(result)
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[2],
             allSigs[0]
         ]
-        result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
-        XCTAssert(result)
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[2],
             allSigs[1]
         ]
-        result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
-        XCTAssert(result)
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[1],
             allSigs[2]
         ]
-        result = runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts)
-        XCTAssert(result)
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
     }
 }

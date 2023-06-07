@@ -6,7 +6,7 @@ extension Array where Element == Op {
         var data = data
         var newOps = [Op]()
         while data.count > 0 {
-            let op = Op.fromData(data)
+            let op = Op(data)
             newOps.append(op)
             data = data.dropFirst(op.dataLen)
         }

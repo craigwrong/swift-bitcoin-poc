@@ -150,88 +150,59 @@ public enum Op: Equatable {
         }
     }
     
-    func execute(stack: inout [Data], context: ExecutionContext) -> Bool {
+    func execute(stack: inout [Data], context: ExecutionContext) throws {
         switch(self) {
-        
-        // Operations that don't consume any parameters from the stack
         case .zero:
-            return opConstant(0, stack: &stack)
+            opConstant(0, stack: &stack)
         case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d):
-            return opPushData(data: d, stack: &stack)
+            opPushData(data: d, stack: &stack)
         case .constant(let k):
             precondition(k > 0 && k < 17)
-            return opConstant(Int(k), stack: &stack)
+            opConstant(Int(k), stack: &stack)
         case .oneNegate:
-            return opConstant(-1, stack: &stack)
+            opConstant(-1, stack: &stack)
         case .reserved:
-            return opReserved()
+            throw ScriptError.invalidScript
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            return opSuccess(stack: &stack)
+            opSuccess(stack: &stack)
         case .noOp:
-            return opNoOp()
-        case .return:
-            return opReturn()
-
-        // Special operations
-        case .checkMultiSig:
-            guard let (n, pubKeys, m, sigs) = try? getCheckMultiSigParams(&stack) else {
-                return false
-            }
-            return opCheckMultiSig(n, m, pubKeys, sigs, stack: &stack, context: context)
-        case .checkMultiSigVerify:
-            guard let (n, pubKeys, m, sigs) = try? getCheckMultiSigParams(&stack) else {
-                return false
-            }
-            return opCheckMultiSigVerify(n, m, pubKeys, sigs, stack: &stack, context: context)
-
-        // Unary operations
-        case .verify, .drop, .dup, .ripemd160, .sha256, .hash160, .hash256:
-            guard let first = try? getUnaryParam(&stack) else {
-                return false
-            }
-            switch(self) {
-            case .verify:
-                return opVerify(first, stack: &stack)
-            case .drop:
-                return opDrop(first)
-            case .dup:
-                return opDup(first, stack: &stack)
-            case .ripemd160:
-                return opRIPEMD160(first, stack: &stack)
-            case .sha256:
-                return opSHA256(first, stack: &stack)
-            case .hash160:
-                return opHash160(first, stack: &stack)
-            case .hash256:
-                return opHash256(first, stack: &stack)
-            default:
-                fatalError()
-            }
-
-        // Binary operations
-        case .equal, .equalVerify, .boolAnd, .checkSig, .checkSigVerify:
-            guard let (first, second) = try? getBinaryParams(&stack) else {
-                return false
-            }
-            switch(self) {
-            case .equal:
-                return opEqual(first, second, stack: &stack)
-            case .equalVerify:
-                return opEqualVerify(first, second, stack: &stack)
-            case .boolAnd:
-                return opBoolAnd(first, second, stack: &stack)
-            case .checkSig:
-                return opCheckSig(first, second, stack: &stack, context: context)
-            case .checkSigVerify:
-                return opCheckSigVerify(first, second, stack: &stack, context: context)
-            default:
-                fatalError()
-            }
-        default:
             break
+        case .return:
+            throw ScriptError.invalidScript
+        case .checkMultiSig:
+            try opCheckMultiSig(&stack, context: context)
+        case .checkMultiSigVerify:
+            try opCheckMultiSigVerify(&stack, context: context)
+        case .verify:
+            try opVerify(&stack)
+        case .drop:
+            try opDrop(&stack)
+        case .dup:
+            try opDup(&stack)
+        case .ripemd160:
+            try opRIPEMD160(&stack)
+        case .sha256:
+            try opSHA256(&stack)
+        case .hash160:
+            try opHash160(&stack)
+        case .hash256:
+            try opHash256(&stack)
+        case .equal:
+            try opEqual(&stack)
+        case .equalVerify:
+            try opEqualVerify(&stack)
+        case .boolAnd:
+            try opBoolAnd(&stack)
+        case .checkSig:
+            try opCheckSig(&stack, context: context)
+        case .checkSigVerify:
+            try opCheckSigVerify(&stack, context: context)
+        case .codeSeparator:
+            break
+        case .undefined:
+            throw ScriptError.invalidScript
         }
-        return false
     }
     
     var asm: String {
@@ -274,16 +245,16 @@ public enum Op: Equatable {
         return opCodeData + lengthData + rawData
     }
     
-    static func fromData(_ data: Data) -> Self {
+    init(_ data: Data) {
         var data = data
         let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: opCode))
         switch(opCode) {
         case Self.zero.opCode:
-            return .zero
+            self = .zero
         case 0x01 ... 0x4b:
             let d = Data(data[data.startIndex ..< data.startIndex + Int(opCode)])
-            return .pushBytes(d)
+            self = .pushBytes(d)
         case 0x4c ... 0x4e:
             let pushDataLengthInt: Int
             if opCode == 0x4c {
@@ -303,13 +274,13 @@ public enum Op: Equatable {
             }
             let d = Data(data[data.startIndex ..< data.startIndex + pushDataLengthInt])
             if opCode == 0x4c {
-                return .pushData1(d)
+                self = .pushData1(d)
             } else if opCode == 0x4d {
-                return .pushData2(d)
+                self = .pushData2(d)
             }
-            return .pushData4(d)
+            self = .pushData4(d)
         case Self.oneNegate.opCode:
-            return .oneNegate
+            self = .oneNegate
         case
             // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
             Self.success(80).opCode,
@@ -320,47 +291,47 @@ public enum Op: Equatable {
             Self.success(141).opCode ... Self.success(142).opCode,
             Self.success(149).opCode ... Self.success(153).opCode,
             Self.success(187).opCode ... Self.success(254).opCode:
-            return .success(opCode)
+            self = .success(opCode)
         case Self.constant(1).opCode ... Self.constant(16).opCode:
-            return .constant(opCode - 0x50)
+            self = .constant(opCode - 0x50)
         case Self.noOp.opCode:
-            return .noOp
+            self = .noOp
         case Self.verify.opCode:
-            return .verify
+            self = .verify
         case Self.return.opCode:
-            return .return
+            self = .return
         case Self.drop.opCode:
-            return .drop
+            self = .drop
         case Self.dup.opCode:
-            return .dup
+            self = .dup
         case Self.equal.opCode:
-            return .equal
+            self = .equal
         case Self.equalVerify.opCode:
-            return .equalVerify
+            self = .equalVerify
         case Self.boolAnd.opCode:
-            return .boolAnd
+            self = .boolAnd
         case Self.ripemd160.opCode:
-            return .ripemd160
+            self = .ripemd160
         case Self.sha256.opCode:
-            return .sha256
+            self = .sha256
         case Self.hash160.opCode:
-            return .hash160
+            self = .hash160
         case Self.hash256.opCode:
-            return .hash256
+            self = .hash256
         case Self.codeSeparator.opCode:
-            return .codeSeparator
+            self = .codeSeparator
         case Self.checkSig.opCode:
-            return .checkSig
+            self = .checkSig
         case Self.checkSigVerify.opCode:
-            return .checkSigVerify
+            self = .checkSigVerify
         case Self.checkMultiSig.opCode:
-            return .checkMultiSig
+            self = .checkMultiSig
         case Self.checkMultiSigVerify.opCode:
-            return .checkMultiSigVerify
+            self = .checkMultiSigVerify
         case Self.reserved.opCode:
-            return .reserved
+            self = .reserved
         default:
-            return .undefined
+            self = .undefined
             // fatalError("Unknown operation code.")
         }
     }

@@ -1,6 +1,8 @@
 import Foundation
 
-func opCheckSig(_ sig: Data, _ pubKey: Data, stack: inout [Data], context: ExecutionContext) -> Bool {
+func opCheckSig(_ stack: inout [Data], context: ExecutionContext) throws {
+    let (sig, pubKey) = try getBinaryParams(&stack)
+
     let result: Bool
     switch context.version {
         case .legacy:
@@ -29,5 +31,4 @@ func opCheckSig(_ sig: Data, _ pubKey: Data, stack: inout [Data], context: Execu
         result = context.tx.checkSigV1(sig, pubKey: pubKey, inIdx: context.inIdx, prevOuts: context.prevOuts, extFlag: 1, tapscriptExt: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: codesepPos))
     }
     stack.pushInt(result ? 1 : 0)
-    return true
 }

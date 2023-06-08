@@ -50,7 +50,7 @@ final class BCoreTransactionTests: XCTestCase {
                         desc: "addr(mwxFkyeJJDvq2VmrbJA2eVN4ywSdyVXEdk)#mjqgx25y",
                         hex: "76a914b44afd6e2b4dd224e3eb7050c46dd11f9be78a9688ac",
                         address: "mwxFkyeJJDvq2VmrbJA2eVN4ywSdyVXEdk",
-                        type: .pubkeyhash
+                        type: .pubKeyHash
                     )
                 ),
                 .init(
@@ -61,7 +61,7 @@ final class BCoreTransactionTests: XCTestCase {
                         desc: "raw(6a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf9)#cav96mf3",
                         hex: "6a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf9",
                         address: .none,
-                        type: .nulldata
+                        type: .nullData
                     )
                 )
             ],

@@ -85,41 +85,6 @@ extension Tx {
         )
         return txCopy.data + hashType.data32
     }
-    
-    // TODO: Remove once newer implementation was tested.
-    func sigMsgAlt(hashType: HashType, inIdx: Int, scriptCode subScript: [Op]) -> Data {
-        let input = ins[inIdx]
-        var txCopy = self
-        txCopy.ins.indices.forEach {
-            txCopy.ins[$0].scriptSig = .init([])
-            txCopy.ins[$0].witness = .none
-        }
-        txCopy.ins[inIdx].scriptSig = subScript
-        if hashType.isNone {
-            txCopy.outs = []
-        } else if hashType.isSingle {
-            txCopy.outs = []
-            outs.enumerated().forEach { (i, out) in
-                if i == inIdx {
-                    txCopy.outs.append(out)
-                } else if i < inIdx {
-                    txCopy.outs.append(.init(value: UInt64.max, scriptPubKeyData: .init()))
-                }
-            }
-        }
-        if hashType.isNone || hashType.isSingle {
-            txCopy.ins.indices.forEach {
-                if $0 != inIdx {
-                    txCopy.ins[$0].sequence = 0
-                }
-            }
-        }
-        if hashType.isAnyCanPay {
-            txCopy.ins = [input]
-            txCopy.ins[0].scriptSig = subScript
-        }
-        return txCopy.data + hashType.data32
-    }
 
     // - Witness V0
 

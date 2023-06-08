@@ -5,12 +5,6 @@ fileprivate typealias InvalidChecksum = (bech32: String, error: Bech32.DecodingE
 fileprivate typealias ValidAddressData = (address: String, script: [UInt8])
 fileprivate typealias InvalidAddressData = (hrp: String, version: Int, programLen: Int)
 
-fileprivate extension Data {
-    var hex: String {
-        return self.map { String(format: "%02hhx", $0) }.joined()
-    }
-}
-
 class Bech32Tests: XCTestCase {
     
     private let _validChecksum: [String] = [

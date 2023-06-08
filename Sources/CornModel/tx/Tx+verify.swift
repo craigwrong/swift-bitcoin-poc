@@ -65,7 +65,7 @@ extension Tx {
             guard var stack = ins[inIdx].witness else {
                 fatalError()
             }
-            try runScript([Op].makeP2WPKH(witnessProgram), stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV0)
+            try runScript(makeP2WPKH(witnessProgram), stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV0)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
             guard var stack = ins[inIdx].witness, let witnessScriptRaw = stack.popLast() else {

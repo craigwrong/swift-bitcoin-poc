@@ -1,6 +1,11 @@
 import Foundation
 
 extension Array where Element == Data {
+    
+    /// Memory size as multiple variable length arrays.
+    var varLenSize: Int {
+        reduce(0) { $0 + $1.varLenSize }
+    }
 
     mutating func popInt() -> Int {
         let d = self.removeLast()
@@ -11,13 +16,5 @@ extension Array where Element == Data {
     
     mutating func pushInt(_ k: Int) {
         append(Swift.withUnsafeBytes(of: k) { Data($0) })
-    }
-}
-
-extension Data {
-    var isZero: Bool {
-        return reduce(true) {
-            $0 && $1 == 0
-        }
     }
 }

@@ -25,7 +25,7 @@ final class DataTests: XCTestCase {
                     ins: [.init(txID: "", outIdx: 0, sequence: 0)],
                     outs: [.init(value: 0, scriptPubKey: makeNullData(""))]
         )
-        tx.signInput(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         var res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         //signed.outs.removeAll()
@@ -34,7 +34,7 @@ final class DataTests: XCTestCase {
         XCTAssert(res)
         
         tx.ins.append(Tx.In(txID: "", outIdx: 0, sequence: 0))
-        tx.signInput(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .all, inIdx: 1, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .all, inIdx: 1, prevOuts: prevOuts)
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
     }
@@ -76,8 +76,8 @@ final class DataTests: XCTestCase {
         )
         
         // Sign both inputs
-        tx.signInput(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .allAnyCanPay, inIdx: 0, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .noneAnyCanPay, inIdx: 1, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .allAnyCanPay, inIdx: 0, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .noneAnyCanPay, inIdx: 1, prevOuts: prevOuts)
         
         // Verify the signed transaction as is
         var res = tx.verify(prevOuts: prevOuts)
@@ -98,7 +98,7 @@ final class DataTests: XCTestCase {
         // Appending an additional input
         var signedOneMoreIn = tx
         signedOneMoreIn.ins.append(.init(txID: "", outIdx: 0, sequence: 0))
-        signedOneMoreIn.signInput(privKeys: [privKey2], pubKeys: [pubKey2], hashType: .noneAnyCanPay, inIdx: 2, prevOuts: prevOutsPlus)
+        signedOneMoreIn.sign(privKeys: [privKey2], pubKeys: [pubKey2], hashType: .noneAnyCanPay, inIdx: 2, prevOuts: prevOutsPlus)
         res = signedOneMoreIn.verify(prevOuts: prevOutsPlus)
         XCTAssert(res)
         
@@ -208,15 +208,15 @@ final class DataTests: XCTestCase {
                 .init(value: 0, scriptPubKey: makeNullData(""))
             ]
         )
-        tx.signInput(privKeys: [privKeys[0]], hashType: .all, inIdx: 0, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[1]], pubKeys: [pubKeys[1]], hashType: .all, inIdx: 1, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[2], privKeys[3]], redeemScript: redeemScript2, hashType: .all, inIdx: 2, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[3]], pubKeys: [pubKeys[3]], hashType: .all, inIdx: 3, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[4]], pubKeys: [pubKeys[4]], redeemScript: redeemScript4, hashType: .all, inIdx: 4, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[5], privKeys[6]], redeemScriptV0: redeemScript5, hashType: .all, inIdx: 5, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[6], privKeys[7]], redeemScript: redeemScript6, redeemScriptV0: redeemScriptV06, hashType: .all, inIdx: 6, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[7]], inIdx: 7, prevOuts: prevOuts)
-        tx.signInput(privKeys: [privKeys[8], privKeys[9]], hashType: .all, inIdx: 8, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[0]], hashType: .all, inIdx: 0, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[1]], pubKeys: [pubKeys[1]], hashType: .all, inIdx: 1, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[2], privKeys[3]], redeemScript: redeemScript2, hashType: .all, inIdx: 2, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[3]], pubKeys: [pubKeys[3]], hashType: .all, inIdx: 3, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[4]], pubKeys: [pubKeys[4]], redeemScript: redeemScript4, hashType: .all, inIdx: 4, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[5], privKeys[6]], redeemScriptV0: redeemScript5, hashType: .all, inIdx: 5, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[6], privKeys[7]], redeemScript: redeemScript6, redeemScriptV0: redeemScriptV06, hashType: .all, inIdx: 6, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[7]], inIdx: 7, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKeys[8], privKeys[9]], hashType: .all, inIdx: 8, prevOuts: prevOuts)
         
         let res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)

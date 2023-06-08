@@ -3,7 +3,7 @@ import Foundation
 extension Tx {
 
     /// Populates unlocking script / witness with signatures.
-    public mutating func signInput(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: [Op]? = .none, redeemScriptV0: [Op]? = .none, scriptTree: ScriptTree? = .none, leaf: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Tx.Out]) {
+    public mutating func sign(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: [Op]? = .none, redeemScriptV0: [Op]? = .none, scriptTree: ScriptTree? = .none, leafIdx: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Tx.Out]) {
         let prevOut = prevOuts.count == 1 ? prevOuts[0] : prevOuts[inIdx]
         switch(prevOut.scriptPubKey.scriptType) {
         case .pubKey:
@@ -40,9 +40,9 @@ extension Tx {
             signP2WSH(privKeys: privKeys, redeemScript: redeemScriptV0, hashType: hashType, inIdx: inIdx, prevOut: prevOut)
         case .witnessV1TapRoot:
             if scriptTree != .none {
-                precondition(leaf != .none)
+                precondition(leafIdx != .none)
             }
-            signP2TR(privKey: privKeys[0], scriptTree: scriptTree, leaf: leaf, annex: taprootAnnex, hashType: hashType, inIdx: inIdx, prevOuts: prevOuts)
+            signP2TR(privKey: privKeys[0], scriptTree: scriptTree, leafIdx: leafIdx, annex: taprootAnnex, hashType: hashType, inIdx: inIdx, prevOuts: prevOuts)
         default:
             fatalError()
         }
@@ -81,7 +81,7 @@ extension Tx {
     }
     
     mutating func signP2WKH(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Tx.Out) {
-        let scriptCode = [Op].makeP2WPKH(hash160(pubKey))
+        let scriptCode = makeP2WPKH(hash160(pubKey))
         let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
         ins[inIdx].witness = [sig, pubKey]
@@ -96,38 +96,32 @@ extension Tx {
         ins[inIdx].witness = nullDummy + sigs + [redeemScript.data]
     }
 
-    mutating func signP2TR(privKey: Data, scriptTree: ScriptTree?, leaf: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out]) {
+    mutating func signP2TR(privKey: Data, scriptTree: ScriptTree?, leafIdx: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out]) {
     
-        precondition(scriptTree == .none || (scriptTree != .none && leaf != .none))
+        precondition(scriptTree == .none || (scriptTree != .none && leafIdx != .none))
         var cache = SigMsgV1Cache?.some(.init())
         
         // WARN: We support adding only a single signature for now. Therefore we only take one codesepPos (OP_CODESEPARATOR position)
         ins[inIdx].witness = [Data()] // Placeholder for the signature
         
-        let tapscript: [Op]?
         let treeInfo: [(ScriptTree, Data)]?
         let merkleRoot: Data?
-        let leafVersion: UInt8?
-        if let scriptTree, let leaf {
-            let leafs = scriptTree.leafs().map { $0.1 }
-            guard case let .leaf(leafVersionInt, tapscript1) = leafs[leaf] else {
-                fatalError()
-            }
-            leafVersion = UInt8(leafVersionInt)
-            tapscript = tapscript1
+        if let scriptTree, let leafIdx {
             (treeInfo, merkleRoot) = scriptTree.calcMerkleRoot()
         } else {
-            tapscript = .none
             treeInfo = .none
             merkleRoot = .none
-            leafVersion = .none
         }
         
-        if let leaf, let tapscript, let treeInfo, let merkleRoot {
+        if let leafIdx, let treeInfo, let merkleRoot {
+            let (leaf, _) = treeInfo[leafIdx]
+            guard case let .leaf(_, tapscript) = leaf else {
+                fatalError()
+            }
             let internalKey = getInternalKey(privKey: privKey)
             let outputKey = getOutputKey(privKey: privKey, merkleRoot: merkleRoot)
 
-            let controlBlock = computeControlBlock(internalPubKey: internalKey, leafInfo: treeInfo[leaf], merkleRoot: merkleRoot)
+            let controlBlock = computeControlBlock(internalPubKey: internalKey, leafInfo: treeInfo[leafIdx], merkleRoot: merkleRoot)
             
             ins[inIdx].witness?.append(outputKey)
             ins[inIdx].witness?.append(tapscript.data)
@@ -139,9 +133,10 @@ extension Tx {
         }
         
         let tapscriptExt: TapscriptExt?
-        if let tapscript, let leafVersion {
+        if let treeInfo, let leafIdx {
+            let (leaf, _) = treeInfo[leafIdx]
             // Only 1 signature supported for this method so codesepPos and tapscriptExt does not have to vary
-            let tapLeafHash = taggedHash(tag: "TapLeaf", payload: Data([leafVersion]) + tapscript.data.varLenData)
+            let tapLeafHash = leaf.leafHash
             tapscriptExt = .init(tapLeafHash: tapLeafHash, keyVersion: 0, codesepPos: codesepPos)
         } else {
             tapscriptExt = .none

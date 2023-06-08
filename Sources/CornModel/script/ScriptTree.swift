@@ -21,19 +21,16 @@ public indirect enum ScriptTree: Equatable {
         }
     }
 
-    func leafs() -> [(Int, ScriptTree)] {
-        var count = 0
-        return leafs(partialResult: [], counter: &count)
+    var leafs: [ScriptTree] {
+        leafs()
     }
     
-    private func leafs(partialResult: [(Int, ScriptTree)], counter: inout Int) -> [(Int, ScriptTree)] {
+    private func leafs(_ partial: [ScriptTree] = []) -> [ScriptTree] {
         switch self {
         case .leaf(_, _):
-            let ret = partialResult + [(counter, self)]
-            counter += 1
-            return ret
-        case .branch(let scriptTreeLeft, let scriptTreeRight):
-            return scriptTreeLeft.leafs(partialResult: partialResult, counter: &counter) + scriptTreeRight.leafs(partialResult: partialResult, counter: &counter)
+            return partial + [self]
+        case .branch(let left, let right):
+            return left.leafs(partial) + right.leafs(partial)
         }
     }
     
@@ -49,5 +46,4 @@ public indirect enum ScriptTree: Equatable {
         let (_, merkleRoot) = calcMerkleRoot()
         return CornModel.getOutputKey(privKey: privKey, merkleRoot: merkleRoot)
     }
-    
 }

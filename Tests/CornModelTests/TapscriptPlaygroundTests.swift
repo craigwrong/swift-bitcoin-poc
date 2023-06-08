@@ -22,7 +22,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
             ins: [.init(txID: "", outIdx: 0, sequence: 0)],
             outs: [.init(value: 50, scriptPubKey: makeNullData(""))])
         
-        tx.signInput(privKeys: [privKey], scriptTree: scriptTree, leaf: 0, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 0, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
         let result = tx.verify(prevOuts: prevOuts)
         XCTAssert(result)
     }

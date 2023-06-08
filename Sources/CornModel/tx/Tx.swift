@@ -28,14 +28,6 @@ public struct Tx: Equatable {
     
     /// Transaction lock time.
     public var lockTime: UInt32
-}
-
-extension Tx: CustomStringConvertible {
-    
-    public var description: String { txid }
-}
-
-extension Tx {
     
     static let empty = Self(version: .v1, lockTime: 0, ins: [], outs: [])
     static let coinbaseID = String(repeating: "0", count: 64)
@@ -126,9 +118,6 @@ extension Tx {
     var vsize: Int { Int((Double(weight) / 4).rounded(.up)) }
     var txid: String { hash256(idData).reversed().hex }
     var wtxid: String { hash256(data).reversed().hex}
-}
-
-extension Tx {
     
     /// Whether this is the coinbase transaction of any given block. Based of whether the first and only input is a coinbase input.
     var isCoinbase: Bool { ins.first?.isCoinbase ?? false }
@@ -143,4 +132,9 @@ extension Tx {
     var witnessSize: Int {
         hasWitness ? (MemoryLayout.size(ofValue: Tx.segwitMarker) + MemoryLayout.size(ofValue: Tx.segwitFlag)) + ins.reduce(0) { $0 + $1.witnessDataLen } : 0
     }
+}
+
+extension Tx: CustomStringConvertible {
+    
+    public var description: String { txid }
 }

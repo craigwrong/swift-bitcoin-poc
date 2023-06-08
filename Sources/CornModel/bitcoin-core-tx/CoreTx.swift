@@ -77,7 +77,7 @@ extension CoreTx {
     }
     
     struct Output: Equatable, Decodable {
-        
+
         init(value: Double, n: Int, scriptPubKey: CoreTx.Output.LockScript) {
             self.value = value
             self.n = n
@@ -86,7 +86,7 @@ extension CoreTx {
         
         struct LockScript: Equatable, Decodable {
             
-            init(asm: String, desc: String, hex: String, address: String? = nil, type: CoreTx.Output.LockScript.ScriptType) {
+            init(asm: String, desc: String, hex: String, address: String? = nil, type: LockType) {
                 self.asm = asm
                 self.desc = desc
                 self.hex = hex
@@ -94,15 +94,25 @@ extension CoreTx {
                 self.type = type
             }
             
-            enum ScriptType: String, Equatable, Decodable {
-                case witness_v0_keyhash, pubkeyhash, nulldata, unknown
+            enum LockType: String, Equatable, Decodable {
+                case nonStandard = "nonstandard",
+                     pubKey = "pubkey",
+                     pubKeyHash = "pubkeyhash",
+                     scriptHash = "scripthash",
+                     multiSig = "multisig",
+                     nullData = "nulldata",
+                     witnessV0KeyHash = "witness_v0_keyhash",
+                     witnessV0ScriptHash = "witness_v0_scripthash",
+                     witnessV1TapRoot = "witness_v1_taproot",
+                     witnessUnknown = "witness_unknown",
+                     unknown
             }
             
             let asm: String
             let desc: String
             let hex: String
             let address: String?
-            let type: ScriptType
+            let type: LockType
         }
         
         let value: Double
@@ -162,6 +172,7 @@ extension Tx.In {
 }
 
 extension Tx.Out {
+
     func toBCoreOutput(outIdx: Int, network: Network = .main) -> CoreTx.Output {
         .init(
             value: doubleValue,
@@ -171,9 +182,36 @@ extension Tx.Out {
                 desc: "", // TODO: Create descriptor
                 hex: scriptPubKey.data.hex,
                 address: address(network: network),
-                type: .init(rawValue: CoreScriptType(scriptPubKey.scriptType).rawValue) ?? .unknown
+                type: .init(rawValue: CoreTx.Output.LockScript.LockType(scriptPubKey.scriptType).rawValue) ?? .unknown
             )
         )
     }
 }
 
+extension CoreTx.Output.LockScript.LockType {
+    
+    init(_ scriptType: LockScriptType) {
+        switch scriptType {
+        case .nonStandard:
+            self = .nonStandard
+        case .pubKey:
+            self = .pubKey
+        case .pubKeyHash:
+            self = .pubKeyHash
+        case .scriptHash:
+            self = .scriptHash
+        case .multiSig:
+            self = .multiSig
+        case .nullData:
+            self = .nullData
+        case .witnessV0KeyHash:
+            self = .witnessV0KeyHash
+        case .witnessV0ScriptHash:
+            self = .witnessV0ScriptHash
+        case .witnessV1TapRoot:
+            self = .witnessV1TapRoot
+        case .witnessUnknown:
+            self = .witnessUnknown
+        }
+    }
+}

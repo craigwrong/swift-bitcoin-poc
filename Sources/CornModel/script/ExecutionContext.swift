@@ -6,7 +6,7 @@ struct ExecutionContext {
     let prevOuts: [Tx.Out]
     let script: [Op]
     let version: ScriptVersion
-    let leafVersion: UInt8?
+    let tapLeafHash: Data?
     let keyVersion: UInt8? = 0
     var opIdx: Int = 0
 

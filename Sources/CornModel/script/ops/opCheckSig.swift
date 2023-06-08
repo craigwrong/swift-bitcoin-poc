@@ -12,10 +12,9 @@ func opCheckSig(_ stack: inout [Data], context: ExecutionContext) throws {
         // SegWit V0 semantics
         result = context.tx.checkSigV0(sig, pubKey: pubKey, inIdx: context.inIdx, prevOut: context.prevOut, script: context.script, opIdx: context.opIdx)
         case .witnessV1:
-        guard let leafVersion = context.leafVersion, let keyVersion = context.keyVersion else {
+        guard let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
             preconditionFailure()
         }
-        let tapLeafHash = taggedHash(tag: "TapLeaf", payload: Data([leafVersion]) + context.script.data.varLenData)
         
         // https://bitcoin.stackexchange.com/questions/115695/what-are-the-last-bytes-for-in-a-taproot-script-path-sighash
         var codesepPos = UInt32(0xffffffff)

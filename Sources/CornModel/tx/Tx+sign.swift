@@ -106,7 +106,7 @@ extension Tx {
         
         let treeInfo: [(ScriptTree, Data)]?
         let merkleRoot: Data?
-        if let scriptTree, let leafIdx {
+        if let scriptTree {
             (treeInfo, merkleRoot) = scriptTree.calcMerkleRoot()
         } else {
             treeInfo = .none

@@ -146,7 +146,7 @@ extension Tx {
             }
 
             let tapscript = [Op](tapscriptData)
-            try runScript(tapscript, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV1, leafVersion: leafVersion)
+            try runScript(tapscript, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV1, tapLeafHash: tapLeafHash)
         default:
             preconditionFailure()
         }

@@ -1,7 +1,7 @@
 import Foundation
 
-func runScript(_ ops: [Op], stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], version: ScriptVersion = .legacy, leafVersion: UInt8? = .none) throws {
-    var context = ExecutionContext(tx: tx, inIdx: inIdx, prevOuts: prevOuts, script: ops, version: version, leafVersion: leafVersion)
+func runScript(_ ops: [Op], stack: inout [Data], tx: Tx, inIdx: Int, prevOuts: [Tx.Out], version: ScriptVersion = .legacy, tapLeafHash: Data? = .none) throws {
+    var context = ExecutionContext(tx: tx, inIdx: inIdx, prevOuts: prevOuts, script: ops, version: version, tapLeafHash: tapLeafHash)
     var i = context.opIdx
     while i < ops.count {
         try ops[i].execute(stack: &stack, context: context)

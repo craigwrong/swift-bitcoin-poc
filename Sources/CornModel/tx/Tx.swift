@@ -34,9 +34,7 @@ public struct Tx: Equatable {
     
     init(_ data: Data) {
         var data = data
-        guard let version = Version(data) else {
-            fatalError("Unknown bitcoin transaction version.")
-        }
+        let version = Version(data)
         data = data.dropFirst(version.dataLen)
         
         // Check for marker and segwit flag

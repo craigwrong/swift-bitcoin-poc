@@ -53,7 +53,7 @@ extension Tx {
             }
             scriptPubKey2 = redeemScript
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
-            guard input.scriptSig == .none else {
+            guard input.scriptSig?.isEmpty != false else {
                 // The scriptSig must be exactly empty or validation fails. ("native witness program")
                 throw ScriptError.invalidScript
             }

@@ -1,7 +1,7 @@
 import Foundation
 
 public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkSigAdd
         // Legacy only
         , undefined
         // Witness V1 only
@@ -80,6 +80,8 @@ public enum Op: Equatable {
             return 0xae
         case .checkMultiSigVerify:
             return 0xaf
+        case .checkSigAdd:
+            return 0xba
         case .undefined:
             return 0xff
         case .reserved:
@@ -140,6 +142,8 @@ public enum Op: Equatable {
             return "OP_CHECKMULTISIG"
         case .checkMultiSigVerify:
             return "OP_CHECKMULTISIGVERIFY"
+        case .checkSigAdd:
+            return "OP_CHECKSIGADD"
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
             // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
@@ -158,7 +162,7 @@ public enum Op: Equatable {
             opPushData(data: d, stack: &stack)
         case .constant(let k):
             precondition(k > 0 && k < 17)
-            opConstant(Int(k), stack: &stack)
+            opConstant(Int32(k), stack: &stack)
         case .oneNegate:
             opConstant(-1, stack: &stack)
         case .reserved:
@@ -171,8 +175,14 @@ public enum Op: Equatable {
         case .return:
             throw ScriptError.invalidScript
         case .checkMultiSig:
+            guard context.version == .legacy || context.version == .witnessV0 else {
+                throw ScriptError.invalidScript
+            }
             try opCheckMultiSig(&stack, context: context)
         case .checkMultiSigVerify:
+            guard context.version == .legacy || context.version == .witnessV0 else {
+                throw ScriptError.invalidScript
+            }
             try opCheckMultiSigVerify(&stack, context: context)
         case .verify:
             try opVerify(&stack)
@@ -198,6 +208,8 @@ public enum Op: Equatable {
             try opCheckSig(&stack, context: context)
         case .checkSigVerify:
             try opCheckSigVerify(&stack, context: context)
+        case .checkSigAdd:
+            try opCheckSigAdd(&stack, context: context)
         case .codeSeparator:
             break
         case .undefined:
@@ -328,6 +340,8 @@ public enum Op: Equatable {
             self = .checkMultiSig
         case Self.checkMultiSigVerify.opCode:
             self = .checkMultiSigVerify
+        case Self.checkSigAdd.opCode:
+            self = .checkSigAdd
         case Self.reserved.opCode:
             self = .reserved
         default:
@@ -335,41 +349,4 @@ public enum Op: Equatable {
             // fatalError("Unknown operation code.")
         }
     }
-}
-
-enum ScriptError: Error {
-    case invalidScript
-}
-
-func getUnaryParam(_ stack: inout [Data]) throws -> Data {
-    guard stack.count > 0 else {
-        throw ScriptError.invalidScript
-    }
-    return stack.removeLast()
-}
-
-func getBinaryParams(_ stack: inout [Data]) throws -> (Data, Data) {
-    guard stack.count > 1 else {
-        throw ScriptError.invalidScript
-    }
-    let second = stack.removeLast()
-    let first = stack.removeLast()
-    return (first, second)
-}
-
-func getCheckMultiSigParams(_ stack: inout [Data]) throws -> (Int, [Data], Int, [Data]) {
-    guard stack.count > 4 else {
-        throw ScriptError.invalidScript
-    }
-    let n = stack.popInt()
-    let pubKeys = Array(stack[(stack.endIndex - n)...].reversed())
-    stack.removeLast(n)
-    let m = stack.popInt()
-    let sigs = Array(stack[(stack.endIndex - m)...].reversed())
-    stack.removeLast(m)
-    let nullDummy = stack.removeLast()
-    guard nullDummy.count == 0 else {
-        throw ScriptError.invalidScript
-    }
-    return (n, pubKeys, m, sigs)
 }

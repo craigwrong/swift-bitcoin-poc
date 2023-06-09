@@ -12,10 +12,10 @@ final class ScriptTests: XCTestCase {
     }
     
     func testBoolAnd() {
-        let zero = withUnsafeBytes(of: 0) { Data($0) }
-        let one = withUnsafeBytes(of: 1) { Data($0) }
-        let two = withUnsafeBytes(of: 2) { Data($0) }
-        let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
+        let zero = withUnsafeBytes(of: Int32(0)) { Data($0) }
+        let one = withUnsafeBytes(of: Int32(1)) { Data($0) }
+        let two = withUnsafeBytes(of: Int32(2)) { Data($0) }
+        let big = withUnsafeBytes(of: (Int32.max / 2) - 1) { Data($0) }
         
         var script = [Op.pushBytes(zero), .pushBytes(zero), .boolAnd]
         var stack = [Data]()

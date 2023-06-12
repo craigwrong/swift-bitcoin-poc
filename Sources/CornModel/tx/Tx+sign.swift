@@ -99,7 +99,6 @@ extension Tx {
     mutating func signP2TR(privKey: Data, scriptTree: ScriptTree?, leafIdx: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out]) {
     
         precondition(scriptTree == .none || (scriptTree != .none && leafIdx != .none))
-        var cache = SigMsgV1Cache?.some(.init())
         
         // WARN: We support adding only a single signature for now. Therefore we only take one codesepPos (OP_CODESEPARATOR position)
         ins[inIdx].witness = [Data()] // Placeholder for the signature
@@ -143,7 +142,7 @@ extension Tx {
         }
         
         // Again we are only adding a single signature. Note that the script might be required to consume multiple signatures with different code separator positions even.
-        let sighash = sighashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, tapscriptExt: tapscriptExt, cache: &cache)
+        let sighash = sighashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, tapscriptExt: tapscriptExt)
         let aux = getRandBytes(32)
         
         let hashTypeSuffix: Data

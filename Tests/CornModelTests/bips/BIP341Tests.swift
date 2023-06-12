@@ -257,9 +257,9 @@ final class BIP341Tests: XCTestCase {
             hashSequences: Data(hex: "18959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957e")
         )
         
-        var cache = SigMsgV1Cache?.some(.init())
+        var cache = SighashCache()
         _ = tx.sigMsgV1(hashType: HashType?.none, inIdx: 0, prevOuts: utxosSpent, cache: &cache)
-        if let cache, let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
+        if let shaAmounts = cache.shaAmounts, let shaOuts = cache.shaOuts, let shaPrevouts = cache.shaPrevouts, let shaScriptPubKeys = cache.shaScriptPubKeys, let shaSequences = cache.shaSequences {
             XCTAssertEqual(shaAmounts, intermediary.hashAmounts)
             XCTAssertEqual(shaOuts, intermediary.hashOutputs)
             XCTAssertEqual(shaPrevouts, intermediary.hashPrevouts)
@@ -473,15 +473,11 @@ final class BIP341Tests: XCTestCase {
 
             let sigMsg = tx.sigMsgV1(hashType: hashType, inIdx: inIdx, prevOuts: utxosSpent, cache: &cache)
 
-            if let cache {
-                XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
-                XCTAssertEqual(cache.shaOutsUsed, testCase.intermediary.precomputedUsed.hashOutputs)
-                XCTAssertEqual(cache.shaPrevoutsUsed, testCase.intermediary.precomputedUsed.hashPrevouts)
-                XCTAssertEqual(cache.shaSequencesUsed, testCase.intermediary.precomputedUsed.hashSequences)
-                XCTAssertEqual(cache.shaScriptPubKeysUsed, testCase.intermediary.precomputedUsed.hashScriptPubkeys)
-            } else {
-                XCTFail("Could not obtain precomputed hashes.")
-            }
+            XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
+            XCTAssertEqual(cache.shaOutsUsed, testCase.intermediary.precomputedUsed.hashOutputs)
+            XCTAssertEqual(cache.shaPrevoutsUsed, testCase.intermediary.precomputedUsed.hashPrevouts)
+            XCTAssertEqual(cache.shaSequencesUsed, testCase.intermediary.precomputedUsed.hashSequences)
+            XCTAssertEqual(cache.shaScriptPubKeysUsed, testCase.intermediary.precomputedUsed.hashScriptPubkeys)
             XCTAssertEqual(sigMsg, expectedSigMsg)
 
             let sighash = tx.sighashV1(hashType, inIdx: inIdx, prevOuts: utxosSpent, cache: &cache)

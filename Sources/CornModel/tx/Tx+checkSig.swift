@@ -39,7 +39,7 @@ extension Tx {
         }
         
         var txCopy = self
-        var cache = SigMsgV1Cache?.none // TODO: Use cache.
+        var cache = SighashCache() // TODO: Hold on to cache.
         let sighash = txCopy.sighashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, tapscriptExt: tapscriptExt, cache: &cache)
         let result = verifySchnorr(sig: sig, msg: sighash, pubKey: pubKey)
         return result

@@ -1,6 +1,6 @@
 import Foundation
 
-struct SigMsgV1Cache {
+struct SighashCache {
     init(shaPrevouts: Data? = nil, shaPrevoutsUsed: Bool = false, shaAmounts: Data? = nil, shaAmountsUsed: Bool = false, shaScriptPubKeys: Data? = nil, shaScriptPubKeysUsed: Bool = false, shaSequences: Data? = nil, shaSequencesUsed: Bool = false, shaOuts: Data? = nil, shaOutsUsed: Bool = false) {
         self.shaPrevouts = shaPrevouts
         self.shaPrevoutsUsed = shaPrevoutsUsed

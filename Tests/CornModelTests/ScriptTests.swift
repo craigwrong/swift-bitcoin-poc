@@ -99,7 +99,7 @@ final class ScriptTests: XCTestCase {
         XCTAssertNoThrow(try runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: [], version: .witnessV1))
         XCTAssertEqual(stack, [])
 
-        let legacyScript = [Op.reserved]
+        let legacyScript = [Op.reserved(80)]
         stack = [Data]()
         XCTAssertThrowsError(try runScript(legacyScript, stack: &stack, tx: .empty, inIdx: -1, prevOuts: []))
         XCTAssertEqual(stack, [])

@@ -1,7 +1,7 @@
 import Foundation
 
 public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved, constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkSigAdd
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved(UInt8), constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkSigAdd
         // Legacy only
         , undefined
         // Witness V1 only
@@ -38,6 +38,9 @@ public enum Op: Equatable {
             return 0x4e
         case .oneNegate:
             return 0x4f
+        case .reserved(let k):
+            precondition(k == 80 || (k >= 137 && k <= 138))
+            return k
         case .success(let k):
             // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
             // 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254
@@ -84,8 +87,6 @@ public enum Op: Equatable {
             return 0xba
         case .undefined:
             return 0xff
-        case .reserved:
-            return 0x50
         }
     }
     
@@ -103,8 +104,9 @@ public enum Op: Equatable {
             return "OP_PUSHDATA4"
         case .oneNegate:
             return "OP_1NEGATE"
-        case .reserved:
-            return "OP_RESERVED"
+        case .reserved(let k):
+            precondition(k == 80 || (k >= 137 && k <= 138))
+            return "OP_RESERVED\(k == 80 ? "" : k == 137 ? "1" : "2")"
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return "OP_\(k)"
@@ -165,7 +167,8 @@ public enum Op: Equatable {
             opConstant(Int32(k), stack: &stack)
         case .oneNegate:
             opConstant(-1, stack: &stack)
-        case .reserved:
+        case .reserved(let k):
+            precondition(k == 80 || (k >= 137 && k <= 138))
             throw ScriptError.invalidScript
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
@@ -257,7 +260,7 @@ public enum Op: Equatable {
         return opCodeData + lengthData + rawData
     }
     
-    init(_ data: Data) {
+    init(_ data: Data, version: ScriptVersion) {
         var data = data
         let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: opCode))
@@ -294,12 +297,18 @@ public enum Op: Equatable {
         case Self.oneNegate.opCode:
             self = .oneNegate
         case
+            Self.reserved(80).opCode,
+            Self.reserved(137).opCode ... Self.reserved(138).opCode:
+            if version == .legacy || version == .witnessV0 {
+                self = .reserved(opCode)
+            } else {
+                self = .success(opCode)
+            }
+        case
             // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
-            Self.success(80).opCode,
             Self.success(98).opCode,
             Self.success(126).opCode ... Self.success(129).opCode,
             Self.success(131).opCode ... Self.success(134).opCode,
-            Self.success(137).opCode ... Self.success(138).opCode,
             Self.success(141).opCode ... Self.success(142).opCode,
             Self.success(149).opCode ... Self.success(153).opCode,
             Self.success(187).opCode ... Self.success(254).opCode:
@@ -342,8 +351,6 @@ public enum Op: Equatable {
             self = .checkMultiSigVerify
         case Self.checkSigAdd.opCode:
             self = .checkSigAdd
-        case Self.reserved.opCode:
-            self = .reserved
         default:
             self = .undefined
             // fatalError("Unknown operation code.")

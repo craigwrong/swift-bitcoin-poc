@@ -74,7 +74,7 @@ extension Tx {
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 throw ScriptError.invalidScript
             }
-            let witnessScript = [Op](witnessScriptRaw)
+            let witnessScript = [Op](witnessScriptRaw, version: .witnessV0)
             try runScript(witnessScript, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV0)
         case .witnessV1TapRoot:
             // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
@@ -145,7 +145,7 @@ extension Tx {
                 throw ScriptError.invalidScript
             }
 
-            let tapscript = [Op](tapscriptData)
+            let tapscript = [Op](tapscriptData, version: .witnessV1)
             try runScript(tapscript, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV1, tapLeafHash: tapLeafHash)
         default:
             preconditionFailure()

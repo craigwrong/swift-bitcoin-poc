@@ -2,11 +2,11 @@ import Foundation
 
 extension Array where Element == Op {
 
-    init(_ data: Data) {
+    init(_ data: Data, version: ScriptVersion = .legacy) {
         var data = data
         var newOps = [Op]()
         while data.count > 0 {
-            let op = Op(data)
+            let op = Op(data, version: version)
             newOps.append(op)
             data = data.dropFirst(op.dataLen)
         }

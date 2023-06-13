@@ -1,6 +1,6 @@
 import Foundation
 
-func opToAltStack(_ stack: inout [Data], altStack: inout [Data]) throws {
+func opToAltStack(_ stack: inout [Data], context: inout ExecutionContext) throws {
     let first = try getUnaryParam(&stack)
-    altStack.append(first)
+    context.altStack.append(first)
 }

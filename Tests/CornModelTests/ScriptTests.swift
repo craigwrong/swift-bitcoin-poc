@@ -121,6 +121,37 @@ final class ScriptTests: XCTestCase {
         XCTAssertEqual(stack, [big, big])
     }
 
+    func testIf() {
+        
+        // If branch
+        var script = [Op.constant(3), .constant(4), .add, .constant(7), .equal, .if, .constant(2), .constant(6), .add, .else, .constant(5), .endIf, .constant(10)
+        ]
+        var stack = [Data]()
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: []))
+        XCTAssertEqual(stack, [Data([0x08]), Data([0x0a])])
+        
+        // Missing else branch
+        script = [.constant(3), .constant(4), .add, .constant(7), .equal, .if, .constant(2), .constant(6), .add, .endIf, .constant(10)
+        ]
+        stack = []
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: []))
+        XCTAssertEqual(stack, [Data([0x08]), Data([0x0a])])
+        
+        // Else branch
+        script = [.constant(3), .constant(4), .add, .constant(9), .equal, .if, .constant(2), .constant(6), .add, .else, .constant(5), .endIf, .constant(10)
+        ]
+        stack = []
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: []))
+        XCTAssertEqual(stack, [Data([0x05]), Data([0x0a])])
+        
+        // Notif
+        script = [.constant(3), .constant(4), .add, .constant(9), .equal, .notIf, .constant(5), .endIf, .constant(10)
+        ]
+        stack = []
+        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: .empty, inIdx: -1, prevOuts: []))
+        XCTAssertEqual(stack, [Data([0x05]), Data([0x0a])])
+    }
+
     func testCheckSig() {
         let pubKey = Data(hex: "04ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125")
         let prevOut = Tx.Out(value: UInt64(0), scriptPubKeyData: .init(hex: "76a914786890276a55f3e6d2f403e3d595b6603964fa0d88ac"))

@@ -1,7 +1,7 @@
 import Foundation
 
 public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, verify, `return`, toAltStack, ifDup, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, /* V1+ */ checkSigAdd, undefined
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, ifDup, drop, dup, equal, equalVerify, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, /* V1+ */ checkSigAdd, undefined
     
     var dataLen: Int {
         let additionalSize: Int
@@ -47,6 +47,14 @@ public enum Op: Equatable {
             return 0x50 + k
         case .noOp:
             return 0x61
+        case .if:
+            return 0x61
+        case .notIf:
+            return 0x64
+        case .else:
+            return 0x67
+        case .endIf:
+            return 0x68
         case .verify:
             return 0x69
         case .return:
@@ -63,6 +71,8 @@ public enum Op: Equatable {
             return 0x87
         case .equalVerify:
             return 0x88
+        case .add:
+            return 0x93
         case .boolAnd:
             return 0x9a
         case .ripemd160:
@@ -117,6 +127,14 @@ public enum Op: Equatable {
             return "OP_\(k)"
         case .noOp:
             return "OP_NOP"
+        case .if:
+            return "OP_IF"
+        case .notIf:
+            return "OP_NOTIF"
+        case .else:
+            return "OP_ELSE"
+        case .endIf:
+            return "OP_ENDIF"
         case .verify:
             return "OP_VERIFY"
         case .return:
@@ -133,6 +151,8 @@ public enum Op: Equatable {
             return "OP_EQUAL"
         case .equalVerify:
             return "OP_EQUALVERIFY"
+        case .add:
+            return "OP_ADD"
         case .boolAnd:
             return "OP_BOOLAND"
         case .ripemd160:
@@ -160,7 +180,7 @@ public enum Op: Equatable {
         }
     }
     
-    func execute(stack: inout [Data], altStack: inout [Data], context: ExecutionContext) throws {
+    func execute(stack: inout [Data], context: inout ExecutionContext) throws {
         switch(self) {
         case .zero:
             opConstant(0, stack: &stack)
@@ -179,12 +199,20 @@ public enum Op: Equatable {
             opConstant(k, stack: &stack)
         case .noOp:
             break
+        case .if:
+            try opIf(&stack, context: &context)
+        case .notIf:
+            try opIf(&stack, isNotIf: true, context: &context)
+        case .else:
+            try opElse(context: &context)
+        case .endIf:
+            try opEndIf(context: &context)
         case .verify:
             try opVerify(&stack)
         case .return:
             throw ScriptError.invalidScript
         case .toAltStack:
-            try opToAltStack(&stack, altStack: &altStack)
+            try opToAltStack(&stack, context: &context)
         case .ifDup:
             try opIfDup(&stack)
         case .drop:
@@ -195,6 +223,8 @@ public enum Op: Equatable {
             try opEqual(&stack)
         case .equalVerify:
             try opEqualVerify(&stack)
+        case .add:
+            try opAdd(&stack)
         case .boolAnd:
             try opBoolAnd(&stack)
         case .ripemd160:
@@ -325,6 +355,14 @@ public enum Op: Equatable {
             self = .constant(opCode - 0x50)
         case Self.noOp.opCode:
             self = .noOp
+        case Self.if.opCode:
+            self = .if
+        case Self.notIf.opCode:
+            self = .notIf
+        case Self.else.opCode:
+            self = .else
+        case Self.endIf.opCode:
+            self = .endIf
         case Self.verify.opCode:
             self = .verify
         case Self.return.opCode:
@@ -341,6 +379,8 @@ public enum Op: Equatable {
             self = .equal
         case Self.equalVerify.opCode:
             self = .equalVerify
+        case Self.add.opCode:
+            self = .add
         case Self.boolAnd.opCode:
             self = .boolAnd
         case Self.ripemd160.opCode:

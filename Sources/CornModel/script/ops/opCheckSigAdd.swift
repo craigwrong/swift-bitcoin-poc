@@ -46,12 +46,11 @@ func opCheckSigAdd(_ stack: inout [Data], context: ExecutionContext) throws {
     if sig.isEmpty {
         // If the signature is the empty vector:
         // For OP_CHECKSIGADD, a CScriptNum with value n is pushed onto the stack, and execution continues with the next opcode.
-        stack.append(nData)
+        stack.append(nData) // stack.pushInt(nData.asUInt32)
     } else {
         // If the signature is not the empty vector, the opcode is counted towards the sigops budget (see further).
         // For OP_CHECKSIGADD, a CScriptNum with value of n + 1 is pushed onto the stack.
-        let paddedN = nData + Data(repeating: 0, count: MemoryLayout<UInt32>.size - nData.count)
-        let nPlus1 = paddedN.withUnsafeBytes { $0.load(as: UInt32.self) } + 1
-        stack.append(withUnsafeBytes(of: nPlus1) { Data($0) })
+        let nPlus1 = nData.asUInt32 + 1
+        stack.pushInt(nPlus1)
     }
 }

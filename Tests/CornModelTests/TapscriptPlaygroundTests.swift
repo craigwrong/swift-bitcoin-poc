@@ -41,7 +41,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
         var tx0 = tx
         tx0.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 0, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
         tx0.ins[0].witness?.insert(Data(), at: 0)
-        var result = tx0.verify(prevOuts: prevOuts)
+        var result = tx0.verify(prevOuts: prevOuts)        
 
         var tx1 = tx
         tx1.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)

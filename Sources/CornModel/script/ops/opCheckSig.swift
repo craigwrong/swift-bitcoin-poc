@@ -27,5 +27,5 @@ func opCheckSig(_ stack: inout [Data], context: ExecutionContext) throws {
         // Tapscript semantics
         result = context.tx.checkSigV1(sig, pubKey: pubKey, inIdx: context.inIdx, prevOuts: context.prevOuts, extFlag: 1, tapscriptExt: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: codesepPos))
     }
-    stack.pushInt(result ? 1 : 0)
+    stack.pushBool(result)
 }

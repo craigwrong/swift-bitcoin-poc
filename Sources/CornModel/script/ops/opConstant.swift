@@ -1,8 +1,8 @@
 import Foundation
 
-func opConstant(_ k: Int32, stack: inout [Data]) {
+func opConstant(_ k: UInt8, stack: inout [Data]) {
     if k == 0 {
-        stack.append(Data())
+        stack.append(.zero)
     } else {
         stack.pushInt(k)
     }

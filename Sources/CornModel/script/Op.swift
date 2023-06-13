@@ -1,11 +1,7 @@
 import Foundation
 
 public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved(UInt8), constant(UInt8), noOp, verify, `return`, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkSigAdd
-        // Legacy only
-        , undefined
-        // Witness V1 only
-        , success(UInt8)
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, verify, `return`, toAltStack, ifDup, drop, dup, equal, equalVerify, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, /* V1+ */ checkSigAdd, undefined
     
     var dataLen: Int {
         let additionalSize: Int
@@ -55,6 +51,10 @@ public enum Op: Equatable {
             return 0x69
         case .return:
             return 0x6a
+        case .toAltStack:
+            return 0x6b
+        case .ifDup:
+            return 0x73
         case .drop:
             return 0x75
         case .dup:
@@ -107,6 +107,11 @@ public enum Op: Equatable {
         case .reserved(let k):
             precondition(k == 80 || (k >= 137 && k <= 138))
             return "OP_RESERVED\(k == 80 ? "" : k == 137 ? "1" : "2")"
+        case .success(let k):
+            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
+            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
+            // These opcodes are renamed to OP_SUCCESS80, ..., OP_SUCCESS254, and collectively known as OP_SUCCESSx[1].
+            return "OP_SUCCESS\(k)"
         case .constant(let k):
             precondition(k > 0 && k < 17)
             return "OP_\(k)"
@@ -116,6 +121,10 @@ public enum Op: Equatable {
             return "OP_VERIFY"
         case .return:
             return "OP_RETURN"
+        case .toAltStack:
+            return "OP_TOALTSTACK"
+        case .ifDup:
+            return "OP_IFDUP"
         case .drop:
             return "OP_DROP"
         case .dup:
@@ -146,37 +155,62 @@ public enum Op: Equatable {
             return "OP_CHECKMULTISIGVERIFY"
         case .checkSigAdd:
             return "OP_CHECKSIGADD"
-        case .success(let k):
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // These opcodes are renamed to OP_SUCCESS80, ..., OP_SUCCESS254, and collectively known as OP_SUCCESSx[1].
-            return "OP_SUCCESS\(k)"
         case .undefined:
             return "undefined"
         }
     }
     
-    func execute(stack: inout [Data], context: ExecutionContext) throws {
+    func execute(stack: inout [Data], altStack: inout [Data], context: ExecutionContext) throws {
         switch(self) {
         case .zero:
             opConstant(0, stack: &stack)
         case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d):
             opPushData(data: d, stack: &stack)
-        case .constant(let k):
-            precondition(k > 0 && k < 17)
-            opConstant(Int32(k), stack: &stack)
         case .oneNegate:
-            opConstant(-1, stack: &stack)
+            opOneNegate(&stack)
         case .reserved(let k):
             precondition(k == 80 || (k >= 137 && k <= 138))
             throw ScriptError.invalidScript
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
             opSuccess(stack: &stack)
+        case .constant(let k):
+            precondition(k > 0 && k < 17)
+            opConstant(k, stack: &stack)
         case .noOp:
             break
+        case .verify:
+            try opVerify(&stack)
         case .return:
             throw ScriptError.invalidScript
+        case .toAltStack:
+            try opToAltStack(&stack, altStack: &altStack)
+        case .ifDup:
+            try opIfDup(&stack)
+        case .drop:
+            try opDrop(&stack)
+        case .dup:
+            try opDup(&stack)
+        case .equal:
+            try opEqual(&stack)
+        case .equalVerify:
+            try opEqualVerify(&stack)
+        case .boolAnd:
+            try opBoolAnd(&stack)
+        case .ripemd160:
+            try opRIPEMD160(&stack)
+        case .sha256:
+            try opSHA256(&stack)
+        case .hash160:
+            try opHash160(&stack)
+        case .hash256:
+            try opHash256(&stack)
+        case .codeSeparator:
+            break
+        case .checkSig:
+            try opCheckSig(&stack, context: context)
+        case .checkSigVerify:
+            try opCheckSigVerify(&stack, context: context)
         case .checkMultiSig:
             guard context.version == .legacy || context.version == .witnessV0 else {
                 throw ScriptError.invalidScript
@@ -187,34 +221,8 @@ public enum Op: Equatable {
                 throw ScriptError.invalidScript
             }
             try opCheckMultiSigVerify(&stack, context: context)
-        case .verify:
-            try opVerify(&stack)
-        case .drop:
-            try opDrop(&stack)
-        case .dup:
-            try opDup(&stack)
-        case .ripemd160:
-            try opRIPEMD160(&stack)
-        case .sha256:
-            try opSHA256(&stack)
-        case .hash160:
-            try opHash160(&stack)
-        case .hash256:
-            try opHash256(&stack)
-        case .equal:
-            try opEqual(&stack)
-        case .equalVerify:
-            try opEqualVerify(&stack)
-        case .boolAnd:
-            try opBoolAnd(&stack)
-        case .checkSig:
-            try opCheckSig(&stack, context: context)
-        case .checkSigVerify:
-            try opCheckSigVerify(&stack, context: context)
         case .checkSigAdd:
             try opCheckSigAdd(&stack, context: context)
-        case .codeSeparator:
-            break
         case .undefined:
             throw ScriptError.invalidScript
         }
@@ -321,6 +329,10 @@ public enum Op: Equatable {
             self = .verify
         case Self.return.opCode:
             self = .return
+        case Self.toAltStack.opCode:
+            self = .toAltStack
+        case Self.ifDup.opCode:
+            self = .ifDup
         case Self.drop.opCode:
             self = .drop
         case Self.dup.opCode:

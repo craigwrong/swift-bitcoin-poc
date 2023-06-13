@@ -37,8 +37,7 @@ final class CheckSigTests: XCTestCase {
             pubKey
         ]
         XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
-        var expectedStack = [Data]()
-        expectedStack.pushInt(1)
+        let expectedStack = [Data]([.one])
         XCTAssertEqual(stack, expectedStack)
     }
 }

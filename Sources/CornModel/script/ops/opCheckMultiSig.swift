@@ -30,6 +30,5 @@ func opCheckMultiSig(_ stack: inout [Data], context: ExecutionContext) throws {
             leftSigs.remove(at: i)
         }
     }
-    let result = leftSigs.count == 0
-    stack.pushInt(result ? 1 : 0)
+    stack.pushBool(leftSigs.count == 0)
 }

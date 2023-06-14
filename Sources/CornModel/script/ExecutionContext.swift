@@ -10,8 +10,10 @@ struct ExecutionContext {
     let keyVersion: UInt8? = 0
     var opIdx: Int = 0
     var altStack: [Data] = []
-    var ifCount = 0
-    var pendingElseCount = 0
+    
+    // If else support
+    var pendingIfs = 0
+    var pendingElses = 0
     var evalElse = false
 
     var prevOut: Tx.Out {

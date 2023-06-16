@@ -1,7 +1,7 @@
 import Foundation
 
 public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, ifDup, drop, dup, equal, equalVerify, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, /* V1+ */ checkSigAdd, undefined
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, /* V1+ */ checkSigAdd, undefined
     
     var dataLen: Int {
         let additionalSize: Int
@@ -25,6 +25,7 @@ public enum Op: Equatable {
         case .zero:
             return 0x00
         case .pushBytes(let d):
+            precondition(d.count >= 0x01 && d.count <= 0x4b)
             return UInt8(d.count)
         case .pushData1(_):
             return 0x4c
@@ -48,7 +49,7 @@ public enum Op: Equatable {
         case .noOp:
             return 0x61
         case .if:
-            return 0x61
+            return 0x63
         case .notIf:
             return 0x64
         case .else:
@@ -61,6 +62,8 @@ public enum Op: Equatable {
             return 0x6a
         case .toAltStack:
             return 0x6b
+        case .fromAltStack:
+            return 0x6c
         case .ifDup:
             return 0x73
         case .drop:
@@ -71,6 +74,8 @@ public enum Op: Equatable {
             return 0x87
         case .equalVerify:
             return 0x88
+        case .negate:
+            return 0x8f
         case .add:
             return 0x93
         case .boolAnd:
@@ -141,6 +146,8 @@ public enum Op: Equatable {
             return "OP_RETURN"
         case .toAltStack:
             return "OP_TOALTSTACK"
+        case .fromAltStack:
+            return "OP_FROMALTSTACK"
         case .ifDup:
             return "OP_IFDUP"
         case .drop:
@@ -151,6 +158,8 @@ public enum Op: Equatable {
             return "OP_EQUAL"
         case .equalVerify:
             return "OP_EQUALVERIFY"
+        case .negate:
+            return "OP_NEGATE"
         case .add:
             return "OP_ADD"
         case .boolAnd:
@@ -213,6 +222,8 @@ public enum Op: Equatable {
             throw ScriptError.invalidScript
         case .toAltStack:
             try opToAltStack(&stack, context: &context)
+        case .fromAltStack:
+            try opFromAltStack(&stack, context: &context)
         case .ifDup:
             try opIfDup(&stack)
         case .drop:
@@ -223,6 +234,8 @@ public enum Op: Equatable {
             try opEqual(&stack)
         case .equalVerify:
             try opEqualVerify(&stack)
+        case .negate:
+            try opNegate(&stack)
         case .add:
             try opAdd(&stack)
         case .boolAnd:
@@ -369,6 +382,8 @@ public enum Op: Equatable {
             self = .return
         case Self.toAltStack.opCode:
             self = .toAltStack
+        case Self.fromAltStack.opCode:
+            self = .fromAltStack
         case Self.ifDup.opCode:
             self = .ifDup
         case Self.drop.opCode:
@@ -379,6 +394,8 @@ public enum Op: Equatable {
             self = .equal
         case Self.equalVerify.opCode:
             self = .equalVerify
+        case Self.negate.opCode:
+            self = .negate
         case Self.add.opCode:
             self = .add
         case Self.boolAnd.opCode:

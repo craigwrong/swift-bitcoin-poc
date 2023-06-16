@@ -2,8 +2,15 @@ import Foundation
 import CryptoKit
 import ECCHelper
 
+/// A bitcoin transaction. Could be a partial or invalid transaction.
 public struct Tx: Equatable {
     
+    /// Creates a final or partial transaction.
+    /// - Parameters:
+    ///   - version: The bitcoin transaction version.
+    ///   - lockTime: The lock time raw integer value.
+    ///   - ins: The transaction's inputs.
+    ///   - outs: The transaction's outputs.
     public init(version: Tx.Version, lockTime: UInt32, ins: [Tx.In], outs: [Tx.Out]) {
         self.version = version
         self.lockTime = lockTime

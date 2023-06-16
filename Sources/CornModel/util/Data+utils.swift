@@ -128,7 +128,7 @@ extension Data {
 
     static let zero = Self()
     static let one = {
-        Swift.withUnsafeBytes(of: UInt8(1)) { Data($0) }
+        Swift.withUnsafeBytes(of: Int8(1)) { Data($0) }
     }()
 
     var isZero: Bool { self == .zero }
@@ -141,34 +141,63 @@ extension Data {
         reduce(true) { $0 && $1 == 0 }
     }
 
-    var asUInt32: UInt32 {
+    var asUInt32: UInt32? {
+        guard count <= 4 else {
+            return .none
+        }
         let padded = self + Data(repeating: 0, count: MemoryLayout<UInt32>.size - count)
         return padded.withUnsafeBytes { $0.load(as: UInt32.self) }
+    }
+
+    var asInt32: Int32? {
+        guard count <= 4 else {
+            return .none
+        }
+        let positive: Bool
+        if let last {
+            positive = (last & 0b10000000) == 0
+        } else {
+            positive = false
+        }
+        let padded = self + Data(repeating: positive ? 0 : 0xFF, count: MemoryLayout<Int32>.size - count)
+        return padded.withUnsafeBytes { $0.load(as: Int32.self) }
     }
 }
 
 extension Array where Element == Data {
     
-    mutating func popUInt8() -> UInt8 {
+    mutating func popInt8() -> Int8 {
         let d = self.removeLast()
         return d.withUnsafeBytes {
-            $0.load(as: UInt8.self)
+            $0.load(as: Int8.self)
         }
     }
     
     mutating func pushInt(_ k: UInt8) {
-        append(Swift.withUnsafeBytes(of: k) { Data($0) })
+        if k > Int8.max {
+            append(Swift.withUnsafeBytes(of: Int16(k)) { Data($0) })
+        } else {
+            append(Swift.withUnsafeBytes(of: Int8(k)) { Data($0) })
+        }
     }
 
     mutating func pushInt(_ k: UInt32) {
         if k <= UInt8.max {
-            pushInt(UInt8(k))
-        } else if k <= UInt16.max {
-            let d = Swift.withUnsafeBytes(of: UInt16(k)) { Data($0) }
-            append(d)
+            append(Swift.withUnsafeBytes(of: UInt8(k)) { Data($0) })
+        } else if k <= Int16.max {
+            append(Swift.withUnsafeBytes(of: UInt16(k)) { Data($0) })
         } else {
-            let d = Swift.withUnsafeBytes(of: k) { Data($0) }
-            append(d)
+            append(Swift.withUnsafeBytes(of: k) { Data($0) })
+        }
+    }
+
+    mutating func pushInt(_ k: Int32) {
+        if k <= Int8.max && k >= Int8.min {
+            append(Swift.withUnsafeBytes(of: Int8(k)) { Data($0) })
+        } else if k <= Int16.max && k >= Int16.min {
+            append(Swift.withUnsafeBytes(of: Int16(k)) { Data($0) })
+        } else {
+            append(Swift.withUnsafeBytes(of: k) { Data($0) })
         }
     }
     

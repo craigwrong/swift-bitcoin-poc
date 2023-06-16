@@ -6,7 +6,7 @@ public func makeNullData(_ message: String) -> [Op] {
     }
     return [
         .return,
-        .pushBytes(messageData)
+        messageData.count == 0 ? .zero : .pushBytes(messageData)
     ]
 }
 

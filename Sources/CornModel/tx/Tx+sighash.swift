@@ -2,9 +2,17 @@ import Foundation
 
 extension Tx {
 
-    // - Legacy
-
-    func sighash(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
+    // -MARK: Legacy Bitcoin SCRIPT system
+    
+    /// Signature hash for legacy inputs.
+    /// - Parameters:
+    ///   - hashType: Signature hash type.
+    ///   - inIdx: Transaction input index.
+    ///   - prevOut: Previous unspent transaction output corresponding to the transaction input being signed/verified.
+    ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
+    ///   - opIdx: The index of the  signature operation being executed.
+    /// - Returns: A hash value for use while either signing or verifying a transaction input.
+    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: [Op]
@@ -22,7 +30,7 @@ extension Tx {
             subScript = scriptCode
             // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).
         }
-        let sigMsg = sigMsg(hashType: type, inIdx: inIdx, subScript: subScript)
+        let sigMsg = sigMsg(hashType: hashType, inIdx: inIdx, subScript: subScript)
         return hash256(sigMsg)
     }
     
@@ -86,14 +94,14 @@ extension Tx {
         return txCopy.data + hashType.data32
     }
 
-    // - Witness V0
-
-    func sighashV0(_ type: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
+    // -MARK: Segregated Witnes version 0 (SegWit)
+    
+    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
         // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
         var scriptCode = scriptCode
         scriptCode.removeSubScripts(before: opIdx)
         let amount = prevOut.value
-        return hash256(sigMsgV0(hashType: type, inIdx: inIdx, scriptCode: scriptCode, amount: amount))
+        return hash256(sigMsgV0(hashType: hashType, inIdx: inIdx, scriptCode: scriptCode, amount: amount))
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
@@ -147,7 +155,7 @@ extension Tx {
         return version.data + hashPrevouts + hashSequence + outpointData + scriptCodeData + amountData + remaindingData
     }
 
-    // - Witness V1
+    // -MARK: Segregated Witnes version 1 (TapRoot)
 
     mutating func sighashV1(_ hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out], tapscriptExt: TapscriptExt? = .none) -> Data {
         var cache = SighashCache()

@@ -1,7 +1,7 @@
 import Foundation
 
 public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, /* V1+ */ checkSigAdd, undefined
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
     
     var dataLen: Int {
         let additionalSize: Int
@@ -98,6 +98,10 @@ public enum Op: Equatable {
             return 0xae
         case .checkMultiSigVerify:
             return 0xaf
+        case .checkLockTimeVerify:
+            return 0xb1
+        case .checkSequenceVerify:
+            return 0xb2
         case .checkSigAdd:
             return 0xba
         case .undefined:
@@ -182,6 +186,10 @@ public enum Op: Equatable {
             return "OP_CHECKMULTISIG"
         case .checkMultiSigVerify:
             return "OP_CHECKMULTISIGVERIFY"
+        case .checkLockTimeVerify:
+            return "OP_CHECKLOCKTIMEVERIFY"
+        case .checkSequenceVerify:
+            return "OP_CHECKSEQUENCEVERIFY"
         case .checkSigAdd:
             return "OP_CHECKSIGADD"
         case .undefined:
@@ -264,6 +272,10 @@ public enum Op: Equatable {
                 throw ScriptError.invalidScript
             }
             try opCheckMultiSigVerify(&stack, context: context)
+        case .checkLockTimeVerify:
+            try opCheckLockTimeVerify(&stack, context: context)
+        case .checkSequenceVerify:
+            try opCheckSequenceVerify(&stack, context: context)
         case .checkSigAdd:
             try opCheckSigAdd(&stack, context: context)
         case .undefined:
@@ -418,6 +430,10 @@ public enum Op: Equatable {
             self = .checkMultiSig
         case Self.checkMultiSigVerify.opCode:
             self = .checkMultiSigVerify
+        case Self.checkLockTimeVerify.opCode:
+            self = .checkLockTimeVerify
+        case Self.checkSequenceVerify.opCode:
+            self = .checkSequenceVerify
         case Self.checkSigAdd.opCode:
             self = .checkSigAdd
         default:

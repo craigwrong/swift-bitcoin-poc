@@ -4,6 +4,10 @@ import ECCHelper
 
 /// A bitcoin transaction. Could be a partial or invalid transaction.
 public struct Tx: Equatable {
+
+    // Threshold for nLockTime: below this value it is interpreted as block number,
+    // otherwise as UNIX timestamp.
+    static let lockTimeThreshold = Int64(500000000)
     
     /// Creates a final or partial transaction.
     /// - Parameters:
@@ -136,6 +140,27 @@ public struct Tx: Equatable {
     
     var witnessSize: Int {
         hasWitness ? (MemoryLayout.size(ofValue: Tx.segwitMarker) + MemoryLayout.size(ofValue: Tx.segwitFlag)) + ins.reduce(0) { $0 + $1.witnessDataLen } : 0
+    }
+    
+    func isFinal(blockHeight: UInt32?, blockTime: Int64?) -> Bool {
+        precondition((blockHeight == .none && blockTime != .none) || (blockHeight != .none && blockTime == .none))
+        if lockTime == 0 { return true }
+
+        if let blockHeight, Int64(lockTime) < Self.lockTimeThreshold, lockTime < blockHeight {
+            return true
+        } else if let blockTime, Int64(lockTime) >= Self.lockTimeThreshold, Int64(lockTime) < blockTime {
+            return true
+        }
+
+        // Even if tx.nLockTime isn't satisfied by nBlockHeight/nBlockTime, a
+        // transaction is still considered final if all inputs' nSequence ==
+        // SEQUENCE_FINAL (0xffffffff), in which case nLockTime is ignored.
+        //
+        // Because of this behavior OP_CHECKLOCKTIMEVERIFY/CheckLockTime() will
+        // also check that the spending input's nSequence != SEQUENCE_FINAL,
+        // ensuring that an unsatisfied nLockTime value will actually cause
+        // IsFinalTx() to return false here:
+        return ins.allSatisfy(\.sequence.isFinal)
     }
 }
 

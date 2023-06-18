@@ -103,4 +103,8 @@ public struct InSequence: Equatable {
             Self.typeFlag | UInt32(timeUnits)
         }
     }
+    
+    var isFinal: Bool {
+        sequenceValue == UInt32.max
+    }
 }

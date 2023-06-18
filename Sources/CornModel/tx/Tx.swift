@@ -60,7 +60,7 @@ public struct Tx: Equatable {
         
         var ins = [In]()
         for _ in 0 ..< insLen {
-            let input = In(data)
+            let input = In(data, txVersion: version)
             ins.append(input)
             data = data.dropFirst(input.dataLen)
         }

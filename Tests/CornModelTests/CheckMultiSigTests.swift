@@ -20,7 +20,7 @@ final class CheckMultiSigTests: XCTestCase {
         ]
         let tx = Tx(version: .v1, lockTime: 0,
             ins: [
-                .init(txID: "", outIdx: 0, sequence: 0)
+                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0))
             ],
             outs: [
                 Tx.Out(value: 0, scriptPubKey: .init([]))
@@ -53,7 +53,7 @@ final class CheckMultiSigTests: XCTestCase {
         ]
         let tx = Tx(version: .v1, lockTime: 0,
             ins: [
-                .init(txID: "", outIdx: 0, sequence: 0)
+                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0))
             ],
             outs: [
                 Tx.Out(value: 0, scriptPubKey: .init([]))

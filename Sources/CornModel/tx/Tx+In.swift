@@ -5,11 +5,11 @@ extension Tx {
     public struct In: Equatable {
         public var txID: String
         public var outIdx: Int
-        public var sequence: UInt32
+        public var sequence: InSequence
         public var scriptSig: [Op]?
         public var witness: [Data]?
         
-        public init(txID: String, outIdx: Int, sequence: UInt32, scriptSig: [Op]? = .none, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: Int, sequence: InSequence, scriptSig: [Op]? = .none, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
@@ -21,7 +21,7 @@ extension Tx {
 
 extension Tx.In {
     
-    init(_ data: Data) {
+    init(_ data: Data, txVersion: Tx.Version) {
         var offset = data.startIndex
         let txIDData = Data(data[offset ..< offset + 32].reversed())
         let txID = txIDData.hex
@@ -43,7 +43,7 @@ extension Tx.In {
         }
         offset += sequenceData.count
         
-        self.init(txID: txID, outIdx: outIdx, sequence: sequence, scriptSig: scriptSig)
+        self.init(txID: txID, outIdx: outIdx, sequence: .init(rawValue: sequence, txVersion: txVersion), scriptSig: scriptSig)
     }
     
     var isCoinbase: Bool { txID == Tx.coinbaseID }
@@ -88,12 +88,10 @@ extension Tx.In {
         return ret
     }
     
-    var sequenceData: Data {
-        withUnsafeBytes(of: sequence) { Data($0) }
-    }
+    var sequenceData: Data { sequence.data }
     
     var dataLen: Int {
-        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (scriptSig?.dataLen ?? 0) +  MemoryLayout.size(ofValue: sequence)
+        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (scriptSig?.dataLen ?? 0) + sequence.dataLen
     }
     
     var witnessDataLen: Int {

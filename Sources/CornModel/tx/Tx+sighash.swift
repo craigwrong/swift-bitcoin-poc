@@ -48,7 +48,7 @@ extension Tx {
                     txID: input.txID,
                     outIdx: input.outIdx,
                     // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
-                    sequence: i == inIdx || hashType.isAll ? input.sequence : 0,
+                    sequence: i == inIdx || hashType.isAll ? input.sequence : .init(sequence: 0),
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
                     scriptSig: i == inIdx ? subScript : .init([])
@@ -122,7 +122,7 @@ extension Tx {
         let hashSequence: Data
         if !hashType.isAnyCanPay && !hashType.isSingle && !hashType.isNone {
             let sequence = ins.reduce(Data()) {
-                $0 + withUnsafeBytes(of: $1.sequence) { Data($0) }
+                $0 + $1.sequence.data
             }
             hashSequence = hash256(sequence)
         } else {
@@ -134,7 +134,7 @@ extension Tx {
         let scriptCodeData = scriptCode.data.varLenData
         
         let amountData = withUnsafeBytes(of: amount) { Data($0) }
-        let sequenceData = withUnsafeBytes(of: ins[inIdx].sequence) { Data($0) }
+        let sequenceData = ins[inIdx].sequence.data
         
         // If the sighash type is neither SINGLE nor NONE, hashOutputs is the double SHA256 of the serialization of all output amount (8-byte little endian) with scriptPubKey (serialized as scripts inside CTxOuts);
         // If sighash type is SINGLE and the input index is smaller than the number of outputs, hashOutputs is the double SHA256 of the output amount with scriptPubKey of the same index as the input;
@@ -239,7 +239,7 @@ extension Tx {
             if let cached = cache.shaSequences {
                 shaSequences = cached
             } else {
-                let sequences = ins.reduce(Data()) { $0 + $1.sequenceData }
+                let sequences = ins.reduce(Data()) { $0 + $1.sequence.data }
                 shaSequences = sha256(sequences)
                 cache.shaSequences = shaSequences
             }
@@ -287,7 +287,7 @@ extension Tx {
             let scriptPubKey = prevOuts[inIdx].scriptPubKey.data.varLenData
             inputData.append(scriptPubKey)
             // nSequence (4): nSequence of this input.
-            let sequence = withUnsafeBytes(of: ins[inIdx].sequence) { Data($0) }
+            let sequence = ins[inIdx].sequence.data
             inputData.append(sequence)
         } else { // If hash_type & 0x80 does not equal SIGHASH_ANYONECANPAY:
             // input_index (4): index of this input in the transaction input vector. Index of the first input is 0.

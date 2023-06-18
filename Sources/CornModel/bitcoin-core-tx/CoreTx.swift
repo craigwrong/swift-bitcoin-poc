@@ -155,7 +155,7 @@ extension Tx.In {
             txid: .none,
             vout: .none,
             txinwitness: witness?.map(\.hex),
-            sequence: sequence
+            sequence: sequence.sequenceValue
         )
         : .init(
             coinbase: .none,
@@ -166,7 +166,7 @@ extension Tx.In {
             txid: txID,
             vout: outIdx,
             txinwitness: witness?.map(\.hex),
-            sequence: sequence
+            sequence: sequence.sequenceValue
         )
     }
 }

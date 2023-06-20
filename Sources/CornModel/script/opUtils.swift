@@ -1,10 +1,11 @@
 import Foundation
 
-func getUnaryParam(_ stack: inout [Data]) throws -> Data {
-    guard stack.count > 0 else {
+func getUnaryParam(_ stack: inout [Data], keep: Bool = false) throws -> Data {
+    guard let param = stack.last else {
         throw ScriptError.invalidScript
     }
-    return stack.removeLast()
+    if !keep { stack.removeLast() }
+    return param
 }
 
 func getBinaryParams(_ stack: inout [Data]) throws -> (Data, Data) {

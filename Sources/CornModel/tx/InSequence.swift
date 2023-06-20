@@ -6,7 +6,7 @@ public struct InSequence: Equatable {
     // Below flags apply in the context of BIP 68
     
     // If this flag set, CTxIn::nSequence is NOT interpreted as a relative lock-time.
-    private static let disableFlag: UInt32 = 1 << 31
+    public static let disableFlag: UInt32 = 1 << 31
     
     // If CTxIn::nSequence encodes a relative lock-time and this flag is set, the relative lock-time has units of 512 seconds, otherwise it specifies blocks with a granularity of 1.
     private static let typeFlag: UInt32 = 1 << 22
@@ -70,25 +70,46 @@ public struct InSequence: Equatable {
         MemoryLayout<UInt32>.size
     }
 
-    var timelockHeight: UInt16 {
+    var locktimeHeight: UInt16 {
         guard case let .locktimeHeight(height) = type else {
             preconditionFailure()
         }
         return height
     }
 
-    var timelockSeconds: UInt32 {
+    var locktimeSeconds: UInt32 {
         guard case let .locktimeClock(timeUnits) = type else {
             preconditionFailure()
         }
         return UInt32(timeUnits) << Self.granularity
     }
 
-    var timelockDisabledValue: UInt32 {
+    var locktimeDisabledValue: UInt32 {
         guard case let .locktimeDisabled(value) = type else {
             preconditionFailure()
         }
         return value
+    }
+    
+    var isLocktimeDisabled: Bool {
+        if case .locktimeDisabled(_) = type {
+            return true
+        }
+        return false
+    }
+
+    var isLocktimeHeight: Bool {
+        if case .locktimeHeight(_) = type {
+            return true
+        }
+        return false
+    }
+
+    var isLocktimeClock: Bool {
+        if case .locktimeClock(_) = type {
+            return true
+        }
+        return false
     }
 
     var sequenceValue: UInt32 {

@@ -7,7 +7,7 @@ public struct Tx: Equatable {
 
     // Threshold for nLockTime: below this value it is interpreted as block number,
     // otherwise as UNIX timestamp.
-    static let lockTimeThreshold = Int64(500000000)
+    static let lockTimeThreshold = UInt32(500000000)
     
     /// Creates a final or partial transaction.
     /// - Parameters:

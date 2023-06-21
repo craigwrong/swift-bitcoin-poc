@@ -1,6 +1,6 @@
 import Foundation
 
-public extension Tx.In {
+public extension Transaction.Input {
     struct Sequence: Equatable {
         public static let initial = Self(0)
         public static let secondFinal = Self(0xfffffffe)

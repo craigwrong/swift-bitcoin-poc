@@ -1,6 +1,6 @@
 import Foundation
 
-extension Tx {
+extension Transaction {
 
     // -MARK: Legacy Bitcoin SCRIPT system
     
@@ -12,13 +12,13 @@ extension Tx {
     ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
     ///   - opIdx: The index of the  signature operation being executed.
     /// - Returns: A hash value for use while either signing or verifying a transaction input.
-    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
+    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: [Op], opIdx: Int) -> Data {
         
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: [Op]
-        if prevOut.scriptPubKey.scriptType == .scriptHash {
+        if prevOut.script.scriptType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
-            if let op = ins[inIdx].scriptSig?.last, case let .pushBytes(redeemScriptRaw) = op, [Op](redeemScriptRaw) != scriptCode {
+            if let op = inputs[inIdx].script?.last, case let .pushBytes(redeemScriptRaw) = op, [Op](redeemScriptRaw) != scriptCode {
                 preconditionFailure()
             }
             subScript = scriptCode
@@ -36,14 +36,14 @@ extension Tx {
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
     func sigMsg(hashType: HashType, inIdx: Int, subScript: [Op]) -> Data {
-        var newIns = [Tx.In]()
+        var newIns = [Transaction.Input]()
         if hashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
             // The current transaction input (with scriptPubKey modified to subScript) is set as the first and only member of this vector.
-            newIns.append(.init(txID: ins[inIdx].txID, outIdx: ins[inIdx].outIdx, sequence: ins[inIdx].sequence, scriptSig: subScript))
+            newIns.append(.init(txID: inputs[inIdx].txID, outIdx: inputs[inIdx].outIdx, sequence: inputs[inIdx].sequence, script: subScript))
         } else {
-            ins.enumerated().forEach { i, input in
+            inputs.enumerated().forEach { i, input in
                 newIns.append(.init(
                     txID: input.txID,
                     outIdx: input.outIdx,
@@ -51,11 +51,11 @@ extension Tx {
                     sequence: i == inIdx || hashType.isAll ? input.sequence : .initial,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
-                    scriptSig: i == inIdx ? subScript : .init([])
+                    script: i == inIdx ? subScript : .init([])
                 ))
             }
         }
-        var newOuts: [Tx.Out]
+        var newOuts: [Transaction.Output]
         // Procedure for Hashtype SIGHASH_SINGLE
         
         //if hashType.isSingle && inIdx >= outs.count {
@@ -68,7 +68,7 @@ extension Tx {
             // All other txCopy outputs aside from the output that is the same as the current input index are set to a blank script and a value of (long) -1.
             newOuts = []
             
-            outs.enumerated().forEach { i, out in
+            outputs.enumerated().forEach { i, out in
                 guard i <= inIdx else {
                     return
                 }
@@ -76,27 +76,27 @@ extension Tx {
                     newOuts.append(out)
                 } else if i < inIdx {
                     // TODO: Verify that "long -1" means  UInt64(bitPattern: -1) aka UInt64.max
-                    newOuts.append(.init(value: UInt64.max, scriptPubKeyData: .init()))
+                    newOuts.append(.init(value: Amount.max, scriptData: .init()))
                 }
             }
             
         } else if hashType.isNone {
             newOuts = []
         } else {
-            newOuts = outs
+            newOuts = outputs
         }
-        let txCopy = Tx(
+        let txCopy = Transaction(
             version: version,
             locktime: locktime,
-            ins: newIns,
-            outs: newOuts
+            inputs: newIns,
+            outputs: newOuts
         )
         return txCopy.data + hashType.data32
     }
 
     // -MARK: Segregated Witnes version 0 (SegWit)
     
-    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Tx.Out, scriptCode: [Op], opIdx: Int) -> Data {
+    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: [Op], opIdx: Int) -> Data {
         // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
         var scriptCode = scriptCode
         scriptCode.removeSubScripts(before: opIdx)
@@ -105,7 +105,7 @@ extension Tx {
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
-    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: [Op], amount: UInt64) -> Data {
+    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: [Op], amount: Amount) -> Data {
         
         //If the ANYONECANPAY flag is not set, hashPrevouts is the double SHA256 of the serialization of all input outpoints;
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.
@@ -113,7 +113,7 @@ extension Tx {
         if hashType.isAnyCanPay {
             hashPrevouts = Data(repeating: 0, count: 256)
         } else {
-            let prevouts = ins.reduce(Data()) { $0 + $1.prevoutData }
+            let prevouts = inputs.reduce(Data()) { $0 + $1.prevoutData }
             hashPrevouts = hash256(prevouts)
         }
         
@@ -121,7 +121,7 @@ extension Tx {
         // Otherwise, hashSequence is a uint256 of 0x0000......0000.
         let hashSequence: Data
         if !hashType.isAnyCanPay && !hashType.isSingle && !hashType.isNone {
-            let sequence = ins.reduce(Data()) {
+            let sequence = inputs.reduce(Data()) {
                 $0 + $1.sequence.data
             }
             hashSequence = hash256(sequence)
@@ -129,22 +129,22 @@ extension Tx {
             hashSequence = Data(repeating: 0, count: 256)
         }
         
-        let outpointData = ins[inIdx].prevoutData
+        let outpointData = inputs[inIdx].prevoutData
         
         let scriptCodeData = scriptCode.data.varLenData
         
         let amountData = withUnsafeBytes(of: amount) { Data($0) }
-        let sequenceData = ins[inIdx].sequence.data
+        let sequenceData = inputs[inIdx].sequence.data
         
         // If the sighash type is neither SINGLE nor NONE, hashOutputs is the double SHA256 of the serialization of all output amount (8-byte little endian) with scriptPubKey (serialized as scripts inside CTxOuts);
         // If sighash type is SINGLE and the input index is smaller than the number of outputs, hashOutputs is the double SHA256 of the output amount with scriptPubKey of the same index as the input;
         // Otherwise, hashOutputs is a uint256 of 0x0000......0000.[7]
         let hashOuts: Data
         if !hashType.isSingle && !hashType.isNone {
-            let outsData = outs.reduce(Data()) { $0 + $1.data }
+            let outsData = outputs.reduce(Data()) { $0 + $1.data }
             hashOuts = hash256(outsData)
-        } else if hashType.isSingle && inIdx < outs.count {
-            hashOuts = hash256(outs[inIdx].data)
+        } else if hashType.isSingle && inIdx < outputs.count {
+            hashOuts = hash256(outputs[inIdx].data)
         } else {
             hashOuts = Data(repeating: 0, count: 256)
         }
@@ -155,12 +155,12 @@ extension Tx {
 
     // -MARK: Segregated Witnes version 1 (TapRoot)
 
-    mutating func sighashV1(_ hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out], tapscriptExt: TapscriptExt? = .none) -> Data {
+    mutating func sighashV1(_ hashType: HashType?, inIdx: Int, prevOuts: [Transaction.Output], tapscriptExt: TapscriptExt? = .none) -> Data {
         var cache = SighashCache()
         return sighashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, tapscriptExt: tapscriptExt, cache: &cache)
     }
     
-    mutating func sighashV1(_ hashType: HashType?, inIdx: Int, prevOuts: [Tx.Out], tapscriptExt: TapscriptExt? = .none, cache: inout SighashCache) -> Data {
+    mutating func sighashV1(_ hashType: HashType?, inIdx: Int, prevOuts: [Transaction.Output], tapscriptExt: TapscriptExt? = .none, cache: inout SighashCache) -> Data {
         var payload = sigMsgV1(hashType: hashType, extFlag: tapscriptExt == .none ? 0 : 1, inIdx: inIdx, prevOuts: prevOuts, cache: &cache)
         if let tapscriptExt {
             payload += tapscriptExt.data
@@ -171,13 +171,13 @@ extension Tx {
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .
     /// https://github.com/bitcoin/bitcoin/blob/58da1619be7ac13e686cb8bbfc2ab0f836eb3fa5/src/script/interpreter.cpp#L1477
     /// https://bitcoin.stackexchange.com/questions/115328/how-do-you-calculate-a-taproot-sighash
-    func sigMsgV1(hashType: HashType?, extFlag: UInt8 = 0, inIdx: Int, prevOuts: [Tx.Out], cache: inout SighashCache) -> Data {
+    func sigMsgV1(hashType: HashType?, extFlag: UInt8 = 0, inIdx: Int, prevOuts: [Transaction.Output], cache: inout SighashCache) -> Data {
         
-        precondition(prevOuts.count == ins.count, "The corresponding (aligned) UTXO for each transaction input is required.")
-        precondition(!hashType.isSingle || inIdx < outs.count, "For single hash type, the selected input needs to have a matching output.")
+        precondition(prevOuts.count == inputs.count, "The corresponding (aligned) UTXO for each transaction input is required.")
+        precondition(!hashType.isSingle || inIdx < outputs.count, "For single hash type, the selected input needs to have a matching output.")
 
         // (the original witness stack has two or more witness elements, and the first byte of the last element is 0x50)
-        let annex = ins[inIdx].taprootAnnex
+        let annex = inputs[inIdx].taprootAnnex
 
         // Epoch:
         // epoch (0).
@@ -200,7 +200,7 @@ extension Tx {
             if let cached = cache.shaPrevouts {
                 shaPrevouts = cached
             } else {
-                let prevouts = ins.reduce(Data()) { $0 + $1.prevoutData }
+                let prevouts = inputs.reduce(Data()) { $0 + $1.prevoutData }
                 shaPrevouts = sha256(prevouts)
                 cache.shaPrevouts = shaPrevouts
             }
@@ -224,7 +224,7 @@ extension Tx {
             if let cached = cache.shaScriptPubKeys {
                 shaScriptPubKeys = cached
             } else {
-                let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.scriptPubKey.data.varLenData }
+                let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.script.data.varLenData }
                 shaScriptPubKeys = sha256(scriptPubKeys)
                 cache.shaScriptPubKeys = shaScriptPubKeys
             }
@@ -236,7 +236,7 @@ extension Tx {
             if let cached = cache.shaSequences {
                 shaSequences = cached
             } else {
-                let sequences = ins.reduce(Data()) { $0 + $1.sequence.data }
+                let sequences = inputs.reduce(Data()) { $0 + $1.sequence.data }
                 shaSequences = sha256(sequences)
                 cache.shaSequences = shaSequences
             }
@@ -256,7 +256,7 @@ extension Tx {
             if let cached = cache.shaOuts {
                 shaOuts = cached
             } else {
-                let outsData = outs.reduce(Data()) { $0 + $1.data }
+                let outsData = outputs.reduce(Data()) { $0 + $1.data }
                 shaOuts = sha256(outsData)
                 cache.shaOuts = shaOuts
             }
@@ -275,16 +275,16 @@ extension Tx {
         // If hash_type & 0x80 equals SIGHASH_ANYONECANPAY:
         if hashType.isAnyCanPay {
             // outpoint (36): the COutPoint of this input (32-byte hash + 4-byte little-endian).
-            let outpoint = ins[inIdx].prevoutData
+            let outpoint = inputs[inIdx].prevoutData
             inputData.append(outpoint)
             // amount (8): value of the previous output spent by this input.
             let amount = prevOuts[inIdx].valueData
             inputData.append(amount)
             // scriptPubKey (35): scriptPubKey of the previous output spent by this input, serialized as script inside CTxOut. Its size is always 35 bytes.
-            let scriptPubKey = prevOuts[inIdx].scriptPubKey.data.varLenData
+            let scriptPubKey = prevOuts[inIdx].script.data.varLenData
             inputData.append(scriptPubKey)
             // nSequence (4): nSequence of this input.
-            let sequence = ins[inIdx].sequence.data
+            let sequence = inputs[inIdx].sequence.data
             inputData.append(sequence)
         } else { // If hash_type & 0x80 does not equal SIGHASH_ANYONECANPAY:
             // input_index (4): index of this input in the transaction input vector. Index of the first input is 0.
@@ -304,7 +304,7 @@ extension Tx {
         var outputData = Data()
         if hashType.isSingle {
             //sha_single_output (32): the SHA256 of the corresponding output in CTxOut format.
-            let shaSingleOutput = sha256(outs[inIdx].data)
+            let shaSingleOutput = sha256(outputs[inIdx].data)
             outputData.append(shaSingleOutput)
         }
         

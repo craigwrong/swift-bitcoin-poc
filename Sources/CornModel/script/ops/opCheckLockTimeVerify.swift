@@ -6,12 +6,12 @@ func opCheckLockTimeVerify(_ stack: inout [Data], context: ExecutionContext) thr
 
     guard
         first.count < 6,
-        let lockTime64 = first.asInt64,
-        lockTime64 >= 0,
-        lockTime64 <= UInt32.max
+        let locktime64 = first.asInt,
+        locktime64 >= 0,
+        locktime64 <= UInt32.max
     else { throw ScriptError.invalidScript }
 
-    let locktime = Tx.Locktime(UInt32(lockTime64))
+    let locktime = Transaction.Locktime(UInt32(locktime64))
 
     if let blockHeight = locktime.blockHeight, let txBlockHeight = context.tx.locktime.blockHeight {
         if blockHeight > txBlockHeight {
@@ -25,5 +25,5 @@ func opCheckLockTimeVerify(_ stack: inout [Data], context: ExecutionContext) thr
         throw ScriptError.invalidScript
     }
     
-    if context.tx.ins[context.inIdx].sequence == .final { throw ScriptError.invalidScript }
+    if context.tx.inputs[context.inIdx].sequence == .final { throw ScriptError.invalidScript }
 }

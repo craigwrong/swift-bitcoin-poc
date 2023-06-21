@@ -1,9 +1,9 @@
 import Foundation
 
-extension Tx {
+extension Transaction {
 
-    public func verify(prevOuts: [Tx.Out]) -> Bool {
-        for i in ins.indices {
+    public func verify(prevOuts: [Transaction.Output]) -> Bool {
+        for i in inputs.indices {
             do {
                 try verify(inIdx: i, prevOuts: prevOuts)
             } catch {
@@ -13,29 +13,29 @@ extension Tx {
         return true
     }
     
-    func verify(inIdx: Int, prevOuts: [Tx.Out]) throws {
-        let input = ins[inIdx]
+    func verify(inIdx: Int, prevOuts: [Transaction.Output]) throws {
+        let input = inputs[inIdx]
         let prevOut = prevOuts[inIdx]
-        let scriptPubKey = prevOut.scriptPubKey
+        let scriptPubKey = prevOut.script
         
         let scriptPubKey2: [Op]
-        switch prevOut.scriptPubKey.scriptType {
+        switch prevOut.script.scriptType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
-            guard let scriptSig = input.scriptSig else {
+            guard let scriptSig = input.script else {
                 throw ScriptError.invalidScript
             }
             try runScript(scriptSig, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
-            try runScript(prevOut.scriptPubKey, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            try runScript(prevOut.script, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             return
         case .scriptHash:
             var stack = [Data]()
             guard
-                let scriptSig = input.scriptSig, let op = scriptSig.last else {
+                let scriptSig = input.script, let op = scriptSig.last else {
                 throw ScriptError.invalidScript
             }
             try runScript([op], stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
-            try runScript(prevOut.scriptPubKey, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
+            try runScript(prevOut.script, stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts)
             guard let lastOp = scriptSig.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
                 fatalError()
             }
@@ -53,7 +53,7 @@ extension Tx {
             }
             scriptPubKey2 = redeemScript
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
-            guard input.scriptSig?.isEmpty != false else {
+            guard input.script?.isEmpty != false else {
                 // The scriptSig must be exactly empty or validation fails. ("native witness program")
                 throw ScriptError.invalidScript
             }
@@ -62,13 +62,13 @@ extension Tx {
         switch scriptPubKey2.scriptType {
         case .witnessV0KeyHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the key
-            guard var stack = ins[inIdx].witness else {
+            guard var stack = inputs[inIdx].witness else {
                 fatalError()
             }
             try runScript(makeP2WPKH(witnessProgram), stack: &stack, tx: self, inIdx: inIdx, prevOuts: prevOuts, version: .witnessV0)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
-            guard var stack = ins[inIdx].witness, let witnessScriptRaw = stack.popLast() else {
+            guard var stack = inputs[inIdx].witness, let witnessScriptRaw = stack.popLast() else {
                 fatalError()
             }
             guard sha256(witnessScriptRaw) == witnessProgram else {
@@ -85,7 +85,7 @@ extension Tx {
             // Guard not strictly needed as `outputKey` (aka witnessProgram) would be recognized as non-standard and execute normally
             // guard scriptPubKey2.witnessProgram.count == 32 else { return true }
 
-            guard var stack = ins[inIdx].witness else { preconditionFailure() }
+            guard var stack = inputs[inIdx].witness else { preconditionFailure() }
             
             // Fail if the witness stack has 0 elements.
             if stack.count == 0 { throw ScriptError.invalidScript }
@@ -93,7 +93,7 @@ extension Tx {
             let outputKey = scriptPubKey2.witnessProgram // In this case it is the key (aka taproot output key q)
                         
             // this last element is called annex a and is removed from the witness stack
-            if ins[inIdx].taprootAnnex != .none { stack.removeLast() }
+            if inputs[inIdx].taprootAnnex != .none { stack.removeLast() }
             
             // If there is exactly one element left in the witness stack, key path spending is used:
             if stack.count == 1 {

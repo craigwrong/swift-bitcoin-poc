@@ -1,6 +1,6 @@
 import Foundation
 
-extension Tx {
+extension Transaction {
     public struct Version: Equatable {
         public static let v1 = Self(1)
         public static let v2 = Self(2)

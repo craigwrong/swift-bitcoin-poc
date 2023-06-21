@@ -16,24 +16,24 @@ final class DataTests: XCTestCase {
         let privKey1 = createPrivKey()
         let pubKey1 = getPubKey(privKey: privKey1)
         let prevOuts = [
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                    scriptPubKey: makeP2PKH(pubKey: pubKey0)),
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                    scriptPubKey: makeP2PKH(pubKey: pubKey1))
         ]
-        var tx = Tx(version: .v1, locktime: .disabled,
-                    ins: [.init(txID: "", outIdx: 0, sequence: .initial)],
-                    outs: [.init(value: 0, scriptPubKey: makeNullData(""))]
+        var tx = Transaction(version: .v1, locktime: .disabled,
+                    inputs: [.init(txID: "", outIdx: 0, sequence: .initial)],
+                    outputs: [.init(value: 0, scriptPubKey: makeNullData(""))]
         )
         tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         var res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         //signed.outs.removeAll()
-        tx.outs.append(.init(value: 0, scriptPubKey: makeNullData("")))
+        tx.outputs.append(.init(value: 0, scriptPubKey: makeNullData("")))
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         
-        tx.ins.append(Tx.In(txID: "", outIdx: 0, sequence: .initial))
+        tx.inputs.append(Transaction.Input(txID: "", outIdx: 0, sequence: .initial))
         tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .all, inIdx: 1, prevOuts: prevOuts)
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
@@ -50,26 +50,26 @@ final class DataTests: XCTestCase {
         
         // Some previous outputs
         let prevOuts = [
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                    scriptPubKey: makeP2PKH(pubKey: pubKey0)),
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                    scriptPubKey: makeP2PKH(pubKey: pubKey1))
         ]
         
         let prevOutsPlus = prevOuts + [
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                    scriptPubKey: makeP2WKH(pubKey: pubKey2))
         ]
         
         // Our transaction with 2 ins and 2 outs
-        var tx = Tx(
+        var tx = Transaction(
             version: .v1,
             locktime: .disabled,
-            ins: [
+            inputs: [
                 .init(txID: "", outIdx: 0, sequence: .initial),
                 .init(txID: "", outIdx: 0, sequence: .initial),
             ],
-            outs: [
+            outputs: [
                 .init(value: 0, scriptPubKey: makeNullData("")),
                 .init(value: 0, scriptPubKey: makeNullData(""))
             ]
@@ -85,26 +85,26 @@ final class DataTests: XCTestCase {
         
         // Appending an additional output
         var signedOneMoreOut = tx
-        signedOneMoreOut.outs.append(.init(value: 0, scriptPubKey: makeNullData("")))
+        signedOneMoreOut.outputs.append(.init(value: 0, scriptPubKey: makeNullData("")))
         res = signedOneMoreOut.verify(prevOuts: prevOuts)
         XCTAssertFalse(res)
         
         // Removing one of the outputs
         var signedOutRemoved = tx
-        signedOutRemoved.outs.remove(at: 0)
+        signedOutRemoved.outputs.remove(at: 0)
         res = signedOutRemoved.verify(prevOuts: prevOuts)
         XCTAssertFalse(res)
         
         // Appending an additional input
         var signedOneMoreIn = tx
-        signedOneMoreIn.ins.append(.init(txID: "", outIdx: 0, sequence: .initial))
+        signedOneMoreIn.inputs.append(.init(txID: "", outIdx: 0, sequence: .initial))
         signedOneMoreIn.sign(privKeys: [privKey2], pubKeys: [pubKey2], hashType: .noneAnyCanPay, inIdx: 2, prevOuts: prevOutsPlus)
         res = signedOneMoreIn.verify(prevOuts: prevOutsPlus)
         XCTAssert(res)
         
         // Removing the last one of the ins
         var signedInRemoved = tx
-        signedInRemoved.ins.remove(at: 1)
+        signedInRemoved.inputs.remove(at: 1)
         res = signedInRemoved.verify(prevOuts: [prevOuts[0]])
         XCTAssert(res)
     }
@@ -143,41 +143,41 @@ final class DataTests: XCTestCase {
         // Sprevious outputs
         let prevOuts = [
             // p2pk
-            Tx.Out(value: 0, scriptPubKey: makeP2PK(pubKey: pubKeys[0])),
+            Transaction.Output(value: 0, scriptPubKey: makeP2PK(pubKey: pubKeys[0])),
             
             // p2pkh
-            Tx.Out(value: 0, scriptPubKey: makeP2PKH(pubKey: pubKeys[1])),
+            Transaction.Output(value: 0, scriptPubKey: makeP2PKH(pubKey: pubKeys[1])),
             
             // p2sh
-            Tx.Out( value: 0,
+            Transaction.Output( value: 0,
                 scriptPubKey: makeP2SH(redeemScript: redeemScript2)
             ),
             
             // p2wkh
-            Tx.Out(value: 0, scriptPubKey: makeP2WKH(pubKey: pubKeys[3])),
+            Transaction.Output(value: 0, scriptPubKey: makeP2WKH(pubKey: pubKeys[3])),
             
             // p2sh-p2wkh
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                 scriptPubKey: makeP2SH(redeemScript: redeemScript4)
             ),
 
             // p2wsh
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                 scriptPubKey: makeP2WSH(redeemScriptV0: redeemScript5)
             ),
 
             // p2sh-p2wsh
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                 scriptPubKey: makeP2SH(redeemScript: redeemScript6)
             ),
 
             // p2tr (key path)
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                 scriptPubKey: makeP2TR(outputKey: outputKey7)
             ),
             
             // legacy multisig
-            Tx.Out(value: 0,
+            Transaction.Output(value: 0,
                 scriptPubKey: .init([
                     .constant(2),
                     .pushBytes(pubKeys[9]),
@@ -189,10 +189,10 @@ final class DataTests: XCTestCase {
         ]
         
         // Our transaction with 6 ins and 2 outs
-        var tx = Tx(
+        var tx = Transaction(
             version: .v1,
             locktime: .disabled,
-            ins: [
+            inputs: [
                 .init(txID: "", outIdx: 0, sequence: .initial),
                 .init(txID: "", outIdx: 0, sequence: .initial),
                 .init(txID: "", outIdx: 0, sequence: .initial),
@@ -203,7 +203,7 @@ final class DataTests: XCTestCase {
                 .init(txID: "", outIdx: 0, sequence: .initial),
                 .init(txID: "", outIdx: 0, sequence: .initial),
             ],
-            outs: [
+            outputs: [
                 .init(value: 0, scriptPubKey: makeNullData("")),
                 .init(value: 0, scriptPubKey: makeNullData(""))
             ]

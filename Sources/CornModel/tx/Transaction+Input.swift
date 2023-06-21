@@ -1,25 +1,25 @@
 import Foundation
 
-extension Tx {
+extension Transaction {
     
-    public struct In: Equatable {
+    public struct Input: Equatable {
         public var txID: String
         public var outIdx: Int
         public var sequence: Sequence
-        public var scriptSig: [Op]?
+        public var script: [Op]?
         public var witness: [Data]?
         
-        public init(txID: String, outIdx: Int, sequence: Sequence, scriptSig: [Op]? = .none, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: Int, sequence: Sequence, script: [Op]? = .none, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
-            self.scriptSig = scriptSig
+            self.script = script
             self.witness = witness
         }
     }
 }
 
-extension Tx.In {
+extension Transaction.Input {
     
     init(_ data: Data) {
         var offset = data.startIndex
@@ -33,19 +33,19 @@ extension Tx.In {
         })
         offset += outIdxData.count
         
-        let scriptSigData = Data(varLenData: data[offset...])
-        let scriptSig = [Op](scriptSigData)
-        offset += scriptSigData.varLenSize
+        let scriptData = Data(varLenData: data[offset...])
+        let script = [Op](scriptData)
+        offset += scriptData.varLenSize
         
         guard let sequenceData = Sequence(data[offset...]) else {
             fatalError()
         }
         offset += Sequence.dataCount
         
-        self.init(txID: txID, outIdx: outIdx, sequence: sequenceData, scriptSig: scriptSig)
+        self.init(txID: txID, outIdx: outIdx, sequence: sequenceData, script: script)
     }
     
-    var isCoinbase: Bool { txID == Tx.coinbaseID }
+    var isCoinbase: Bool { txID == Transaction.coinbaseID }
     
     mutating func populateWitness(from data: Data) {
         var data = data
@@ -64,8 +64,8 @@ extension Tx.In {
         var ret = Data()
         ret += Data(hex: txID).reversed()
         ret += withUnsafeBytes(of: UInt32(outIdx)) { Data($0) }
-        if let scriptSig {
-            ret += scriptSig.data.varLenData
+        if let script {
+            ret += script.data.varLenData
         }
         ret += sequenceData
         return ret
@@ -90,7 +90,7 @@ extension Tx.In {
     var sequenceData: Data { sequence.data }
     
     var dataLen: Int {
-        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (scriptSig?.dataLen ?? 0) + Sequence.dataCount
+        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (script?.dataLen ?? 0) + Sequence.dataCount
     }
     
     var witnessDataLen: Int {

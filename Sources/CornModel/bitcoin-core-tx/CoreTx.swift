@@ -37,7 +37,7 @@ struct CoreTx: Equatable, Decodable {
 
 extension CoreTx {
     
-    var toBitcoinTransaction: Tx {
+    var toBitcoinTransaction: Transaction {
         .init(Data(hex: hex))
     }
     
@@ -121,7 +121,7 @@ extension CoreTx {
     }
 }
 
-extension Tx {
+extension Transaction {
     func toBCoreTransaction(network: Network = .main) -> CoreTx {
         .init(
             txid: txid,
@@ -131,10 +131,10 @@ extension Tx {
             vsize: vsize,
             weight: weight,
             locktime: locktime.rawValue,
-            vin: ins.map {
+            vin: inputs.map {
                 $0.bCoreInput
             },
-            vout: outs.enumerated().map { (i, output) in
+            vout: outputs.enumerated().map { (i, output) in
                 output.toBCoreOutput(outIdx: i, network: network)
             },
             hex: data.hex,
@@ -146,11 +146,11 @@ extension Tx {
     }
 }
 
-extension Tx.In {
+extension Transaction.Input {
     var bCoreInput: CoreTx.Input {
         isCoinbase
         ? .init(
-            coinbase: scriptSig?.data.hex ?? "",
+            coinbase: script?.data.hex ?? "",
             scriptSig: .none,
             txid: .none,
             vout: .none,
@@ -160,8 +160,8 @@ extension Tx.In {
         : .init(
             coinbase: .none,
             scriptSig: .init(
-                asm: scriptSig?.asm ?? "",
-                hex: scriptSig?.data.hex ?? ""
+                asm: script?.asm ?? "",
+                hex: script?.data.hex ?? ""
             ),
             txid: txID,
             vout: outIdx,
@@ -171,18 +171,18 @@ extension Tx.In {
     }
 }
 
-extension Tx.Out {
+extension Transaction.Output {
 
     func toBCoreOutput(outIdx: Int, network: Network = .main) -> CoreTx.Output {
         .init(
             value: doubleValue,
             n: outIdx,
             scriptPubKey: .init(
-                asm: scriptPubKey.asm,
+                asm: script.asm,
                 desc: "", // TODO: Create descriptor
-                hex: scriptPubKey.data.hex,
+                hex: script.data.hex,
                 address: address(network: network),
-                type: .init(rawValue: CoreTx.Output.LockScript.LockType(scriptPubKey.scriptType).rawValue) ?? .unknown
+                type: .init(rawValue: CoreTx.Output.LockScript.LockType(script.scriptType).rawValue) ?? .unknown
             )
         )
     }

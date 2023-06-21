@@ -1,9 +1,9 @@
 import Foundation
 
 struct ExecutionContext {
-    let tx: Tx
+    let tx: Transaction
     let inIdx: Int
-    let prevOuts: [Tx.Out]
+    let prevOuts: [Transaction.Output]
     let script: [Op]
     let version: ScriptVersion
     let tapLeafHash: Data?
@@ -16,7 +16,7 @@ struct ExecutionContext {
     var pendingElses = 0
     var evalElse = false
 
-    var prevOut: Tx.Out {
+    var prevOut: Transaction.Output {
         prevOuts[inIdx]
     }
 }

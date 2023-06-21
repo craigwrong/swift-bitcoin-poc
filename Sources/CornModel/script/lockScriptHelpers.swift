@@ -75,7 +75,7 @@ func makeP2WPKH(_ pubKeyHash: Data) -> [Op] {
     [
         .dup,
         .hash160,
-        .pushBytes(pubKeyHash), // prevOut.scriptPubKey.ops[1], // pushBytes 20
+        .pushBytes(pubKeyHash), // prevOut.script.ops[1], // pushBytes 20
         .equalVerify,
         .checkSig
     ]

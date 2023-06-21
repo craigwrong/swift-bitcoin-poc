@@ -1,8 +1,8 @@
 import Foundation
 
-extension Tx {
+extension Transaction {
     
-    func checkSig(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, script: [Op], opIdx: Int) -> Bool {
+    func checkSig(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Transaction.Output, script: [Op], opIdx: Int) -> Bool {
         precondition(sighashType.count > 69, "Signature too short or missing hash type suffix.")
         precondition(sighashType.count < 72, "Signature too long.")
         var sig = sighashType
@@ -14,7 +14,7 @@ extension Tx {
         return result
     }
     
-    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Tx.Out, script: [Op], opIdx: Int) -> Bool {
+    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Transaction.Output, script: [Op], opIdx: Int) -> Bool {
         var sig = sighashType
         guard let hashTypeRaw = sig.popLast(), let hashType = HashType(rawValue: hashTypeRaw) else {
             fatalError()
@@ -24,7 +24,7 @@ extension Tx {
         return result
     }
     
-    func checkSigV1(_ sig: Data, pubKey: Data, inIdx: Int, prevOuts: [Tx.Out], extFlag: UInt8 = 0, tapscriptExt: TapscriptExt? = .none) -> Bool {
+    func checkSigV1(_ sig: Data, pubKey: Data, inIdx: Int, prevOuts: [Transaction.Output], extFlag: UInt8 = 0, tapscriptExt: TapscriptExt? = .none) -> Bool {
         // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig), where Verify is defined in BIP340.
         // If the sig is 65 bytes long, return sig[64] ≠ 0x00 and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
         // Otherwise, fail.

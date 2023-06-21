@@ -6,17 +6,17 @@ func opCheckSequenceVerify(_ stack: inout [Data], context: ExecutionContext) thr
     
     guard
         first.count < 6,
-        let sequence64 = first.asInt64,
+        let sequence64 = first.asInt,
         sequence64 >= 0,
         sequence64 <= UInt32.max
     else { throw ScriptError.invalidScript }
     
-    let sequence = Tx.In.Sequence(UInt32(sequence64))
+    let sequence = Transaction.Input.Sequence(UInt32(sequence64))
     if sequence.isLocktimeDisabled { return }
     
     if context.tx.version == .v1 { throw ScriptError.invalidScript }
 
-    let txSequence = context.tx.ins[context.inIdx].sequence
+    let txSequence = context.tx.inputs[context.inIdx].sequence
     if txSequence.isLocktimeDisabled { throw ScriptError.invalidScript }
 
     if let locktimeBlocks = sequence.locktimeBlocks, let txLocktimeBlocks = txSequence.locktimeBlocks {

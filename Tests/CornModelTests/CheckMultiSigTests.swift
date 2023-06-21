@@ -16,14 +16,14 @@ final class CheckMultiSigTests: XCTestCase {
         let privKey = createPrivKey()
         let pubKey = getPubKey(privKey: privKey)
         let prevOuts = [
-            Tx.Out(value: 0, scriptPubKey: .init([]))
+            Transaction.Output(value: 0, scriptPubKey: .init([]))
         ]
-        let tx = Tx(version: .v1, locktime: .disabled,
-            ins: [
+        let tx = Transaction(version: .v1, locktime: .disabled,
+            inputs: [
                 .init(txID: "", outIdx: 0, sequence: .initial)
             ],
-            outs: [
-                Tx.Out(value: 0, scriptPubKey: .init([]))
+            outputs: [
+                Transaction.Output(value: 0, scriptPubKey: .init([]))
             ]
         )
         
@@ -49,14 +49,14 @@ final class CheckMultiSigTests: XCTestCase {
         let privKeys = (0...2).map { _ in createPrivKey() }
         let pubKeys = privKeys.map { getPubKey(privKey: $0) }
         let prevOuts = [
-            Tx.Out(value: 0, scriptPubKey: .init([]))
+            Transaction.Output(value: 0, scriptPubKey: .init([]))
         ]
-        let tx = Tx(version: .v1, locktime: .disabled,
-            ins: [
+        let tx = Transaction(version: .v1, locktime: .disabled,
+            inputs: [
                 .init(txID: "", outIdx: 0, sequence: .initial)
             ],
-            outs: [
-                Tx.Out(value: 0, scriptPubKey: .init([]))
+            outputs: [
+                Transaction.Output(value: 0, scriptPubKey: .init([]))
             ]
         )
         

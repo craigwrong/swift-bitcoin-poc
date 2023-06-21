@@ -156,11 +156,11 @@ extension Data {
         return padded.withUnsafeBytes { $0.load(as: Int32.self) }
     }
 
-    var asInt64: Int64? {
-        guard count <= MemoryLayout<Int64>.size else { return .none }
+    var asInt: Int? {
+        guard count <= MemoryLayout<Int>.size else { return .none }
         let positive = if let last { last & 0b10000000 == 0 } else { false }
-        let padded = self + Data(repeating: positive ? 0 : 0xff, count: MemoryLayout<Int64>.size - count)
-        return padded.withUnsafeBytes { $0.load(as: Int64.self) }
+        let padded = self + Data(repeating: positive ? 0 : 0xff, count: MemoryLayout<Int>.size - count)
+        return padded.withUnsafeBytes { $0.load(as: Int.self) }
     }
 }
 

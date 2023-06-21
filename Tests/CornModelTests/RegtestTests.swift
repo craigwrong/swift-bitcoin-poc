@@ -13,7 +13,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_pyBitcoin_all() {
         var tx = Transaction(Data(hex: "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb0000000000ffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a914c992931350c9ba48538003706953831402ea34ea88ac00000000"))
         
-        let prevOuts = [Transaction.Output(value: 0, scriptData: [Op]([
+        let prevOuts = [Transaction.Output(value: 0, scriptData: Script([
             .dup,
             .hash160,
             .pushBytes(Data(hex: "c3f8e5b0f8455a2b02c29c4488a550278209b669")),
@@ -31,7 +31,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_pyBitcoin2_all() {
         var tx = Transaction(Data(hex: "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb0000000000ffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
-        let prevOuts = [Transaction.Output(value: 0, scriptData: [Op]([
+        let prevOuts = [Transaction.Output(value: 0, scriptData: Script([
             .dup,
             .hash160,
             .pushBytes(Data(hex: "c3f8e5b0f8455a2b02c29c4488a550278209b669")),
@@ -52,7 +52,7 @@ final class RegtestTests: XCTestCase {
     func testLegacy_pyBitcoin2_none() {
         var tx = Transaction(Data(hex: "02000000016cce96ffe999c7b2abc8b7bebec0c821e9c378ac41417106f6ddf63be2f448fb0000000000ffffffff0280969800000000001976a914fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a88ac4081ba01000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
-        let prevOuts = [Transaction.Output(value: 0, scriptData: [Op]([
+        let prevOuts = [Transaction.Output(value: 0, scriptData: Script([
             .dup,
             .hash160,
             .pushBytes(Data(hex: "c3f8e5b0f8455a2b02c29c4488a550278209b669")),
@@ -73,14 +73,14 @@ final class RegtestTests: XCTestCase {
         var tx = Transaction(Data(hex: "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760000000000ffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760100000000ffffffff0240548900000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988ac40548900000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
         let prevOuts = [
-            Transaction.Output(value: 0, scriptData: [Op]([
+            Transaction.Output(value: 0, scriptData: Script([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a")),
                 .equalVerify,
                 .checkSig
             ]).data),
-            Transaction.Output(value: 0, scriptData: [Op]([
+            Transaction.Output(value: 0, scriptData: Script([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "42151d0c21442c2b038af0ad5ee64b9d6f4f4e49")),
@@ -115,14 +115,14 @@ final class RegtestTests: XCTestCase {
         var tx = Transaction(Data(hex: "02000000020f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760000000000ffffffff0f798b60b145361aebb95cfcdedd29e6773b4b96778af33ed6f42a9e2b4c46760100000000ffffffff0240548900000000001976a914c3f8e5b0f8455a2b02c29c4488a550278209b66988ac40548900000000001976a91442151d0c21442c2b038af0ad5ee64b9d6f4f4e4988ac00000000"))
         
         let prevOuts = [
-            Transaction.Output(value: 0, scriptData: [Op]([
+            Transaction.Output(value: 0, scriptData: Script([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "fd337ad3bf81e086d96a68e1f8d6a0a510f8c24a")),
                 .equalVerify,
                 .checkSig
             ]).data),
-            Transaction.Output(value: 0, scriptData: [Op]([
+            Transaction.Output(value: 0, scriptData: Script([
                 .dup,
                 .hash160,
                 .pushBytes(Data(hex: "42151d0c21442c2b038af0ad5ee64b9d6f4f4e49")),
@@ -169,7 +169,7 @@ final class RegtestTests: XCTestCase {
         // Since Core generates a different signature, let's at least make sure that their signature also verifies our hash.
         let coreHex = "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022037b8b0c1a33caa83be5eb71f87bce5dbd4890a56a61b98d9d603e754313fadc602201ef00773d2e0b98d558f0a1ac89a1fad1da15f852140fca5f5d737c0025e11ad014104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"
         let coreTx = Transaction(Data(hex: coreHex))
-        if  let coreOp = coreTx.inputs[0].script?[0], case .pushBytes(let hashType) = coreOp {
+        if  let coreOp = coreTx.inputs[0].script?.operations[0], case .pushBytes(let hashType) = coreOp {
             XCTAssertTrue(tx.checkSig(hashType, pubKey: pubKey0, inIdx: 0, prevOut: prevOut0, script: prevOut0.script, opIdx: 0))
         } else {
             XCTFail("Could not extract signature from transaction.")

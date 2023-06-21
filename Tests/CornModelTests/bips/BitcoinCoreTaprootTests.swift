@@ -17,12 +17,12 @@ final class BitcoinCoreTaprootTests: XCTestCase {
             let prevOuts = testCase.prevOuts.map { Transaction.Output(Data(hex: $0)) }
             let inIdx = testCase.inIdx
             var tx = unsigned
-            tx.inputs[inIdx].script = [Op](Data(hex: testCase.success.scriptSig))
+            tx.inputs[inIdx].script = Script(Data(hex: testCase.success.scriptSig))
             tx.inputs[inIdx].witness = testCase.success.witness.map { Data(hex: $0) }
             XCTAssertNoThrow(try tx.verify(inIdx: inIdx, prevOuts: prevOuts))
             if let failure = testCase.failure {
                 var failTx = unsigned
-                failTx.inputs[inIdx].script = [Op](Data(hex: failure.scriptSig))
+                failTx.inputs[inIdx].script = Script(Data(hex: failure.scriptSig))
                 failTx.inputs[inIdx].witness = failure.witness.map { Data(hex: $0) }
                 XCTAssertThrowsError(try failTx.verify(inIdx: inIdx, prevOuts: prevOuts))
             }

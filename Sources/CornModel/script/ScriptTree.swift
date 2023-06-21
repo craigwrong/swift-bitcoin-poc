@@ -39,7 +39,8 @@ public indirect enum ScriptTree: Equatable {
             preconditionFailure("Needs to be a leaf.")
         }
         let leafVersionData = withUnsafeBytes(of: UInt8(version)) { Data($0) }
-        return taggedHash(tag: "TapLeaf", payload: leafVersionData + script.data.varLenData)
+        let scriptData = Script(script, version: .witnessV1).data
+        return taggedHash(tag: "TapLeaf", payload: leafVersionData + scriptData.varLenData)
     }
     
     public func getOutputKey(privKey: Data) -> Data {

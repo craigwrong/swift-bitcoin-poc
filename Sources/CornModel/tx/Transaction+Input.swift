@@ -6,10 +6,10 @@ extension Transaction {
         public var txID: String
         public var outIdx: Int
         public var sequence: Sequence
-        public var script: [Op]?
+        public var script: Script?
         public var witness: [Data]?
         
-        public init(txID: String, outIdx: Int, sequence: Sequence, script: [Op]? = .none, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: Int, sequence: Sequence, script: Script? = .none, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
@@ -34,7 +34,7 @@ extension Transaction.Input {
         offset += outIdxData.count
         
         let scriptData = Data(varLenData: data[offset...])
-        let script = [Op](scriptData)
+        let script = Script(scriptData)
         offset += scriptData.varLenSize
         
         guard let sequenceData = Sequence(data[offset...]) else {

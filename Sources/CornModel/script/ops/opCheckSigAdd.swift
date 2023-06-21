@@ -33,7 +33,7 @@ func opCheckSigAdd(_ stack: inout [Data], context: ExecutionContext) throws {
         var codesepPos = UInt32(0xffffffff)
         var i = 0
         while i <= context.opIdx {
-            if context.script[i] == .codeSeparator { codesepPos = UInt32(i) }
+            if context.script.operations[i] == .codeSeparator { codesepPos = UInt32(i) }
             i += 1
         }
         

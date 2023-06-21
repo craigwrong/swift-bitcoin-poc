@@ -17,19 +17,19 @@ final class DataTests: XCTestCase {
         let pubKey1 = getPubKey(privKey: privKey1)
         let prevOuts = [
             Transaction.Output(value: 0,
-                   scriptPubKey: makeP2PKH(pubKey: pubKey0)),
+                   script: Script.makeP2PKH(pubKey: pubKey0)),
             Transaction.Output(value: 0,
-                   scriptPubKey: makeP2PKH(pubKey: pubKey1))
+                   script: Script.makeP2PKH(pubKey: pubKey1))
         ]
         var tx = Transaction(version: .v1, locktime: .disabled,
                     inputs: [.init(txID: "", outIdx: 0, sequence: .initial)],
-                    outputs: [.init(value: 0, scriptPubKey: makeNullData(""))]
+                    outputs: [.init(value: 0, script:Script.makeNullData(""))]
         )
         tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         var res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         //signed.outs.removeAll()
-        tx.outputs.append(.init(value: 0, scriptPubKey: makeNullData("")))
+        tx.outputs.append(.init(value: 0, script:Script.makeNullData("")))
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         
@@ -51,14 +51,14 @@ final class DataTests: XCTestCase {
         // Some previous outputs
         let prevOuts = [
             Transaction.Output(value: 0,
-                   scriptPubKey: makeP2PKH(pubKey: pubKey0)),
+                   script: Script.makeP2PKH(pubKey: pubKey0)),
             Transaction.Output(value: 0,
-                   scriptPubKey: makeP2PKH(pubKey: pubKey1))
+                   script: Script.makeP2PKH(pubKey: pubKey1))
         ]
         
         let prevOutsPlus = prevOuts + [
             Transaction.Output(value: 0,
-                   scriptPubKey: makeP2WKH(pubKey: pubKey2))
+                   script: Script.makeP2WKH(pubKey: pubKey2))
         ]
         
         // Our transaction with 2 ins and 2 outs
@@ -70,8 +70,8 @@ final class DataTests: XCTestCase {
                 .init(txID: "", outIdx: 0, sequence: .initial),
             ],
             outputs: [
-                .init(value: 0, scriptPubKey: makeNullData("")),
-                .init(value: 0, scriptPubKey: makeNullData(""))
+                .init(value: 0, script:Script.makeNullData("")),
+                .init(value: 0, script:Script.makeNullData(""))
             ]
         )
         
@@ -85,7 +85,7 @@ final class DataTests: XCTestCase {
         
         // Appending an additional output
         var signedOneMoreOut = tx
-        signedOneMoreOut.outputs.append(.init(value: 0, scriptPubKey: makeNullData("")))
+        signedOneMoreOut.outputs.append(.init(value: 0, script:Script.makeNullData("")))
         res = signedOneMoreOut.verify(prevOuts: prevOuts)
         XCTAssertFalse(res)
         
@@ -113,72 +113,72 @@ final class DataTests: XCTestCase {
         let privKeys = (0...10).map { _ in createPrivKey() }
         let pubKeys = privKeys.map { getPubKey(privKey: $0) }
         
-        let redeemScript2 = [
+        let redeemScript2 = Script([
             Op.constant(2),
             .pushBytes(pubKeys[3]),
             .pushBytes(pubKeys[2]),
             .constant(2),
             .checkMultiSig
-        ]
+        ])
 
-        let redeemScript4 = makeP2WKH(pubKey: pubKeys[4])
-        let redeemScript5 = [
+        let redeemScript4 = Script.makeP2WKH(pubKey: pubKeys[4])
+        let redeemScript5 = Script([
             Op.constant(2),
             .pushBytes(pubKeys[6]),
             .pushBytes(pubKeys[5]),
             .constant(2),
             .checkMultiSig
-        ]
-        let redeemScriptV06 = [
+        ], version: .witnessV0)
+        let redeemScriptV06 = Script([
             Op.constant(2),
             .pushBytes(pubKeys[7]),
             .pushBytes(pubKeys[6]),
             .constant(2),
             .checkMultiSig
-        ]
-        let redeemScript6 = makeP2WSH(redeemScriptV0: redeemScriptV06)
+        ], version: .witnessV0)
+        let redeemScript6 = Script.makeP2WSH(redeemScriptV0: redeemScriptV06)
         
         let outputKey7 = getOutputKey(privKey: privKeys[7])
 
         // Sprevious outputs
         let prevOuts = [
             // p2pk
-            Transaction.Output(value: 0, scriptPubKey: makeP2PK(pubKey: pubKeys[0])),
+            Transaction.Output(value: 0, script:Script.makeP2PK(pubKey: pubKeys[0])),
             
             // p2pkh
-            Transaction.Output(value: 0, scriptPubKey: makeP2PKH(pubKey: pubKeys[1])),
+            Transaction.Output(value: 0, script:Script.makeP2PKH(pubKey: pubKeys[1])),
             
             // p2sh
             Transaction.Output( value: 0,
-                scriptPubKey: makeP2SH(redeemScript: redeemScript2)
+                script: Script.makeP2SH(redeemScript: redeemScript2)
             ),
             
             // p2wkh
-            Transaction.Output(value: 0, scriptPubKey: makeP2WKH(pubKey: pubKeys[3])),
+            Transaction.Output(value: 0, script:Script.makeP2WKH(pubKey: pubKeys[3])),
             
             // p2sh-p2wkh
             Transaction.Output(value: 0,
-                scriptPubKey: makeP2SH(redeemScript: redeemScript4)
+                script: Script.makeP2SH(redeemScript: redeemScript4)
             ),
 
             // p2wsh
             Transaction.Output(value: 0,
-                scriptPubKey: makeP2WSH(redeemScriptV0: redeemScript5)
+                script: Script.makeP2WSH(redeemScriptV0: redeemScript5)
             ),
 
             // p2sh-p2wsh
             Transaction.Output(value: 0,
-                scriptPubKey: makeP2SH(redeemScript: redeemScript6)
+                script: Script.makeP2SH(redeemScript: redeemScript6)
             ),
 
             // p2tr (key path)
             Transaction.Output(value: 0,
-                scriptPubKey: makeP2TR(outputKey: outputKey7)
+                script: Script.makeP2TR(outputKey: outputKey7)
             ),
             
             // legacy multisig
             Transaction.Output(value: 0,
-                scriptPubKey: .init([
+                script: .init([
                     .constant(2),
                     .pushBytes(pubKeys[9]),
                     .pushBytes(pubKeys[8]),
@@ -204,8 +204,8 @@ final class DataTests: XCTestCase {
                 .init(txID: "", outIdx: 0, sequence: .initial),
             ],
             outputs: [
-                .init(value: 0, scriptPubKey: makeNullData("")),
-                .init(value: 0, scriptPubKey: makeNullData(""))
+                .init(value: 0, script:Script.makeNullData("")),
+                .init(value: 0, script:Script.makeNullData(""))
             ]
         )
         tx.sign(privKeys: [privKeys[0]], hashType: .all, inIdx: 0, prevOuts: prevOuts)

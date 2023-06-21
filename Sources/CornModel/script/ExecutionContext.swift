@@ -4,8 +4,8 @@ struct ExecutionContext {
     let tx: Transaction
     let inIdx: Int
     let prevOuts: [Transaction.Output]
-    let script: [Op]
-    let version: ScriptVersion
+    let script: Script
+    let version: Script.Version
     let tapLeafHash: Data?
     let keyVersion: UInt8? = 0
     var opIdx: Int = 0

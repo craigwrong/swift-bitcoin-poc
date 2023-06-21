@@ -19,8 +19,8 @@ extension Transaction {
 
 extension Transaction.Output {
 
-    public init(value: Amount, scriptPubKey: [Op]) {
-        self.init(value: value, scriptData: scriptPubKey.data)
+    public init(value: Amount, script: Script) {
+        self.init(value: value, scriptData: script.data)
     }
         
     init(_ data: Data) {
@@ -42,8 +42,8 @@ extension Transaction.Output {
         withUnsafeBytes(of: value) { Data($0) }
     }
 
-    var script: [Op] {
-        [Op](scriptData)
+    var script: Script {
+        Script(scriptData)
     }
     
     var doubleValue: Double {

@@ -12,13 +12,14 @@ extension Transaction {
     ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
     ///   - opIdx: The index of the  signature operation being executed.
     /// - Returns: A hash value for use while either signing or verifying a transaction input.
-    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: [Op], opIdx: Int) -> Data {
-        
+    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: Script, opIdx: Int) -> Data {
+        precondition(scriptCode.version == .legacy)
+
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
-        let subScript: [Op]
+        let subScript: Script
         if prevOut.script.scriptType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
-            if let op = inputs[inIdx].script?.last, case let .pushBytes(redeemScriptRaw) = op, [Op](redeemScriptRaw) != scriptCode {
+            if let op = inputs[inIdx].script?.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw) != scriptCode {
                 preconditionFailure()
             }
             subScript = scriptCode
@@ -35,7 +36,9 @@ extension Transaction {
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func sigMsg(hashType: HashType, inIdx: Int, subScript: [Op]) -> Data {
+    func sigMsg(hashType: HashType, inIdx: Int, subScript: Script) -> Data {
+        precondition(subScript.version == .legacy)
+
         var newIns = [Transaction.Input]()
         if hashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
@@ -96,7 +99,8 @@ extension Transaction {
 
     // -MARK: Segregated Witnes version 0 (SegWit)
     
-    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: [Op], opIdx: Int) -> Data {
+    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: Script, opIdx: Int) -> Data {
+        precondition(scriptCode.version == .witnessV0)
         // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
         var scriptCode = scriptCode
         scriptCode.removeSubScripts(before: opIdx)
@@ -105,8 +109,8 @@ extension Transaction {
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
-    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: [Op], amount: Amount) -> Data {
-        
+    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: Script, amount: Amount) -> Data {
+        precondition(scriptCode.version == .witnessV0)
         //If the ANYONECANPAY flag is not set, hashPrevouts is the double SHA256 of the serialization of all input outpoints;
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.
         var hashPrevouts: Data

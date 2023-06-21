@@ -2,7 +2,8 @@ import Foundation
 
 extension Transaction {
     
-    func checkSig(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Transaction.Output, script: [Op], opIdx: Int) -> Bool {
+    func checkSig(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Transaction.Output, script: Script, opIdx: Int) -> Bool {
+        precondition(script.version == .legacy)
         precondition(sighashType.count > 69, "Signature too short or missing hash type suffix.")
         precondition(sighashType.count < 72, "Signature too long.")
         var sig = sighashType
@@ -14,7 +15,9 @@ extension Transaction {
         return result
     }
     
-    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Transaction.Output, script: [Op], opIdx: Int) -> Bool {
+    func checkSigV0(_ sighashType: Data, pubKey: Data, inIdx: Int, prevOut: Transaction.Output, script: Script, opIdx: Int) -> Bool {
+        precondition(script.version == .witnessV0)
+
         var sig = sighashType
         guard let hashTypeRaw = sig.popLast(), let hashType = HashType(rawValue: hashTypeRaw) else {
             fatalError()

@@ -323,7 +323,7 @@ public enum Op: Equatable {
         return opCodeData + lengthData + rawData
     }
     
-    init(_ data: Data, version: ScriptVersion) {
+    init(_ data: Data, version: Script.Version) {
         var data = data
         let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: opCode))

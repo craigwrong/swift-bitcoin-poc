@@ -9,11 +9,11 @@ func opElse(context: inout ExecutionContext) throws {
         // Find next endif
         var pendingIfs = 0
         var i = context.opIdx
-        while i < context.script.count {
-            if context.script[i] == .if || context.script[i] == .notIf {
+        while i < context.script.operations.count {
+            if context.script.operations[i] == .if || context.script.operations[i] == .notIf {
                 pendingIfs += 1
             }
-            if context.script[i] == .endIf {
+            if context.script.operations[i] == .endIf {
                 if pendingIfs > 0 {
                     pendingIfs -= 1
                 } else {

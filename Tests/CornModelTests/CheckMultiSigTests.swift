@@ -16,30 +16,30 @@ final class CheckMultiSigTests: XCTestCase {
         let privKey = createPrivKey()
         let pubKey = getPubKey(privKey: privKey)
         let prevOuts = [
-            Transaction.Output(value: 0, scriptPubKey: .init([]))
+            Transaction.Output(value: 0, script:.init([]))
         ]
         let tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [
                 .init(txID: "", outIdx: 0, sequence: .initial)
             ],
             outputs: [
-                Transaction.Output(value: 0, scriptPubKey: .init([]))
+                Transaction.Output(value: 0, script:.init([]))
             ]
         )
         
-        let script = [
+        let script = Script([
             Op.constant(1),
             .pushBytes(pubKey),
             .constant(1),
             .checkMultiSig
-        ]
+        ])
         let hashType = HashType.all
         let sig = signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script, opIdx: 0), privKey: privKey) + hashType.data
         var stack = [
             Data(),
             sig
         ]
-        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         let expectedStack = [Data]([.one])
         XCTAssertEqual(stack, expectedStack)
     }
@@ -49,25 +49,25 @@ final class CheckMultiSigTests: XCTestCase {
         let privKeys = (0...2).map { _ in createPrivKey() }
         let pubKeys = privKeys.map { getPubKey(privKey: $0) }
         let prevOuts = [
-            Transaction.Output(value: 0, scriptPubKey: .init([]))
+            Transaction.Output(value: 0, script:.init([]))
         ]
         let tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [
                 .init(txID: "", outIdx: 0, sequence: .initial)
             ],
             outputs: [
-                Transaction.Output(value: 0, scriptPubKey: .init([]))
+                Transaction.Output(value: 0, script:.init([]))
             ]
         )
         
-        let script = [
+        let script = Script([
             Op.constant(2),
             .pushBytes(pubKeys[2]),
             .pushBytes(pubKeys[1]),
             .pushBytes(pubKeys[0]),
             .constant(3),
             .checkMultiSigVerify
-        ]
+        ])
         let hashType = HashType.all
         let allSigs = privKeys.map {
             signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script, opIdx: 0), privKey: $0) + hashType.data
@@ -78,27 +78,27 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[1],
             allSigs[0]
         ]
-        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[2],
             allSigs[0]
         ]
-        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[2],
             allSigs[1]
         ]
-        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[1],
             allSigs[2]
         ]
-        XCTAssertNoThrow(try runScript(script, stack: &stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
     }
 }

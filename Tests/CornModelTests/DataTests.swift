@@ -21,8 +21,8 @@ final class DataTests: XCTestCase {
             Tx.Out(value: 0,
                    scriptPubKey: makeP2PKH(pubKey: pubKey1))
         ]
-        var tx = Tx(version: .v1, lockTime: .zero,
-                    ins: [.init(txID: "", outIdx: 0, sequence: .init(sequence: 0))],
+        var tx = Tx(version: .v1, locktime: .disabled,
+                    ins: [.init(txID: "", outIdx: 0, sequence: .initial)],
                     outs: [.init(value: 0, scriptPubKey: makeNullData(""))]
         )
         tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
@@ -33,7 +33,7 @@ final class DataTests: XCTestCase {
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         
-        tx.ins.append(Tx.In(txID: "", outIdx: 0, sequence: .init(sequence: 0)))
+        tx.ins.append(Tx.In(txID: "", outIdx: 0, sequence: .initial))
         tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .all, inIdx: 1, prevOuts: prevOuts)
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
@@ -64,10 +64,10 @@ final class DataTests: XCTestCase {
         // Our transaction with 2 ins and 2 outs
         var tx = Tx(
             version: .v1,
-            lockTime: .zero,
+            locktime: .disabled,
             ins: [
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
             ],
             outs: [
                 .init(value: 0, scriptPubKey: makeNullData("")),
@@ -97,7 +97,7 @@ final class DataTests: XCTestCase {
         
         // Appending an additional input
         var signedOneMoreIn = tx
-        signedOneMoreIn.ins.append(.init(txID: "", outIdx: 0, sequence: .init(sequence: 0)))
+        signedOneMoreIn.ins.append(.init(txID: "", outIdx: 0, sequence: .initial))
         signedOneMoreIn.sign(privKeys: [privKey2], pubKeys: [pubKey2], hashType: .noneAnyCanPay, inIdx: 2, prevOuts: prevOutsPlus)
         res = signedOneMoreIn.verify(prevOuts: prevOutsPlus)
         XCTAssert(res)
@@ -191,17 +191,17 @@ final class DataTests: XCTestCase {
         // Our transaction with 6 ins and 2 outs
         var tx = Tx(
             version: .v1,
-            lockTime: .zero,
+            locktime: .disabled,
             ins: [
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
-                .init(txID: "", outIdx: 0, sequence: .init(sequence: 0)),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(txID: "", outIdx: 0, sequence: .initial),
             ],
             outs: [
                 .init(value: 0, scriptPubKey: makeNullData("")),

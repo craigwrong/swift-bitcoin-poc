@@ -5,11 +5,11 @@ extension Tx {
     public struct In: Equatable {
         public var txID: String
         public var outIdx: Int
-        public var sequence: InSequence
+        public var sequence: Sequence
         public var scriptSig: [Op]?
         public var witness: [Data]?
         
-        public init(txID: String, outIdx: Int, sequence: InSequence, scriptSig: [Op]? = .none, witness: [Data]? = .none) {
+        public init(txID: String, outIdx: Int, sequence: Sequence, scriptSig: [Op]? = .none, witness: [Data]? = .none) {
             self.txID = txID
             self.outIdx = outIdx
             self.sequence = sequence
@@ -21,7 +21,7 @@ extension Tx {
 
 extension Tx.In {
     
-    init(_ data: Data, txVersion: Tx.Version) {
+    init(_ data: Data) {
         var offset = data.startIndex
         let txIDData = Data(data[offset ..< offset + 32].reversed())
         let txID = txIDData.hex
@@ -37,13 +37,12 @@ extension Tx.In {
         let scriptSig = [Op](scriptSigData)
         offset += scriptSigData.varLenSize
         
-        let sequenceData = data[offset ..< offset + MemoryLayout<UInt32>.size]
-        let sequence = sequenceData.withUnsafeBytes {
-            $0.loadUnaligned(as: UInt32.self)
+        guard let sequenceData = Sequence(data[offset...]) else {
+            fatalError()
         }
-        offset += sequenceData.count
+        offset += Sequence.dataCount
         
-        self.init(txID: txID, outIdx: outIdx, sequence: .init(rawValue: sequence, txVersion: txVersion), scriptSig: scriptSig)
+        self.init(txID: txID, outIdx: outIdx, sequence: sequenceData, scriptSig: scriptSig)
     }
     
     var isCoinbase: Bool { txID == Tx.coinbaseID }
@@ -91,7 +90,7 @@ extension Tx.In {
     var sequenceData: Data { sequence.data }
     
     var dataLen: Int {
-        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (scriptSig?.dataLen ?? 0) + sequence.dataLen
+        txID.count / 2 + MemoryLayout.size(ofValue: UInt32(outIdx)) + (scriptSig?.dataLen ?? 0) + Sequence.dataCount
     }
     
     var witnessDataLen: Int {

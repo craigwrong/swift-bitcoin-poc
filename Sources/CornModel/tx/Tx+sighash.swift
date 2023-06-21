@@ -48,7 +48,7 @@ extension Tx {
                     txID: input.txID,
                     outIdx: input.outIdx,
                     // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
-                    sequence: i == inIdx || hashType.isAll ? input.sequence : .init(sequence: 0),
+                    sequence: i == inIdx || hashType.isAll ? input.sequence : .initial,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
                     scriptSig: i == inIdx ? subScript : .init([])
@@ -87,7 +87,7 @@ extension Tx {
         }
         let txCopy = Tx(
             version: version,
-            lockTime: lockTime,
+            locktime: locktime,
             ins: newIns,
             outs: newOuts
         )
@@ -149,9 +149,7 @@ extension Tx {
             hashOuts = Data(repeating: 0, count: 256)
         }
         
-        let lockTimeData = withUnsafeBytes(of: lockTime) { Data($0) }
-        
-        let remaindingData = sequenceData + hashOuts + lockTimeData + hashType.data32
+        let remaindingData = sequenceData + hashOuts + locktime.data + hashType.data32
         return version.data + hashPrevouts + hashSequence + outpointData + scriptCodeData + amountData + remaindingData
     }
 
@@ -193,8 +191,7 @@ extension Tx {
         // nVersion (4): the nVersion of the transaction.
         var txData = version.data
         // nLockTime (4): the nLockTime of the transaction.
-        let lockTimeData = withUnsafeBytes(of: lockTime) { Data($0) }
-        txData.append(lockTimeData)
+        txData.append(locktime.data)
         
         //If the hash_type & 0x80 does not equal SIGHASH_ANYONECANPAY:
         if !hashType.isAnyCanPay {

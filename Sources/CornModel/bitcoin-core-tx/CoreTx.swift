@@ -126,11 +126,11 @@ extension Tx {
         .init(
             txid: txid,
             hash: wtxid,
-            version: version.uInt32,
+            version: version.rawValue,
             size: size,
             vsize: vsize,
             weight: weight,
-            locktime: lockTime,
+            locktime: locktime.rawValue,
             vin: ins.map {
                 $0.bCoreInput
             },
@@ -155,7 +155,7 @@ extension Tx.In {
             txid: .none,
             vout: .none,
             txinwitness: witness?.map(\.hex),
-            sequence: sequence.sequenceValue
+            sequence: sequence.rawValue
         )
         : .init(
             coinbase: .none,
@@ -166,7 +166,7 @@ extension Tx.In {
             txid: txID,
             vout: outIdx,
             txinwitness: witness?.map(\.hex),
-            sequence: sequence.sequenceValue
+            sequence: sequence.rawValue
         )
     }
 }

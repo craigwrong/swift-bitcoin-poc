@@ -46,16 +46,16 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
     
     func testLockTime() throws {
         let tx = Tx(Data(hex: CoreTx.Sample.coinbase1.hex))
-        XCTAssertEqual(tx.lockTime, UInt32(CoreTx.Sample.coinbase1.locktime))
+        XCTAssertEqual(UInt32(tx.locktime.blockHeight!), UInt32(CoreTx.Sample.coinbase1.locktime))
         let txSegWit = Tx(Data(hex: CoreTx.Sample.segwit1.hex))
-        XCTAssertEqual(txSegWit.lockTime, UInt32(CoreTx.Sample.segwit1.locktime))
+        XCTAssertEqual(UInt32(txSegWit.locktime.blockHeight!), UInt32(CoreTx.Sample.segwit1.locktime))
     }
     
     func testVersion() throws {
         let tx = Tx(Data(hex: CoreTx.Sample.coinbase1.hex))
-        XCTAssertEqual(tx.version.uInt32, UInt32(CoreTx.Sample.coinbase1.version))
+        XCTAssertEqual(tx.version.rawValue, UInt32(CoreTx.Sample.coinbase1.version))
         let txSegWit = Tx(Data(hex: CoreTx.Sample.segwit1.hex))
-        XCTAssertEqual(txSegWit.version.uInt32, UInt32(CoreTx.Sample.segwit1.version))
+        XCTAssertEqual(txSegWit.version.rawValue, UInt32(CoreTx.Sample.segwit1.version))
     }
     
     func testInputs() throws {
@@ -63,7 +63,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let tx = Tx(Data(hex: CoreTx.Sample.coinbase1.hex))
         let input = tx.ins[0]
         let witness = tx.ins[0].witness
-        XCTAssertEqual(input.sequence.sequenceValue, UInt32(bCoreInput.sequence))
+        XCTAssertEqual(input.sequence.rawValue, UInt32(bCoreInput.sequence))
         XCTAssertEqual(input.scriptSig?.data.hex, bCoreInput.coinbase!)
         XCTAssertEqual(witness?.map(\.hex), bCoreInput.txinwitness)
         
@@ -71,7 +71,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let txSegwit = Tx(Data(hex: CoreTx.Sample.segwit1.hex))
         let inputSegwit = txSegwit.ins[0]
         let witnessSegwit = txSegwit.ins[0].witness
-        XCTAssertEqual(inputSegwit.sequence.sequenceValue, UInt32(segWitInput.sequence))
+        XCTAssertEqual(inputSegwit.sequence.rawValue, UInt32(segWitInput.sequence))
         XCTAssertEqual(inputSegwit.scriptSig?.data.hex, segWitInput.scriptSig!.hex)
         XCTAssertEqual(witnessSegwit!.map(\.hex), segWitInput.txinwitness!)
         

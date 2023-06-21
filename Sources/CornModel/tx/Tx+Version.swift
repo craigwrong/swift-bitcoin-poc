@@ -1,33 +1,49 @@
 import Foundation
 
 extension Tx {
-    
-    /// The version of this bitcoin transaction. Either v1 or v2.
-    public enum Version: Equatable {
-        case v1, v2, unknown(UInt32)
-        
-        init(_ data: Data) {
-            let uInt32 = data.withUnsafeBytes { $0.load(as: UInt32.self) }
-            self = uInt32 == 1 ? .v1 : uInt32 == 2 ? .v2 : .unknown(uInt32)
+    public struct Version: Equatable {
+        public static let v1 = Self(1)
+        public static let v2 = Self(2)
+
+        public var isFuture: Bool {
+            versionValue > Self.v2.versionValue
+        }
+
+        static var dataCount: Int {
+            MemoryLayout<UInt32>.size
+        }
+
+        init?(futureVersion versionValue: Int) {
+            guard versionValue > Self.v2.versionValue, versionValue <= UInt32.max else {
+                return nil
+            }
+            self.init(versionValue)
         }
         
-        var uInt32: UInt32 {
-            switch(self) {
-                case .v1:
-                    return UInt32(1)
-                case .v2:
-                    return UInt32(2)
-                case let .unknown(value):
-                    return value
+        init?(_ data: Data) {
+            guard data.count >= Self.dataCount else {
+                return nil
             }
+            let rawValue = data.withUnsafeBytes { $0.load(as: UInt32.self) }
+            self.init(rawValue)
+        }
+        
+        init(_ rawValue: UInt32) {
+            self.init(Int(rawValue))
         }
         
         var data: Data {
-            withUnsafeBytes(of: uInt32) { Data($0) }
+            withUnsafeBytes(of: rawValue) { Data($0) }
+        }
+
+        var rawValue: UInt32 {
+            UInt32(versionValue)
         }
         
-        var dataLen: Int {
-            MemoryLayout.size(ofValue: uInt32)
+        private let versionValue: Int
+        
+        private init(_ versionValue: Int) {
+            self.versionValue = versionValue
         }
     }
 }

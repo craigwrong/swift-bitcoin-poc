@@ -11,7 +11,7 @@ func opCheckSequenceVerify(_ stack: inout [Data], context: ExecutionContext) thr
         sequence64 <= UInt32.max
     else { throw ScriptError.invalidScript }
     
-    let sequence = InSequence(rawValue: UInt32(sequence64), txVersion: .v2)
+    let sequence = Tx.In.Sequence(UInt32(sequence64))
     if sequence.isLocktimeDisabled { return }
     
     if context.tx.version == .v1 { throw ScriptError.invalidScript }
@@ -19,7 +19,15 @@ func opCheckSequenceVerify(_ stack: inout [Data], context: ExecutionContext) thr
     let txSequence = context.tx.ins[context.inIdx].sequence
     if txSequence.isLocktimeDisabled { throw ScriptError.invalidScript }
 
-    guard sequence.isLocktimeHeight && txSequence.isLocktimeHeight && sequence.locktimeHeight <= txSequence.locktimeHeight || (
-        sequence.isLocktimeClock && txSequence.isLocktimeClock && sequence.locktimeSeconds <= txSequence.locktimeSeconds
-    ) else { throw ScriptError.invalidScript }
+    if let locktimeBlocks = sequence.locktimeBlocks, let txLocktimeBlocks = txSequence.locktimeBlocks {
+        if locktimeBlocks > txLocktimeBlocks {
+            throw ScriptError.invalidScript
+        }
+    } else if let seconds = sequence.locktimeSeconds, let txSeconds = txSequence.locktimeSeconds {
+        if seconds > txSeconds {
+            throw ScriptError.invalidScript
+        }
+    } else {
+        throw ScriptError.invalidScript
+    }
 }

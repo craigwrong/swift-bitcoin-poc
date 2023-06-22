@@ -13,11 +13,11 @@ func opCheckLockTimeVerify(_ stack: inout [Data], context: ExecutionContext) thr
 
     let locktime = Transaction.Locktime(UInt32(locktime64))
 
-    if let blockHeight = locktime.blockHeight, let txBlockHeight = context.tx.locktime.blockHeight {
+    if let blockHeight = locktime.blockHeight, let txBlockHeight = context.transaction.locktime.blockHeight {
         if blockHeight > txBlockHeight {
             throw ScriptError.invalidScript
         }
-    } else if let seconds = locktime.secondsSince1970, let txSeconds = context.tx.locktime.secondsSince1970 {
+    } else if let seconds = locktime.secondsSince1970, let txSeconds = context.transaction.locktime.secondsSince1970 {
         if seconds > txSeconds {
             throw ScriptError.invalidScript
         }
@@ -25,5 +25,5 @@ func opCheckLockTimeVerify(_ stack: inout [Data], context: ExecutionContext) thr
         throw ScriptError.invalidScript
     }
     
-    if context.tx.inputs[context.inIdx].sequence == .final { throw ScriptError.invalidScript }
+    if context.transaction.inputs[context.inputIndex].sequence == .final { throw ScriptError.invalidScript }
 }

@@ -51,9 +51,9 @@ extension Transaction.Output {
     }
     
     func address(network: Network = .main) -> String {
-        if script.scriptType == .witnessV0KeyHash || script.scriptType == .witnessV0ScriptHash {
+        if script.lockType == .witnessV0KeyHash || script.lockType == .witnessV0ScriptHash {
             return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: script.witnessProgram)) ?? ""
-        } else if script.scriptType == .witnessV1TapRoot {
+        } else if script.lockType == .witnessV1TapRoot {
             return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: script.witnessProgram)) ?? ""
         }
         return ""

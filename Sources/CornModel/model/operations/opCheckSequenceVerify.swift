@@ -14,9 +14,9 @@ func opCheckSequenceVerify(_ stack: inout [Data], context: ExecutionContext) thr
     let sequence = Transaction.Input.Sequence(UInt32(sequence64))
     if sequence.isLocktimeDisabled { return }
     
-    if context.tx.version == .v1 { throw ScriptError.invalidScript }
+    if context.transaction.version == .v1 { throw ScriptError.invalidScript }
 
-    let txSequence = context.tx.inputs[context.inIdx].sequence
+    let txSequence = context.transaction.inputs[context.inputIndex].sequence
     if txSequence.isLocktimeDisabled { throw ScriptError.invalidScript }
 
     if let locktimeBlocks = sequence.locktimeBlocks, let txLocktimeBlocks = txSequence.locktimeBlocks {

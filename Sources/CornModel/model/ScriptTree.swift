@@ -2,7 +2,7 @@ import Foundation
 
 public indirect enum ScriptTree: Equatable {
     // leaf_version is 0xc0 (or 0xc1) for BIP342
-    case leaf(Int, [Op]), branch(Self, Self)
+    case leaf(Int, [Script.Operation]), branch(Self, Self)
 
     /// Calculates the merkle root as well as some additional tree info for generating control blocks.
     func calcMerkleRoot() -> ([(ScriptTree, Data)], Data) {

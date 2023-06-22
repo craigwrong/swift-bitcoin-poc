@@ -1,14 +1,14 @@
 import Foundation
 
 struct ExecutionContext {
-    let tx: Transaction
-    let inIdx: Int
-    let prevOuts: [Transaction.Output]
+    let transaction: Transaction
+    let inputIndex: Int
+    let previousOutputs: [Transaction.Output]
     let script: Script
     let version: Script.Version
     let tapLeafHash: Data?
     let keyVersion: UInt8? = 0
-    var opIdx: Int = 0
+    var operationIndex: Int = 0
     var altStack: [Data] = []
     
     // If else support
@@ -16,7 +16,7 @@ struct ExecutionContext {
     var pendingElses = 0
     var evalElse = false
 
-    var prevOut: Transaction.Output {
-        prevOuts[inIdx]
+    var previousOutput: Transaction.Output {
+        previousOutputs[inputIndex]
     }
 }

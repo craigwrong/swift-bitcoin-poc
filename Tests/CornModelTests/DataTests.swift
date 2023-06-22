@@ -22,18 +22,18 @@ final class DataTests: XCTestCase {
                    script: Script.makeP2PKH(pubKey: pubKey1))
         ]
         var tx = Transaction(version: .v1, locktime: .disabled,
-                    inputs: [.init(txID: "", outIdx: 0, sequence: .initial)],
+                    inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
                     outputs: [.init(value: 0, script:Script.makeNullData(""))]
         )
         tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], hashType: .singleAnyCanPay, inIdx: 0, prevOuts: prevOuts)
         var res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
-        //signed.outs.removeAll()
+        //signed.outputs.removeAll()
         tx.outputs.append(.init(value: 0, script:Script.makeNullData("")))
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
         
-        tx.inputs.append(Transaction.Input(txID: "", outIdx: 0, sequence: .initial))
+        tx.inputs.append(Transaction.Input(outpoint: .init(transaction: "", output: 0), sequence: .initial))
         tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], hashType: .all, inIdx: 1, prevOuts: prevOuts)
         res = tx.verify(prevOuts: prevOuts)
         XCTAssert(res)
@@ -61,13 +61,13 @@ final class DataTests: XCTestCase {
                    script: Script.makeP2WKH(pubKey: pubKey2))
         ]
         
-        // Our transaction with 2 ins and 2 outs
+        // Our transaction with 2 inputs and 2 outputs
         var tx = Transaction(
             version: .v1,
             locktime: .disabled,
             inputs: [
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
             ],
             outputs: [
                 .init(value: 0, script:Script.makeNullData("")),
@@ -97,12 +97,12 @@ final class DataTests: XCTestCase {
         
         // Appending an additional input
         var signedOneMoreIn = tx
-        signedOneMoreIn.inputs.append(.init(txID: "", outIdx: 0, sequence: .initial))
+        signedOneMoreIn.inputs.append(.init(outpoint: .init(transaction: "", output: 0), sequence: .initial))
         signedOneMoreIn.sign(privKeys: [privKey2], pubKeys: [pubKey2], hashType: .noneAnyCanPay, inIdx: 2, prevOuts: prevOutsPlus)
         res = signedOneMoreIn.verify(prevOuts: prevOutsPlus)
         XCTAssert(res)
         
-        // Removing the last one of the ins
+        // Removing the last one of the inputs
         var signedInRemoved = tx
         signedInRemoved.inputs.remove(at: 1)
         res = signedInRemoved.verify(prevOuts: [prevOuts[0]])
@@ -114,7 +114,7 @@ final class DataTests: XCTestCase {
         let pubKeys = privKeys.map { getPubKey(privKey: $0) }
         
         let redeemScript2 = Script([
-            Op.constant(2),
+            .constant(2),
             .pushBytes(pubKeys[3]),
             .pushBytes(pubKeys[2]),
             .constant(2),
@@ -123,14 +123,14 @@ final class DataTests: XCTestCase {
 
         let redeemScript4 = Script.makeP2WKH(pubKey: pubKeys[4])
         let redeemScript5 = Script([
-            Op.constant(2),
+            .constant(2),
             .pushBytes(pubKeys[6]),
             .pushBytes(pubKeys[5]),
             .constant(2),
             .checkMultiSig
         ], version: .witnessV0)
         let redeemScriptV06 = Script([
-            Op.constant(2),
+            .constant(2),
             .pushBytes(pubKeys[7]),
             .pushBytes(pubKeys[6]),
             .constant(2),
@@ -188,20 +188,20 @@ final class DataTests: XCTestCase {
             )
         ]
         
-        // Our transaction with 6 ins and 2 outs
+        // Our transaction with 6 inputs and 2 outputs
         var tx = Transaction(
             version: .v1,
             locktime: .disabled,
             inputs: [
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
-                .init(txID: "", outIdx: 0, sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial),
             ],
             outputs: [
                 .init(value: 0, script:Script.makeNullData("")),

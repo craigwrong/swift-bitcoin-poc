@@ -135,7 +135,7 @@ extension Transaction {
                 $0.bCoreInput
             },
             vout: outputs.enumerated().map { (i, output) in
-                output.toBCoreOutput(outIdx: i, network: network)
+                output.toBCoreOutput(outputIndex: i, network: network)
             },
             hex: data.hex,
             blockhash: .none,
@@ -163,8 +163,8 @@ extension Transaction.Input {
                 asm: script?.asm ?? "",
                 hex: script?.data.hex ?? ""
             ),
-            txid: txID,
-            vout: outIdx,
+            txid: outpoint.transaction,
+            vout: outpoint.output,
             txinwitness: witness?.map(\.hex),
             sequence: sequence.rawValue
         )
@@ -173,16 +173,16 @@ extension Transaction.Input {
 
 extension Transaction.Output {
 
-    func toBCoreOutput(outIdx: Int, network: Network = .main) -> CoreTx.Output {
+    func toBCoreOutput(outputIndex: Int, network: Network = .main) -> CoreTx.Output {
         .init(
             value: doubleValue,
-            n: outIdx,
+            n: outputIndex,
             scriptPubKey: .init(
                 asm: script.asm,
                 desc: "", // TODO: Create descriptor
                 hex: script.data.hex,
                 address: address(network: network),
-                type: .init(rawValue: CoreTx.Output.LockScript.LockType(script.scriptType).rawValue) ?? .unknown
+                type: .init(rawValue: CoreTx.Output.LockScript.LockType(script.lockType).rawValue) ?? .unknown
             )
         )
     }
@@ -190,7 +190,7 @@ extension Transaction.Output {
 
 extension CoreTx.Output.LockScript.LockType {
     
-    init(_ scriptType: LockScriptType) {
+    init(_ scriptType: Script.LockType) {
         switch scriptType {
         case .nonStandard:
             self = .nonStandard

@@ -20,7 +20,7 @@ final class CheckSigTests: XCTestCase {
         ]
         let tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [
-                .init(txID: "", outIdx: 0, sequence: .initial)
+                .init(outpoint: .init(transaction: "", output: 0), sequence: .initial)
             ],
             outputs: [
                 Transaction.Output(value: 0, script:.init([]))
@@ -28,7 +28,7 @@ final class CheckSigTests: XCTestCase {
         )
         
         let script = Script([
-            Op.checkSig
+            .checkSig
         ])
         let hashType = HashType.all
         let sig = signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script, opIdx: 0), privKey: privKey) + hashType.data
@@ -36,7 +36,7 @@ final class CheckSigTests: XCTestCase {
             sig,
             pubKey
         ]
-        XCTAssertNoThrow(try script.run(&stack, tx: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
         let expectedStack = [Data]([.one])
         XCTAssertEqual(stack, expectedStack)
     }

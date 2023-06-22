@@ -1,41 +1,45 @@
 import Foundation
 
+public enum ScriptError: Error {
+    case invalidScript
+}
+
 public struct Script: Equatable {
 
     public enum Version: String {
         case legacy, witnessV0, witnessV1
     }
 
-    private(set) public var operations: [Op]
+    private(set) public var operations: [Operation]
     public let version: Version
     
-    public init(_ operations: [Op], version: Script.Version = .legacy) {
+    public init(_ operations: [Operation], version: Script.Version = .legacy) {
         self.operations = operations
         self.version = version
     }
     
     init(_ data: Data, version: Version = .legacy) {
-        operations = [Op]()
+        operations = [Operation]()
         self.version = version
         var data = data
         while data.count > 0 {
-            let op = Op(data, version: version)
+            let op = Operation(data, version: version)
             operations.append(op)
             data = data.dropFirst(op.dataLen)
         }
     }
     
-    func run(_ stack: inout [Data], tx: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
-        var context = ExecutionContext(tx: tx, inIdx: inIdx, prevOuts: prevOuts, script: self, version: version, tapLeafHash: tapLeafHash)
-        var i = context.opIdx
+    func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
+        var context = ExecutionContext(transaction: transaction, inputIndex: inIdx, previousOutputs: prevOuts, script: self, version: version, tapLeafHash: tapLeafHash)
+        var i = context.operationIndex
         while i < operations.count {
             try operations[i].execute(stack: &stack, context: &context)
             if version == .witnessV1, case .success(_) = operations[i] {
                break
             }
             // Advance iterator if operation itself didn't move it
-            if context.opIdx == i { context.opIdx += 1 }
-            i = context.opIdx
+            if context.operationIndex == i { context.operationIndex += 1 }
+            i = context.operationIndex
         }
         if let last = stack.last, last.isZeroIsh {
             throw ScriptError.invalidScript
@@ -44,14 +48,14 @@ public struct Script: Equatable {
 
 
     var witnessProgram: Data {
-        precondition(scriptType == .witnessV0KeyHash || scriptType == .witnessV0ScriptHash || scriptType == .witnessV1TapRoot || scriptType == .witnessUnknown)
+        precondition(lockType == .witnessV0KeyHash || lockType == .witnessV0ScriptHash || lockType == .witnessV1TapRoot || lockType == .witnessUnknown)
         guard case let .pushBytes(programData) = operations[1] else {
             fatalError()
         }
         return programData
     }
 
-    var scriptType: LockScriptType {
+    var lockType: LockType {
         if operations.count == 2, operations[1] == .checkSig, case let .pushBytes(data) = operations[0], data.count == 33 {
             return .pubKey
         }
@@ -76,7 +80,7 @@ public struct Script: Equatable {
         if operations.count == 2, operations[0] == .constant(1), case let .pushBytes(data) = operations[1], data.count == 32 {
             return .witnessV1TapRoot
         }
-        if operations.count == 2, operations[0].opCode > Op.constant(1).opCode, operations[0].opCode < Op.constant(16).opCode, case let .pushBytes(data) = operations[1], data.count >= 2, data.count <= 40 {
+        if operations.count == 2, operations[0].opCode > Operation.constant(1).opCode, operations[0].opCode < Operation.constant(16).opCode, case let .pushBytes(data) = operations[1], data.count >= 2, data.count <= 40 {
             return .witnessUnknown
         }
         return .nonStandard

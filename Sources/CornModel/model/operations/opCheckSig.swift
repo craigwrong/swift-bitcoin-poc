@@ -7,10 +7,10 @@ func opCheckSig(_ stack: inout [Data], context: ExecutionContext) throws {
     switch context.version {
         case .legacy:
         // Legacy semantics
-        result = context.tx.checkSig(sig, pubKey: pubKey, inIdx: context.inIdx, prevOut: context.prevOut, script: context.script, opIdx: context.opIdx)
+        result = context.transaction.checkSig(sig, pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)
         case .witnessV0:
         // SegWit V0 semantics
-        result = context.tx.checkSigV0(sig, pubKey: pubKey, inIdx: context.inIdx, prevOut: context.prevOut, script: context.script, opIdx: context.opIdx)
+        result = context.transaction.checkSigV0(sig, pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)
         case .witnessV1:
         guard let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
             preconditionFailure()
@@ -19,13 +19,13 @@ func opCheckSig(_ stack: inout [Data], context: ExecutionContext) throws {
         // https://bitcoin.stackexchange.com/questions/115695/what-are-the-last-bytes-for-in-a-taproot-script-path-sighash
         var codesepPos = UInt32(0xffffffff)
         var i = 0
-        while i <= context.opIdx {
+        while i <= context.operationIndex {
             if context.script.operations[i] == .codeSeparator { codesepPos = UInt32(i) }
             i += 1
         }
         
         // Tapscript semantics
-        result = context.tx.checkSigV1(sig, pubKey: pubKey, inIdx: context.inIdx, prevOuts: context.prevOuts, extFlag: 1, tapscriptExt: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: codesepPos))
+        result = context.transaction.checkSigV1(sig, pubKey: pubKey, inIdx: context.inputIndex, prevOuts: context.previousOutputs, extFlag: 1, tapscriptExt: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: codesepPos))
     }
     stack.pushBool(result)
 }

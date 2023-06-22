@@ -8,7 +8,7 @@ func opElse(context: inout ExecutionContext) throws {
     if !context.evalElse {
         // Find next endif
         var pendingIfs = 0
-        var i = context.opIdx
+        var i = context.operationIndex
         while i < context.script.operations.count {
             if context.script.operations[i] == .if || context.script.operations[i] == .notIf {
                 pendingIfs += 1
@@ -17,7 +17,7 @@ func opElse(context: inout ExecutionContext) throws {
                 if pendingIfs > 0 {
                     pendingIfs -= 1
                 } else {
-                    context.opIdx = i
+                    context.operationIndex = i
                     return
                 }
             }

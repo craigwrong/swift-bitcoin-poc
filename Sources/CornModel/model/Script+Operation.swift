@@ -1,8 +1,12 @@
 import Foundation
 
-public enum Op: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
-    
+public extension Script {
+    enum Operation: Equatable {
+        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
+    }
+}
+
+extension Script.Operation {
     var dataLen: Int {
         let additionalSize: Int
         switch(self) {

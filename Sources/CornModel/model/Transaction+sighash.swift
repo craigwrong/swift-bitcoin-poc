@@ -17,7 +17,7 @@ extension Transaction {
 
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: Script
-        if prevOut.script.scriptType == .scriptHash {
+        if prevOut.script.lockType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
             if let op = inputs[inIdx].script?.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw) != scriptCode {
                 preconditionFailure()
@@ -44,12 +44,11 @@ extension Transaction {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
             // The current transaction input (with scriptPubKey modified to subScript) is set as the first and only member of this vector.
-            newIns.append(.init(txID: inputs[inIdx].txID, outIdx: inputs[inIdx].outIdx, sequence: inputs[inIdx].sequence, script: subScript))
+            newIns.append(.init(outpoint: inputs[inIdx].outpoint, sequence: inputs[inIdx].sequence, script: subScript))
         } else {
             inputs.enumerated().forEach { i, input in
                 newIns.append(.init(
-                    txID: input.txID,
-                    outIdx: input.outIdx,
+                    outpoint: input.outpoint,
                     // SIGHASH_NONE | SIGHASH_SINGLE - All other txCopy inputs aside from the current input are set to have an nSequence index of zero.
                     sequence: i == inIdx || hashType.isAll ? input.sequence : .initial,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
@@ -61,9 +60,9 @@ extension Transaction {
         var newOuts: [Transaction.Output]
         // Procedure for Hashtype SIGHASH_SINGLE
         
-        //if hashType.isSingle && inIdx >= outs.count {
+        //if hashType.isSingle && inIdx >= outputs.count {
         // uint256 of 0x0000......0001 is committed if the input index for a SINGLE signature is greater than or equal to the number of outputs.
-        //outs = Data(repeating: 0, count: 255) + [0x01]
+        //outputs = Data(repeating: 0, count: 255) + [0x01]
         // TODO: figure out this
         //} else
         if hashType.isSingle {
@@ -117,7 +116,7 @@ extension Transaction {
         if hashType.isAnyCanPay {
             hashPrevouts = Data(repeating: 0, count: 256)
         } else {
-            let prevouts = inputs.reduce(Data()) { $0 + $1.prevoutData }
+            let prevouts = inputs.reduce(Data()) { $0 + $1.outpoint.data }
             hashPrevouts = hash256(prevouts)
         }
         
@@ -133,7 +132,7 @@ extension Transaction {
             hashSequence = Data(repeating: 0, count: 256)
         }
         
-        let outpointData = inputs[inIdx].prevoutData
+        let outpointData = inputs[inIdx].outpoint.data
         
         let scriptCodeData = scriptCode.data.varLenData
         
@@ -204,7 +203,7 @@ extension Transaction {
             if let cached = cache.shaPrevouts {
                 shaPrevouts = cached
             } else {
-                let prevouts = inputs.reduce(Data()) { $0 + $1.prevoutData }
+                let prevouts = inputs.reduce(Data()) { $0 + $1.outpoint.data }
                 shaPrevouts = sha256(prevouts)
                 cache.shaPrevouts = shaPrevouts
             }
@@ -279,7 +278,7 @@ extension Transaction {
         // If hash_type & 0x80 equals SIGHASH_ANYONECANPAY:
         if hashType.isAnyCanPay {
             // outpoint (36): the COutPoint of this input (32-byte hash + 4-byte little-endian).
-            let outpoint = inputs[inIdx].prevoutData
+            let outpoint = inputs[inIdx].outpoint.data
             inputData.append(outpoint)
             // amount (8): value of the previous output spent by this input.
             let amount = prevOuts[inIdx].valueData

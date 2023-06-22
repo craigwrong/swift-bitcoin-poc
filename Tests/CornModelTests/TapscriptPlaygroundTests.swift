@@ -19,7 +19,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
         let prevOuts = [Transaction.Output(value: 100, script: Script.makeP2TR(outputKey: outputKey))]
         
         var tx = Transaction(version: .v1, locktime: .disabled,
-            inputs: [.init(txID: "", outIdx: 0, sequence: .initial)],
+            inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
             outputs: [.init(value: 50, script: Script.makeNullData(""))])
         
         tx.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
@@ -35,7 +35,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
         let prevOuts = [Transaction.Output(value: 100, script: Script.makeP2TR(outputKey: outputKey))]
         
         let tx = Transaction(version: .v1, locktime: .disabled,
-            inputs: [.init(txID: "", outIdx: 0, sequence: .initial)],
+            inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
             outputs: [.init(value: 50, script: Script.makeNullData(""))])
         
         var tx0 = tx

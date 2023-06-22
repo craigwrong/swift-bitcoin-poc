@@ -11,7 +11,7 @@ func opIf(_ stack: inout [Data], isNotIf: Bool = false, context: inout Execution
         // Find next else or endif
         var pendingIfs = -1
         var pendingElses = -1
-        var i = context.opIdx
+        var i = context.operationIndex
         while i < context.script.operations.count {
             if context.script.operations[i] == .if || context.script.operations[i] == .notIf {
                 pendingIfs += 1
@@ -21,7 +21,7 @@ func opIf(_ stack: inout [Data], isNotIf: Bool = false, context: inout Execution
                 if pendingElses > 0 {
                     pendingElses -= 1
                 } else {
-                    context.opIdx = i
+                    context.operationIndex = i
                     return
                 }
             }
@@ -32,7 +32,7 @@ func opIf(_ stack: inout [Data], isNotIf: Bool = false, context: inout Execution
                         pendingElses -= 1
                     }
                 } else {
-                    context.opIdx = i
+                    context.operationIndex = i
                     return
                 }
             }

@@ -7,88 +7,22 @@ public typealias Amount = UInt
 /// A bitcoin transaction. Could be a partial or invalid transaction.
 public struct Transaction: Equatable {
 
-    public struct Locktime: Equatable {
-        public static let disabled = Self(0)
-        public static let maxBlock = Self(minClock.locktimeValue - 1)
-        public static let minClock = Self(500_000_000)
-        public static let maxClock = Self(Int(UInt32.max))
-
-        public init?(blockHeight: Int) {
-            guard blockHeight >= Self.disabled.locktimeValue && blockHeight <= Self.maxBlock.locktimeValue else {
-                return nil
-            }
-            self.init(blockHeight)
-        }
-        
-        public init?(secondsSince1970: Int) {
-            guard secondsSince1970 >= Self.minClock.locktimeValue && secondsSince1970 <= Self.maxClock.locktimeValue else {
-                return nil
-            }
-            self.init(secondsSince1970)
-        }
-        
-        public var isDisabled: Bool {
-            locktimeValue == Self.disabled.locktimeValue
-        }
-        
-        public var blockHeight: Int? {
-            guard locktimeValue <= Self.maxBlock.locktimeValue else {
-                return nil
-            }
-            return locktimeValue
-        }
-        
-        public var secondsSince1970: Int? {
-            guard locktimeValue >= Self.minClock.locktimeValue else {
-                return nil
-            }
-            return locktimeValue
-        }
-
-        static var dataCount: Int {
-            MemoryLayout<UInt32>.size
-        }
-
-        init?(_ data: Data) {
-            guard data.count >= Self.dataCount else {
-                return nil
-            }
-            let value32 = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
-            self.init(value32)
-        }
-        
-        init(_ rawValue: UInt32) {
-            self.init(Int(rawValue))
-        }
-        
-        var data: Data {
-            withUnsafeBytes(of: rawValue) { Data($0) }
-        }
-
-        var rawValue: UInt32 {
-            UInt32(locktimeValue)
-        }
-
-        private init(_ locktimeValue: Int) {
-            self.locktimeValue = locktimeValue
-        }
-        
-        private let locktimeValue: Int
-    }
-        
     /// Creates a final or partial transaction.
     /// - Parameters:
     ///   - version: The bitcoin transaction version.
     ///   - locktime: The lock time raw integer value.
-    ///   - ins: The transaction's inputs.
-    ///   - outs: The transaction's outputs.
+    ///   - inputs: The transaction's inputs.
+    ///   - outputs: The transaction's outputs.
     public init(version: Transaction.Version, locktime: Locktime, inputs: [Transaction.Input], outputs: [Transaction.Output]) {
         self.version = version
         self.locktime = locktime
         self.inputs = inputs
         self.outputs = outputs
     }
-    
+
+    // Transaction ID length in bytes.
+    static let identifierDataCount = 32
+
     /// Its presence withn transaction data indicates the inclusion of seggregated witness (SegWit) data.
     static let segwitMarker = UInt8(0x00)
     
@@ -108,7 +42,7 @@ public struct Transaction: Equatable {
     public var outputs: [Output]
     
     static let empty = Self(version: .v1, locktime: .disabled, inputs: [], outputs: [])
-    static let coinbaseID = String(repeating: "0", count: 64)
+    static let coinbaseID = String(repeating: "0", count: Transaction.identifierDataCount * 2)
     
     init(_ data: Data) {
         var data = data
@@ -131,27 +65,27 @@ public struct Transaction: Equatable {
         let insLen = data.varInt
         data = data.dropFirst(insLen.varIntSize)
         
-        var ins = [Input]()
+        var inputs = [Input]()
         for _ in 0 ..< insLen {
             let input = Input(data)
-            ins.append(input)
+            inputs.append(input)
             data = data.dropFirst(input.dataLen)
         }
         
         let outsLen = data.varInt
         data = data.dropFirst(outsLen.varIntSize)
         
-        var outs = [Output]()
+        var outputs = [Output]()
         for _ in 0 ..< outsLen {
             let out = Output(data)
-            outs.append(out)
+            outputs.append(out)
             data = data.dropFirst(out.dataLen)
         }
         
         if isSegwit {
-            for i in ins.indices {
-                ins[i].populateWitness(from: data)
-                data = data.dropFirst(ins[i].witnessDataLen)
+            for i in inputs.indices {
+                inputs[i].populateWitness(from: data)
+                data = data.dropFirst(inputs[i].witnessDataLen)
             }
         }
         
@@ -160,7 +94,7 @@ public struct Transaction: Equatable {
         }
         data = data.dropFirst(Locktime.dataCount)
         
-        self.init(version: version, locktime: locktime, inputs: ins, outputs: outs)
+        self.init(version: version, locktime: locktime, inputs: inputs, outputs: outputs)
     }
     
     var data: Data {
@@ -231,9 +165,4 @@ public struct Transaction: Equatable {
         // IsFinalTx() to return false here:
         return inputs.allSatisfy { $0.sequence == .final }
     }
-}
-
-extension Transaction: CustomStringConvertible {
-    
-    public var description: String { txid }
 }

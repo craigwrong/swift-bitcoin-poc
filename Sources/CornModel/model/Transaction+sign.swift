@@ -9,7 +9,7 @@ extension Transaction {
         if let redeemScriptV0 { precondition(redeemScriptV0.version == .witnessV0) }
 
         let prevOut = prevOuts.count == 1 ? prevOuts[0] : prevOuts[inIdx]
-        switch(prevOut.script.scriptType) {
+        switch(prevOut.script.lockType) {
         case .pubKey:
             guard let hashType else { preconditionFailure() }
             signP2PK(privKey: privKeys[0], hashType: hashType, inIdx: inIdx, prevOut: prevOut)
@@ -23,11 +23,11 @@ extension Transaction {
         case .scriptHash:
             guard let hashType else { preconditionFailure() }
             guard let redeemScript else { preconditionFailure() }
-            if redeemScript.scriptType == .witnessV0KeyHash {
+            if redeemScript.lockType == .witnessV0KeyHash {
                 guard let pubKeys else { preconditionFailure() }
                 inputs[inIdx].script = .init([.pushBytes(redeemScript.data)])
                 signP2WKH(privKey: privKeys[0], pubKey: pubKeys[0], hashType: hashType, inIdx: inIdx, prevOut: Transaction.Output(value: prevOuts[inIdx].value, script: redeemScript))
-            } else if redeemScript.scriptType == .witnessV0ScriptHash {
+            } else if redeemScript.lockType == .witnessV0ScriptHash {
                 guard let redeemScriptV0 else { preconditionFailure() }
                 inputs[inIdx].script = .init([.pushBytes(redeemScript.data)])
                 signP2WSH(privKeys: privKeys, redeemScript: redeemScriptV0, hashType: hashType, inIdx: inIdx, prevOut: Transaction.Output(value: prevOuts[inIdx].value, script: redeemScript))
@@ -67,10 +67,10 @@ extension Transaction {
     mutating func signMultiSig(privKeys: [Data], hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script, opIdx: 0)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
-        let scriptSigOps = sigs.reversed().map { Op.pushBytes($0) }
+        let scriptSigOps = sigs.reversed().map { Script.Operation.pushBytes($0) }
 
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
-        let nullDummy = [Op.zero]
+        let nullDummy = [Script.Operation.zero]
         inputs[inIdx].script = .init(nullDummy + scriptSigOps)
     }
     
@@ -79,10 +79,10 @@ extension Transaction {
         
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript, opIdx: 0)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
-        let scriptSigOps = sigs.reversed().map { Op.pushBytes($0) }
+        let scriptSigOps = sigs.reversed().map { Script.Operation.pushBytes($0) }
         
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
-        let nullDummy = redeemScript.operations.last == .checkMultiSig || redeemScript.operations.last == .checkMultiSig ? [Op.zero] : []
+        let nullDummy = redeemScript.operations.last == .checkMultiSig || redeemScript.operations.last == .checkMultiSig ? [Script.Operation.zero] : []
         inputs[inIdx].script = .init(nullDummy + scriptSigOps + [.pushBytes(redeemScript.data)])
     }
     

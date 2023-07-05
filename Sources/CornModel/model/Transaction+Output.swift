@@ -1,28 +1,22 @@
 import Foundation
 
-extension Transaction {
+extension Transaction { public struct Output: Equatable {
     
-    public struct Output: Equatable {
-
-        init(value: Amount, scriptData: Data) {
-            self.value = value
-            self.scriptData = scriptData
-        }
-        
-        /// Amount in satoshis.
-        var value: Amount
-        
-        /// Raw content of scriptPubKey. It may contain an invalid / unparsable script.
-        var scriptData: Data
+    init(value: Amount, scriptData: Data) {
+        self.value = value
+        self.scriptData = scriptData
     }
-}
-
-extension Transaction.Output {
-
+    
+    /// Amount in satoshis.
+    var value: Amount
+    
+    /// Raw content of scriptPubKey. It may contain an invalid / unparsable script.
+    var scriptData: Data
+    
     public init(value: Amount, script: Script) {
         self.init(value: value, scriptData: script.data)
     }
-        
+    
     init(_ data: Data) {
         var data = data
         let value = data.withUnsafeBytes { $0.loadUnaligned(as: Amount.self) }
@@ -30,18 +24,18 @@ extension Transaction.Output {
         let scriptData = Data(varLenData: data)
         self.init(value: value, scriptData: scriptData)
     }
-
+    
     var data: Data {
         var ret = Data()
         ret += valueData
         ret += scriptData.varLenData
         return ret
     }
-
+    
     var valueData: Data {
         withUnsafeBytes(of: value) { Data($0) }
     }
-
+    
     var script: Script {
         Script(scriptData)
     }
@@ -59,7 +53,8 @@ extension Transaction.Output {
         return ""
     }
     
-    var dataLen: Int {
+    var dataCount: Int {
         MemoryLayout.size(ofValue: value) + scriptData.varLenSize
     }
-}
+
+} }

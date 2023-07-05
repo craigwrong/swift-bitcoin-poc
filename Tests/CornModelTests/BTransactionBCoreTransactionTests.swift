@@ -65,7 +65,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let witness = tx.inputs[0].witness
         XCTAssertEqual(input.sequence.rawValue, UInt32(bCoreInput.sequence))
         XCTAssertEqual(input.script?.data.hex, bCoreInput.coinbase!)
-        XCTAssertEqual(witness?.map(\.hex), bCoreInput.txinwitness)
+        XCTAssertEqual(witness?.elements.map(\.hex), bCoreInput.txinwitness)
         
         let segWitInput = CoreTx.Sample.segwit1.vin[0]
         let txSegwit = Transaction(Data(hex: CoreTx.Sample.segwit1.hex))
@@ -73,7 +73,7 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let witnessSegwit = txSegwit.inputs[0].witness
         XCTAssertEqual(inputSegwit.sequence.rawValue, UInt32(segWitInput.sequence))
         XCTAssertEqual(inputSegwit.script?.data.hex, segWitInput.scriptSig!.hex)
-        XCTAssertEqual(witnessSegwit!.map(\.hex), segWitInput.txinwitness!)
+        XCTAssertEqual(witnessSegwit?.elements.map(\.hex), segWitInput.txinwitness!)
         
     }
     

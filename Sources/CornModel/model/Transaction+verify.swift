@@ -62,13 +62,13 @@ extension Transaction {
         switch scriptPubKey2.lockType {
         case .witnessV0KeyHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the key
-            guard var stack = inputs[inIdx].witness else {
+            guard var stack = inputs[inIdx].witness?.elements else {
                 fatalError()
             }
             try Script.makeP2WPKH(witnessProgram).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
-            guard var stack = inputs[inIdx].witness, let witnessScriptRaw = stack.popLast() else {
+            guard var stack = inputs[inIdx].witness?.elements, let witnessScriptRaw = stack.popLast() else {
                 fatalError()
             }
             guard sha256(witnessScriptRaw) == witnessProgram else {
@@ -85,7 +85,9 @@ extension Transaction {
             // Guard not strictly needed as `outputKey` (aka witnessProgram) would be recognized as non-standard and execute normally
             // guard scriptPubKey2.witnessProgram.count == 32 else { return true }
 
-            guard var stack = inputs[inIdx].witness else { preconditionFailure() }
+            guard let witness = inputs[inIdx].witness else { preconditionFailure() }
+            
+            var stack = witness.elements
             
             // Fail if the witness stack has 0 elements.
             if stack.count == 0 { throw ScriptError.invalidScript }
@@ -93,7 +95,7 @@ extension Transaction {
             let outputKey = scriptPubKey2.witnessProgram // In this case it is the key (aka taproot output key q)
                         
             // this last element is called annex a and is removed from the witness stack
-            if inputs[inIdx].taprootAnnex != .none { stack.removeLast() }
+            if witness.taprootAnnex != .none { stack.removeLast() }
             
             // If there is exactly one element left in the witness stack, key path spending is used:
             if stack.count == 1 {

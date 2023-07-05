@@ -1,13 +1,11 @@
 import Foundation
 
-public extension Script {
-    enum Operation: Equatable {
-        case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, `if`, notIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
-    }
-}
+public extension Script { enum Operation: Equatable {
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, ver, `if`, notIf, verIf, verNotIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
+} }
 
 extension Script.Operation {
-    var dataLen: Int {
+    var dataCount: Int {
         let additionalSize: Int
         switch(self) {
         case .pushBytes(let d):
@@ -52,10 +50,16 @@ extension Script.Operation {
             return 0x50 + k
         case .noOp:
             return 0x61
+        case .ver:
+            return 0x62
         case .if:
             return 0x63
         case .notIf:
             return 0x64
+        case .verIf:
+            return 0x65
+        case .verNotIf:
+            return 0x66
         case .else:
             return 0x67
         case .endIf:
@@ -140,10 +144,16 @@ extension Script.Operation {
             return "OP_\(k)"
         case .noOp:
             return "OP_NOP"
+        case .ver:
+            return "OP_VER"
         case .if:
             return "OP_IF"
         case .notIf:
             return "OP_NOTIF"
+        case .verIf:
+            return "OP_VERIF"
+        case .verNotIf:
+            return "OP_VERNOTIF"
         case .else:
             return "OP_ELSE"
         case .endIf:
@@ -201,7 +211,15 @@ extension Script.Operation {
         }
     }
     
-    func execute(stack: inout [Data], context: inout ExecutionContext) throws {
+    func execute(stack: inout [Data], context: inout ScriptContext) throws {
+        if !context.evaluateBranch {
+            switch(self) {
+            case .if, .notIf, .else, .endIf, .verIf, .verNotIf, .success(_):
+                break
+            default:
+                return
+            }
+        }
         switch(self) {
         case .zero:
             opConstant(0, stack: &stack)
@@ -214,16 +232,20 @@ extension Script.Operation {
             throw ScriptError.invalidScript
         case .success(let k):
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            opSuccess(stack: &stack)
+            opSuccess(context: &context)
         case .constant(let k):
             precondition(k > 0 && k < 17)
             opConstant(k, stack: &stack)
         case .noOp:
             break
+        case .ver:
+            throw ScriptError.invalidScript
         case .if:
             try opIf(&stack, context: &context)
         case .notIf:
             try opIf(&stack, isNotIf: true, context: &context)
+        case .verIf, .verNotIf:
+            throw ScriptError.invalidScript
         case .else:
             try opElse(context: &context)
         case .endIf:
@@ -267,12 +289,12 @@ extension Script.Operation {
         case .checkSigVerify:
             try opCheckSigVerify(&stack, context: context)
         case .checkMultiSig:
-            guard context.version == .legacy || context.version == .witnessV0 else {
+            guard context.script.version == .legacy || context.script.version == .witnessV0 else {
                 throw ScriptError.invalidScript
             }
             try opCheckMultiSig(&stack, context: context)
         case .checkMultiSigVerify:
-            guard context.version == .legacy || context.version == .witnessV0 else {
+            guard context.script.version == .legacy || context.script.version == .witnessV0 else {
                 throw ScriptError.invalidScript
             }
             try opCheckMultiSigVerify(&stack, context: context)
@@ -338,23 +360,23 @@ extension Script.Operation {
             let d = Data(data[data.startIndex ..< data.startIndex + Int(opCode)])
             self = .pushBytes(d)
         case 0x4c ... 0x4e:
-            let pushDataLengthInt: Int
+            let pushDataCountInt: Int
             if opCode == 0x4c {
-                let pushDataLength = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
-                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataLength))
-                pushDataLengthInt = Int(pushDataLength)
+                let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
+                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
+                pushDataCountInt = Int(pushDataCount)
             } else if opCode == 0x4d {
-                let pushDataLength = data.withUnsafeBytes {  $0.load(as: UInt16.self) }
-                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataLength))
-                pushDataLengthInt = Int(pushDataLength)
+                let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt16.self) }
+                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
+                pushDataCountInt = Int(pushDataCount)
             } else if opCode == 0x4e {
-                let pushDataLength = data.withUnsafeBytes {  $0.load(as: UInt32.self) }
-                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataLength))
-                pushDataLengthInt = Int(pushDataLength)
+                let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt32.self) }
+                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
+                pushDataCountInt = Int(pushDataCount)
             } else {
                 fatalError() // We should never arrive here.
             }
-            let d = Data(data[data.startIndex ..< data.startIndex + pushDataLengthInt])
+            let d = Data(data[data.startIndex ..< data.startIndex + pushDataCountInt])
             if opCode == 0x4c {
                 self = .pushData1(d)
             } else if opCode == 0x4d {
@@ -373,7 +395,6 @@ extension Script.Operation {
             }
         case
             // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
-            Self.success(98).opCode,
             Self.success(126).opCode ... Self.success(129).opCode,
             Self.success(131).opCode ... Self.success(134).opCode,
             Self.success(141).opCode ... Self.success(142).opCode,
@@ -384,10 +405,20 @@ extension Script.Operation {
             self = .constant(opCode - 0x50)
         case Self.noOp.opCode:
             self = .noOp
+        case Self.ver.opCode:
+            if version == .legacy || version == .witnessV0 {
+                self = .ver
+            } else {
+                self = .success(opCode)
+            }
         case Self.if.opCode:
             self = .if
         case Self.notIf.opCode:
             self = .notIf
+        case Self.verIf.opCode:
+            self = .verIf
+        case Self.verNotIf.opCode:
+            self = .verNotIf
         case Self.else.opCode:
             self = .else
         case Self.endIf.opCode:
@@ -442,7 +473,7 @@ extension Script.Operation {
             self = .checkSigAdd
         default:
             self = .undefined
-            // fatalError("Unknown operation code.")
+        // fatalError("Unknown operation code.")
         }
     }
 }

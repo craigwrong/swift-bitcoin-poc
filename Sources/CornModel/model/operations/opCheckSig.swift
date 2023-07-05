@@ -1,10 +1,10 @@
 import Foundation
 
-func opCheckSig(_ stack: inout [Data], context: ExecutionContext) throws {
+func opCheckSig(_ stack: inout [Data], context: ScriptContext) throws {
     let (sig, pubKey) = try getBinaryParams(&stack)
 
     let result: Bool
-    switch context.version {
+    switch context.script.version {
         case .legacy:
         // Legacy semantics
         result = context.transaction.checkSig(sig, pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)

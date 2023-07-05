@@ -154,7 +154,7 @@ extension Transaction.Input {
             scriptSig: .none,
             txid: .none,
             vout: .none,
-            txinwitness: witness?.map(\.hex),
+            txinwitness: witness?.elements.map(\.hex),
             sequence: sequence.rawValue
         )
         : .init(
@@ -165,7 +165,7 @@ extension Transaction.Input {
             ),
             txid: outpoint.transaction,
             vout: outpoint.output,
-            txinwitness: witness?.map(\.hex),
+            txinwitness: witness?.elements.map(\.hex),
             sequence: sequence.rawValue
         )
     }

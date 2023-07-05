@@ -2,7 +2,7 @@ import Foundation
 
 ///
 /// pk0, checksig, pk1, checksigadd, pk2, checksigadd, 3, equal
-func opCheckSigAdd(_ stack: inout [Data], context: ExecutionContext) throws {
+func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
 
     guard let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
         preconditionFailure()

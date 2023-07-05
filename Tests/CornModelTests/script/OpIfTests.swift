@@ -194,12 +194,35 @@ final class OpIfTests: XCTestCase {
         XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
     }
 
-    func testIfMalformed() {
-        // Missing endif (does not check)
-        var script = Script([.constant(1), .if, .constant(1), .if, .constant(2), .endIf])
+    func testVerIf() {
+        var script = Script([.constant(1), .if, .verIf, .else, .constant(2), .endIf])
+        var stack = [Data]()
+        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
+
+        script = Script([.constant(1), .if, .constant(2), .else, .verIf, .endIf])
+        stack = []
+        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
+
+        script = Script([.zero, .if, .verIf, .else, .constant(2), .endIf])
+        stack = []
+        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
+    }
+
+    func testOpSuccess() {
+        var script = Script([.constant(1), .if, .constant(2), .else, .success(80)])
         var stack = [Data]()
         XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
-        XCTAssertEqual(stack, [Data([2])])
+
+        script = Script([.constant(1), .if, .success(80), .else, .constant(2), .endIf])
+        stack = []
+        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
+    }
+    
+    func testIfMalformed() {
+        // Missing endif
+        var script = Script([.constant(1), .if, .constant(1), .if, .constant(2), .endIf])
+        var stack = [Data]()
+        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
 
         // Too many endifs
         script = Script([.constant(1), .if, .constant(2), .endIf, .endIf])
@@ -210,22 +233,21 @@ final class OpIfTests: XCTestCase {
         stack = []
         XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
         
-        // Too many else's (else branch not evaluated)
+        // Too many else's
         script = Script([.constant(1), .if, .constant(2), .else, .constant(3), .else, .constant(4), .endIf])
         stack = []
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
-        XCTAssertEqual(stack, [Data([2])])
+        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
 
         // Too many else's (else branch evaluated)
         script = Script([.zero, .if, .constant(2), .else, .constant(3), .else, .constant(4), .endIf])
         stack = []
         XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
         
-        // interlaceed (not detected)
+        // interlaced
         script = Script([
             .constant(1), .if, .constant(1), .if, .constant(2), .else, .constant(3), .else, .constant(4), .endIf, .endIf])
         stack = []
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
+        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inIdx: -1, prevOuts: []))
 
         script = Script([
             .zero, .if, .constant(1), .if, .constant(2), .else, .constant(3), .else, .constant(4), .endIf, .endIf])

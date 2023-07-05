@@ -5,10 +5,6 @@ extension Transaction.Input { public struct Outpoint: Equatable {
     public var transaction: String
     public var output: Int
 
-    static var dataCount: Int {
-        Transaction.identifierDataCount + MemoryLayout<UInt32>.size
-    }
-
     public init(transaction: String, output: Int) {
         self.transaction = transaction
         self.output = output
@@ -26,6 +22,10 @@ extension Transaction.Input { public struct Outpoint: Equatable {
         self.init(transaction: transaction, output: output)
     }
     
+    static var dataCount: Int {
+        Transaction.identifierDataCount + MemoryLayout<UInt32>.size
+    }
+
     var data: Data {
         var ret = Data()
         ret += Data(hex: transaction).reversed()

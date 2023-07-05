@@ -25,21 +25,25 @@ public struct Script: Equatable {
         while data.count > 0 {
             let op = Operation(data, version: version)
             operations.append(op)
-            data = data.dropFirst(op.dataLen)
+            data = data.dropFirst(op.dataCount)
         }
     }
     
     func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
-        var context = ExecutionContext(transaction: transaction, inputIndex: inIdx, previousOutputs: prevOuts, script: self, version: version, tapLeafHash: tapLeafHash)
+        var context = ScriptContext(transaction: transaction, inputIndex: inIdx, previousOutputs: prevOuts, script: self, tapLeafHash: tapLeafHash)
         var i = context.operationIndex
         while i < operations.count {
             try operations[i].execute(stack: &stack, context: &context)
-            if version == .witnessV1, case .success(_) = operations[i] {
-               break
-            }
+            
+            // OP_SUCCESS
+            if context.succeedUnconditionally { return }
+
             // Advance iterator if operation itself didn't move it
             if context.operationIndex == i { context.operationIndex += 1 }
             i = context.operationIndex
+        }
+        guard context.pendingIfOperations.isEmpty, context.pendingElseOperations == 0 else {
+            throw ScriptError.invalidScript
         }
         if let last = stack.last, last.isZeroIsh {
             throw ScriptError.invalidScript
@@ -96,8 +100,8 @@ public struct Script: Equatable {
         operations.reduce(Data()) { $0 + $1.data }
     }
     
-    var dataLen: Int {
-        let opsSize = operations.reduce(0) { $0 + $1.dataLen }
+    var dataCount: Int {
+        let opsSize = operations.reduce(0) { $0 + $1.dataCount }
         return UInt64(opsSize).varIntSize + opsSize
     }
 

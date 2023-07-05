@@ -180,7 +180,7 @@ extension Transaction {
         precondition(!hashType.isSingle || inIdx < outputs.count, "For single hash type, the selected input needs to have a matching output.")
 
         // (the original witness stack has two or more witness elements, and the first byte of the last element is 0x50)
-        let annex = inputs[inIdx].taprootAnnex
+        let annex = inputs[inIdx].witness?.taprootAnnex
 
         // Epoch:
         // epoch (0).

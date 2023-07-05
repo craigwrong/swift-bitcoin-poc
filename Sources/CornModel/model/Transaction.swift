@@ -2,11 +2,33 @@ import Foundation
 import CryptoKit
 import ECCHelper
 
-public typealias Amount = UInt
-
 /// A bitcoin transaction. Could be a partial or invalid transaction.
 public struct Transaction: Equatable {
 
+    // Transaction ID length in bytes.
+    static let identifierDataCount = 32
+
+    /// Its presence withn transaction data indicates the inclusion of seggregated witness (SegWit) data.
+    static let segwitMarker = UInt8(0x00)
+    
+    /// Its presence withn transaction data indicates the number of witness sections present. At the time of writing only one possible witness data section may exist.
+    static let segwitFlag = UInt8(0x01)
+
+    static let empty = Self(version: .v1, locktime: .disabled, inputs: [], outputs: [])
+    static let coinbaseID = String(repeating: "0", count: Transaction.identifierDataCount * 2)
+
+    /// The transaction format version.
+    public var version: Version
+    
+    /// Transaction lock time.
+    public var locktime: Locktime
+
+    /// Transaction inputs.
+    public var inputs: [Input]
+    
+    /// Transaction outputs.
+    public var outputs: [Output]
+    
     /// Creates a final or partial transaction.
     /// - Parameters:
     ///   - version: The bitcoin transaction version.
@@ -20,30 +42,6 @@ public struct Transaction: Equatable {
         self.outputs = outputs
     }
 
-    // Transaction ID length in bytes.
-    static let identifierDataCount = 32
-
-    /// Its presence withn transaction data indicates the inclusion of seggregated witness (SegWit) data.
-    static let segwitMarker = UInt8(0x00)
-    
-    /// Its presence withn transaction data indicates the number of witness sections present. At the time of writing only one possible witness data section may exist.
-    static let segwitFlag = UInt8(0x01)
-    
-    /// The transaction format version.
-    public var version: Version
-    
-        /// Transaction lock time.
-    public var locktime: Locktime
-
-    /// Transaction inputs.
-    public var inputs: [Input]
-    
-    /// Transaction outputs.
-    public var outputs: [Output]
-    
-    static let empty = Self(version: .v1, locktime: .disabled, inputs: [], outputs: [])
-    static let coinbaseID = String(repeating: "0", count: Transaction.identifierDataCount * 2)
-    
     init(_ data: Data) {
         var data = data
         guard let version = Version(data) else {
@@ -69,7 +67,7 @@ public struct Transaction: Equatable {
         for _ in 0 ..< insLen {
             let input = Input(data)
             inputs.append(input)
-            data = data.dropFirst(input.dataLen)
+            data = data.dropFirst(input.dataCount)
         }
         
         let outsLen = data.varInt
@@ -79,13 +77,14 @@ public struct Transaction: Equatable {
         for _ in 0 ..< outsLen {
             let out = Output(data)
             outputs.append(out)
-            data = data.dropFirst(out.dataLen)
+            data = data.dropFirst(out.dataCount)
         }
         
         if isSegwit {
             for i in inputs.indices {
-                inputs[i].populateWitness(from: data)
-                data = data.dropFirst(inputs[i].witnessDataLen)
+                let witness = Input.Witness(data)
+                inputs[i].witness = witness
+                data = data.dropFirst(witness.dataCount)
             }
         }
         
@@ -108,7 +107,12 @@ public struct Transaction: Equatable {
         ret += Data(varInt: outsLen)
         ret += outputs.reduce(Data()) { $0 + $1.data }
         if hasWitness {
-            ret += inputs.reduce(Data()) { $0 + $1.witnessData }
+            ret += inputs.reduce(Data()) {
+                guard let witness = $1.witness else {
+                    return $0
+                }
+                return $0 + witness.data
+            }
         }
         ret += locktime.data
         return ret
@@ -138,11 +142,11 @@ public struct Transaction: Equatable {
     var outsLen: UInt64 { .init(outputs.count) }
     
     var nonWitnessSize: Int {
-        Version.dataCount + insLen.varIntSize + inputs.reduce(0) { $0 + $1.dataLen } + outsLen.varIntSize + outputs.reduce(0) { $0 + $1.dataLen } + Locktime.dataCount
+        Version.dataCount + insLen.varIntSize + inputs.reduce(0) { $0 + $1.dataCount } + outsLen.varIntSize + outputs.reduce(0) { $0 + $1.dataCount } + Locktime.dataCount
     }
     
     var witnessSize: Int {
-        hasWitness ? (MemoryLayout.size(ofValue: Transaction.segwitMarker) + MemoryLayout.size(ofValue: Transaction.segwitFlag)) + inputs.reduce(0) { $0 + $1.witnessDataLen } : 0
+        hasWitness ? (MemoryLayout.size(ofValue: Transaction.segwitMarker) + MemoryLayout.size(ofValue: Transaction.segwitFlag)) + inputs.reduce(0) { $0 + ($1.witness?.dataCount ?? 0) } : 0
     }
     
     func isFinal(blockHeight: UInt32?, blockTime: Int64?) -> Bool {

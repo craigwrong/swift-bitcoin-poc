@@ -90,7 +90,7 @@ extension Transaction {
         let scriptCode = Script.makeP2WPKH(hash160(pubKey))
         let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode, opIdx: 0)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
-        inputs[inIdx].witness = [sig, pubKey]
+        inputs[inIdx].witness = .init([sig, pubKey])
     }
 
     mutating func signP2WSH(privKeys: [Data], redeemScript: Script, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
@@ -101,7 +101,7 @@ extension Transaction {
         
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
         let nullDummy = redeemScript.operations.last == .checkMultiSig || redeemScript.operations.last == .checkMultiSig ? [Data()] : []
-        inputs[inIdx].witness = nullDummy + sigs + [redeemScript.data]
+        inputs[inIdx].witness = .init(nullDummy + sigs + [redeemScript.data])
     }
 
     mutating func signP2TR(privKey: Data, scriptTree: ScriptTree?, leafIdx: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, hashType: HashType?, inIdx: Int, prevOuts: [Transaction.Output]) {
@@ -109,7 +109,7 @@ extension Transaction {
         precondition(scriptTree == .none || (scriptTree != .none && leafIdx != .none))
         
         // WARN: We support adding only a single signature for now. Therefore we only take one codesepPos (OP_CODESEPARATOR position)
-        inputs[inIdx].witness = [Data()] // Placeholder for the signature
+        var witnessElements = [Data()] // Placeholder for the signature
         
         let treeInfo: [(ScriptTree, Data)]?
         let merkleRoot: Data?
@@ -130,13 +130,13 @@ extension Transaction {
 
             let controlBlock = computeControlBlock(internalPubKey: internalKey, leafInfo: treeInfo[leafIdx], merkleRoot: merkleRoot)
             
-            inputs[inIdx].witness?.append(outputKey)
-            inputs[inIdx].witness?.append(Script(tapscript, version: .witnessV1).data)
-            inputs[inIdx].witness?.append(controlBlock)
+            witnessElements.append(outputKey)
+            witnessElements.append(Script(tapscript, version: .witnessV1).data)
+            witnessElements.append(controlBlock)
         }
         
         if let annex {
-            inputs[inIdx].witness?.append(annex)
+            witnessElements.append(annex)
         }
         
         let tapscriptExt: TapscriptExt?
@@ -161,6 +161,7 @@ extension Transaction {
         }
         let sig = signSchnorr(msg: sighash, privKey: privKey, merkleRoot: merkleRoot, aux: aux) + hashTypeSuffix
 
-        inputs[inIdx].witness?[0] = sig
+        witnessElements[0] = sig
+        inputs[inIdx].witness = .init(witnessElements)
     }
 }

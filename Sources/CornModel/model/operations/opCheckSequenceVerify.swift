@@ -1,7 +1,7 @@
 import Foundation
 
 // [BIP112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki)
-func opCheckSequenceVerify(_ stack: inout [Data], context: ExecutionContext) throws {
+func opCheckSequenceVerify(_ stack: inout [Data], context: ScriptContext) throws {
     let first = try getUnaryParam(&stack, keep: true)
     
     guard

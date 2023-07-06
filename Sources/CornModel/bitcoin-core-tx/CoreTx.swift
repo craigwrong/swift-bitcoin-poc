@@ -150,7 +150,7 @@ extension Transaction.Input {
     var bCoreInput: CoreTx.Input {
         isCoinbase
         ? .init(
-            coinbase: script?.data.hex ?? "",
+            coinbase: script.data.hex,
             scriptSig: .none,
             txid: .none,
             vout: .none,
@@ -160,8 +160,8 @@ extension Transaction.Input {
         : .init(
             coinbase: .none,
             scriptSig: .init(
-                asm: script?.asm ?? "",
-                hex: script?.data.hex ?? ""
+                asm: script.asm,
+                hex: script.data.hex
             ),
             txid: outpoint.transaction,
             vout: outpoint.output,

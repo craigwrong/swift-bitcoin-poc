@@ -4,10 +4,10 @@ extension Transaction { public struct Input: Equatable {
 
     public var outpoint: Outpoint
     public var sequence: Sequence
-    public var script: Script?
+    public var script: Script
     public var witness: Witness?
     
-    public init(outpoint: Outpoint, sequence: Sequence, script: Script? = .none, witness: Witness? = .none) {
+    public init(outpoint: Outpoint, sequence: Sequence, script: Script = .empty, witness: Witness? = .none) {
         self.outpoint = outpoint
         self.sequence = sequence
         self.script = script
@@ -36,15 +36,13 @@ extension Transaction { public struct Input: Equatable {
     var data: Data {
         var ret = Data()
         ret += outpoint.data
-        if let script {
-            ret += script.data.varLenData
-        }
+        ret += script.data.varLenData
         ret += sequence.data
         return ret
     }
     
     var dataCount: Int {
-        Outpoint.dataCount + (script?.dataCount ?? 0) + Sequence.dataCount
+        Outpoint.dataCount + script.dataCount + Sequence.dataCount
     }
 
 } }

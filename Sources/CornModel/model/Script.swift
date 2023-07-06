@@ -10,6 +10,8 @@ public struct Script: Equatable {
         case legacy, witnessV0, witnessV1
     }
 
+    public static let empty = Self([])
+    
     private(set) public var operations: [Operation]
     public let version: Version
     

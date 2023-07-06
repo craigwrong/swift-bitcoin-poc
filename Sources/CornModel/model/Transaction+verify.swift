@@ -15,6 +15,7 @@ extension Transaction {
     
     func verify(inIdx: Int, prevOuts: [Transaction.Output]) throws {
         let input = inputs[inIdx]
+        let scriptSig = input.script
         let prevOut = prevOuts[inIdx]
         let scriptPubKey = prevOut.script
         
@@ -22,16 +23,13 @@ extension Transaction {
         switch prevOut.script.lockType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
-            guard let scriptSig = input.script else {
-                throw ScriptError.invalidScript
-            }
             try scriptSig.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
             try prevOut.script.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
             return
         case .scriptHash:
             var stack = [Data]()
             guard
-                let scriptSig = input.script, let op = scriptSig.operations.last else {
+                let op = input.script.operations.last else {
                 throw ScriptError.invalidScript
             }
             try Script([op]).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
@@ -53,7 +51,7 @@ extension Transaction {
             }
             scriptPubKey2 = redeemScript
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
-            guard input.script?.operations.isEmpty != false else {
+            guard scriptSig.operations.isEmpty else {
                 // The scriptSig must be exactly empty or validation fails. ("native witness program")
                 throw ScriptError.invalidScript
             }

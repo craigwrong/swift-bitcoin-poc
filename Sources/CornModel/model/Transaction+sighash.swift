@@ -19,7 +19,7 @@ extension Transaction {
         let subScript: Script
         if prevOut.script.lockType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
-            if let op = inputs[inIdx].script?.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw) != scriptCode {
+            if let op = inputs[inIdx].script.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw) != scriptCode {
                 preconditionFailure()
             }
             subScript = scriptCode

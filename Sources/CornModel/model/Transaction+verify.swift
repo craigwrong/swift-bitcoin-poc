@@ -15,41 +15,52 @@ extension Transaction {
     
     func verify(inIdx: Int, prevOuts: [Transaction.Output]) throws {
         let input = inputs[inIdx]
-        let scriptSig = input.script
         let prevOut = prevOuts[inIdx]
-        let scriptPubKey = prevOut.script
+
+        let scriptSig = Script(input.script.data)!
+        let scriptPubKey = Script(prevOut.script)!
         
         let scriptPubKey2: Script
-        switch prevOut.script.lockType {
-        case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
+        switch scriptPubKey.lockType {
+        case .nonStandard:
+            throw ScriptError.nonStandardScript
+        case .witnessUnknown:
+            throw ScriptError.unknownWitnessVersion
+        case .pubKey, .pubKeyHash, .multiSig, .nullData:
             var stack = [Data]()
             try scriptSig.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-            try prevOut.script.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try scriptPubKey.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
             return
         case .scriptHash:
             var stack = [Data]()
             guard
-                let op = input.script.operations.last else {
+                let op = scriptSig.operations.last else {
                 throw ScriptError.invalidScript
             }
             try Script([op]).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-            try prevOut.script.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try scriptPubKey.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
             guard let lastOp = scriptSig.operations.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
                 fatalError()
             }
-            let redeemScript = Script(redeemScriptRaw)
-            if redeemScript.lockType != .witnessV0KeyHash && redeemScript.lockType != .witnessV0ScriptHash {
-                var stack2 = [Data]()
-                try Script(scriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-                try redeemScript.run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-                return
+            let redeemScript = Script(redeemScriptRaw)!
+            switch(redeemScript.lockType) {
+                case .nonStandard:
+                    throw ScriptError.nonStandardScript
+                case .witnessUnknown:
+                    throw ScriptError.unknownWitnessVersion
+                case .witnessV0KeyHash, .witnessV0ScriptHash:
+                    // Redeem script is a p2wkh or p2wsh, just need to verify there are no more operations
+                    guard scriptSig.operations.count == 1 else {
+                        // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
+                        throw ScriptError.invalidScript
+                    }
+                    scriptPubKey2 = redeemScript
+                default:
+                    var stack2 = [Data]()
+                    try Script(scriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+                    try redeemScript.run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+                    return
             }
-            // Redeem script is a p2wkh or p2wsh, just need to verify there are no more operations
-            guard scriptSig.operations.count == 1 else {
-                // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
-                throw ScriptError.invalidScript
-            }
-            scriptPubKey2 = redeemScript
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
             guard scriptSig.operations.isEmpty else {
                 // The scriptSig must be exactly empty or validation fails. ("native witness program")
@@ -72,7 +83,7 @@ extension Transaction {
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 throw ScriptError.invalidScript
             }
-            let witnessScript = Script(witnessScriptRaw, version: .witnessV0)
+            let witnessScript = Script(witnessScriptRaw, version: .witnessV0)!
             try witnessScript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
@@ -145,10 +156,10 @@ extension Transaction {
                 throw ScriptError.invalidScript
             }
 
-            let tapscript = Script(tapscriptData, version: .witnessV1)
+            let tapscript = Script(tapscriptData, version: .witnessV1)!
             try tapscript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts, tapLeafHash: tapLeafHash)
         default:
-            preconditionFailure()
+            fatalError() // Should never reach here
         }
     }
 }

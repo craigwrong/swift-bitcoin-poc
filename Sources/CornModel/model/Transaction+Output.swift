@@ -2,19 +2,19 @@ import Foundation
 
 extension Transaction { public struct Output: Equatable {
     
-    init(value: Amount, scriptData: Data) {
+    init(value: Amount, script: Data) {
         self.value = value
-        self.scriptData = scriptData
+        self.script = script
     }
     
     /// Amount in satoshis.
     var value: Amount
     
     /// Raw content of scriptPubKey. It may contain an invalid / unparsable script.
-    var scriptData: Data
+    var script: Data
     
     public init(value: Amount, script: Script) {
-        self.init(value: value, scriptData: script.data)
+        self.init(value: value, script: script.data)
     }
     
     init(_ data: Data) {
@@ -22,39 +22,21 @@ extension Transaction { public struct Output: Equatable {
         let value = data.withUnsafeBytes { $0.loadUnaligned(as: Amount.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: value))
         let scriptData = Data(varLenData: data)
-        self.init(value: value, scriptData: scriptData)
+        self.init(value: value, script: scriptData)
     }
     
     var data: Data {
         var ret = Data()
         ret += valueData
-        ret += scriptData.varLenData
+        ret += script.varLenData
         return ret
     }
     
     var valueData: Data {
         withUnsafeBytes(of: value) { Data($0) }
     }
-    
-    var script: Script {
-        Script(scriptData)
-    }
-    
-    var doubleValue: Double {
-        Double(value) / 100_000_000
-    }
-    
-    func address(network: Network = .main) -> String {
-        if script.lockType == .witnessV0KeyHash || script.lockType == .witnessV0ScriptHash {
-            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: script.witnessProgram)) ?? ""
-        } else if script.lockType == .witnessV1TapRoot {
-            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: script.witnessProgram)) ?? ""
-        }
-        return ""
-    }
-    
-    var dataCount: Int {
-        MemoryLayout.size(ofValue: value) + scriptData.varLenSize
-    }
 
+    var dataCount: Int {
+        MemoryLayout.size(ofValue: value) + script.varLenSize
+    }
 } }

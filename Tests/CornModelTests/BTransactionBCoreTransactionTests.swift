@@ -82,11 +82,11 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let bCoreOutput = CoreTx.Sample.coinbase1.vout[0]
         let output = tx.outputs[0]
         XCTAssertEqual(output.value, Amount(bCoreOutput.value) * 100_000_000)
-        XCTAssertEqual(output.script.data.hex, bCoreOutput.scriptPubKey.hex)
+        XCTAssertEqual(output.script.hex, bCoreOutput.scriptPubKey.hex)
         let bCoreOutput2 = CoreTx.Sample.coinbase1.vout[1]
         let output2 = tx.outputs[1]
         XCTAssertEqual(output2.value, Amount(bCoreOutput2.value) * 100_000_000)
-        XCTAssertEqual(output2.script.data.hex, bCoreOutput2.scriptPubKey.hex)
+        XCTAssertEqual(output2.script.hex, bCoreOutput2.scriptPubKey.hex)
     }
     
     func testTxID2() {

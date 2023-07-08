@@ -148,7 +148,8 @@ extension Transaction {
 
 extension Transaction.Input {
     var bCoreInput: CoreTx.Input {
-        isCoinbase
+        let decodedScript = Script(script.data)!
+        return isCoinbase
         ? .init(
             coinbase: script.data.hex,
             scriptSig: .none,
@@ -160,7 +161,7 @@ extension Transaction.Input {
         : .init(
             coinbase: .none,
             scriptSig: .init(
-                asm: script.asm,
+                asm: decodedScript.asm,
                 hex: script.data.hex
             ),
             txid: outpoint.transaction,
@@ -174,17 +175,32 @@ extension Transaction.Input {
 extension Transaction.Output {
 
     func toBCoreOutput(outputIndex: Int, network: Network = .main) -> CoreTx.Output {
-        .init(
+        let decodedScript = Script(script)!
+        return .init(
             value: doubleValue,
             n: outputIndex,
             scriptPubKey: .init(
-                asm: script.asm,
+                asm: decodedScript.asm,
                 desc: "", // TODO: Create descriptor
-                hex: script.data.hex,
+                hex: script.hex,
                 address: address(network: network),
-                type: .init(rawValue: CoreTx.Output.LockScript.LockType(script.lockType).rawValue) ?? .unknown
+                type: .init(rawValue: CoreTx.Output.LockScript.LockType(decodedScript.lockType).rawValue) ?? .unknown
             )
         )
+    }
+
+    var doubleValue: Double {
+        Double(value) / 100_000_000
+    }
+    
+    func address(network: Network = .main) -> String {
+        let decodedScript = Script(script)!
+        if decodedScript.lockType == .witnessV0KeyHash || decodedScript.lockType == .witnessV0ScriptHash {
+            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: decodedScript.witnessProgram)) ?? ""
+        } else if decodedScript.lockType == .witnessV1TapRoot {
+            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: decodedScript.witnessProgram)) ?? ""
+        }
+        return ""
     }
 }
 

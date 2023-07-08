@@ -348,132 +348,124 @@ extension Script.Operation {
         }
         return opCodeData + lengthData + rawData
     }
-    
-    init(_ data: Data, version: Script.Version) {
+
+    private init?(pushOpCode opCode: UInt8, _ data: Data, version: Script.Version) {
         var data = data
-        let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
-        data = data.dropFirst(MemoryLayout.size(ofValue: opCode))
         switch(opCode) {
-        case Self.zero.opCode:
-            self = .zero
         case 0x01 ... 0x4b:
-            let d = Data(data[data.startIndex ..< data.startIndex + Int(opCode)])
+            let byteCount = Int(opCode)
+            guard data.count >= byteCount else { return nil }
+            let d = Data(data[..<(data.startIndex + byteCount)])
             self = .pushBytes(d)
         case 0x4c ... 0x4e:
-            let pushDataCountInt: Int
+            let byteCount: Int
             if opCode == 0x4c {
                 let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
                 data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
-                pushDataCountInt = Int(pushDataCount)
+                byteCount = Int(pushDataCount)
             } else if opCode == 0x4d {
                 let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt16.self) }
                 data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
-                pushDataCountInt = Int(pushDataCount)
-            } else if opCode == 0x4e {
+                byteCount = Int(pushDataCount)
+            } else {
+                // opCode == 0x4e
                 let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt32.self) }
                 data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
-                pushDataCountInt = Int(pushDataCount)
-            } else {
-                fatalError() // We should never arrive here.
+                byteCount = Int(pushDataCount)
             }
-            let d = Data(data[data.startIndex ..< data.startIndex + pushDataCountInt])
+            guard data.count >= byteCount else { return nil }
+            let d = Data(data[..<(data.startIndex + byteCount)])
             if opCode == 0x4c {
                 self = .pushData1(d)
             } else if opCode == 0x4d {
                 self = .pushData2(d)
             }
+            // opCode == 0x4e
             self = .pushData4(d)
-        case Self.oneNegate.opCode:
-            self = .oneNegate
-        case
-            Self.reserved(80).opCode,
-            Self.reserved(137).opCode ... Self.reserved(138).opCode:
-            if version == .legacy || version == .witnessV0 {
-                self = .reserved(opCode)
+        default:
+            preconditionFailure()
+        }
+    }
+
+    init?(_ data: Data, version: Script.Version = .legacy) {
+        var data = data
+        guard data.count > 0 else {
+            return nil
+        }
+        let opCode = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
+        data = data.dropFirst(MemoryLayout.size(ofValue: opCode))
+        
+        switch(opCode) {
+
+        // OP_ZERO
+        case Self.zero.opCode: self = .zero
+
+        // OP_PUSHBYTES, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4
+        case 0x01 ... 0x4e: self.init(pushOpCode: opCode, data, version: version)
+
+        case Self.oneNegate.opCode: self = .oneNegate
+
+        case Self.reserved(80).opCode,
+             Self.reserved(137).opCode ... Self.reserved(138).opCode:
+            self = if version == .legacy || version == .witnessV0 {
+                .reserved(opCode)
             } else {
-                self = .success(opCode)
+                .success(opCode)
             }
-        case
-            // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
-            Self.success(126).opCode ... Self.success(129).opCode,
-            Self.success(131).opCode ... Self.success(134).opCode,
-            Self.success(141).opCode ... Self.success(142).opCode,
-            Self.success(149).opCode ... Self.success(153).opCode,
-            Self.success(187).opCode ... Self.success(254).opCode:
+
+        // If any opcode numbered 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254 is encountered, validation succeeds
+        case Self.success(126).opCode ... Self.success(129).opCode,
+             Self.success(131).opCode ... Self.success(134).opCode,
+             Self.success(141).opCode ... Self.success(142).opCode,
+             Self.success(149).opCode ... Self.success(153).opCode,
+             Self.success(187).opCode ... Self.success(254).opCode:
             self = .success(opCode)
+
+        // Constants
         case Self.constant(1).opCode ... Self.constant(16).opCode:
             self = .constant(opCode - 0x50)
-        case Self.noOp.opCode:
-            self = .noOp
+
+        case Self.noOp.opCode: self = .noOp
+
+        // OP_VER / OP_SUCCESS
         case Self.ver.opCode:
-            if version == .legacy || version == .witnessV0 {
-                self = .ver
+            self = if version == .legacy || version == .witnessV0 {
+                .ver
             } else {
-                self = .success(opCode)
+                .success(opCode)
             }
-        case Self.if.opCode:
-            self = .if
-        case Self.notIf.opCode:
-            self = .notIf
-        case Self.verIf.opCode:
-            self = .verIf
-        case Self.verNotIf.opCode:
-            self = .verNotIf
-        case Self.else.opCode:
-            self = .else
-        case Self.endIf.opCode:
-            self = .endIf
-        case Self.verify.opCode:
-            self = .verify
-        case Self.return.opCode:
-            self = .return
-        case Self.toAltStack.opCode:
-            self = .toAltStack
-        case Self.fromAltStack.opCode:
-            self = .fromAltStack
-        case Self.ifDup.opCode:
-            self = .ifDup
-        case Self.drop.opCode:
-            self = .drop
-        case Self.dup.opCode:
-            self = .dup
-        case Self.equal.opCode:
-            self = .equal
-        case Self.equalVerify.opCode:
-            self = .equalVerify
-        case Self.negate.opCode:
-            self = .negate
-        case Self.add.opCode:
-            self = .add
-        case Self.boolAnd.opCode:
-            self = .boolAnd
-        case Self.ripemd160.opCode:
-            self = .ripemd160
-        case Self.sha256.opCode:
-            self = .sha256
-        case Self.hash160.opCode:
-            self = .hash160
-        case Self.hash256.opCode:
-            self = .hash256
-        case Self.codeSeparator.opCode:
-            self = .codeSeparator
-        case Self.checkSig.opCode:
-            self = .checkSig
-        case Self.checkSigVerify.opCode:
-            self = .checkSigVerify
-        case Self.checkMultiSig.opCode:
-            self = .checkMultiSig
-        case Self.checkMultiSigVerify.opCode:
-            self = .checkMultiSigVerify
-        case Self.checkLockTimeVerify.opCode:
-            self = .checkLockTimeVerify
-        case Self.checkSequenceVerify.opCode:
-            self = .checkSequenceVerify
-        case Self.checkSigAdd.opCode:
-            self = .checkSigAdd
-        default:
-            self = .undefined
-        // fatalError("Unknown operation code.")
+
+        case Self.if.opCode: self = .if
+        case Self.notIf.opCode: self = .notIf
+        case Self.verIf.opCode: self = .verIf
+        case Self.verNotIf.opCode: self = .verNotIf
+        case Self.else.opCode: self = .else
+        case Self.endIf.opCode: self = .endIf
+        case Self.verify.opCode: self = .verify
+        case Self.return.opCode: self = .return
+        case Self.toAltStack.opCode: self = .toAltStack
+        case Self.fromAltStack.opCode: self = .fromAltStack
+        case Self.ifDup.opCode: self = .ifDup
+        case Self.drop.opCode: self = .drop
+        case Self.dup.opCode: self = .dup
+        case Self.equal.opCode: self = .equal
+        case Self.equalVerify.opCode: self = .equalVerify
+        case Self.negate.opCode: self = .negate
+        case Self.add.opCode: self = .add
+        case Self.boolAnd.opCode: self = .boolAnd
+        case Self.ripemd160.opCode: self = .ripemd160
+        case Self.sha256.opCode: self = .sha256
+        case Self.hash160.opCode: self = .hash160
+        case Self.hash256.opCode: self = .hash256
+        case Self.codeSeparator.opCode: self = .codeSeparator
+        case Self.checkSig.opCode: self = .checkSig
+        case Self.checkSigVerify.opCode: self = .checkSigVerify
+        case Self.checkMultiSig.opCode: self = .checkMultiSig
+        case Self.checkMultiSigVerify.opCode: self = .checkMultiSigVerify
+        case Self.checkLockTimeVerify.opCode: self = .checkLockTimeVerify
+        case Self.checkSequenceVerify.opCode: self = .checkSequenceVerify
+        case Self.checkSigAdd.opCode: self = .checkSigAdd
+        default: self = .undefined
         }
     }
 }

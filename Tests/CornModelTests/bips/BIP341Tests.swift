@@ -36,7 +36,7 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     internalPubkey: Data(hex: "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27"),
-                    scriptTree: .leaf(192, Script(Data(hex: "20d85a959b0290bf19bb89ed43c916be835475d013da4b362117393e25a48229b8ac"), version: .witnessV1).operations)
+                    scriptTree: .leaf(192, Script(Data(hex: "20d85a959b0290bf19bb89ed43c916be835475d013da4b362117393e25a48229b8ac"), version: .witnessV1)!.operations)
                 ),
                 intermediary: (
                     leafHashes: [
@@ -57,7 +57,7 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     internalPubkey: Data(hex: "93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820"),
-                    scriptTree:  ScriptTree?.some(.leaf(192, Script(Data(hex: "20b617298552a72ade070667e86ca63b8f5789a9fe8731ef91202a91c9f3459007ac"), version: .witnessV1).operations))
+                    scriptTree:  ScriptTree?.some(.leaf(192, Script(Data(hex: "20b617298552a72ade070667e86ca63b8f5789a9fe8731ef91202a91c9f3459007ac"), version: .witnessV1)!.operations))
                 ),
                 intermediary: (
                     leafHashes: [
@@ -79,8 +79,8 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "ee4fe085983462a184015d1f782d6a5f8b9c2b60130aff050ce221ecf3786592"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, Script(Data(hex: "20387671353e273264c495656e27e39ba899ea8fee3bb69fb2a680e22093447d48ac"), version: .witnessV1).operations),
-                        .leaf(250, Script(Data(hex: "06424950333431"), version: .witnessV1).operations)
+                        .leaf(192, Script(Data(hex: "20387671353e273264c495656e27e39ba899ea8fee3bb69fb2a680e22093447d48ac"), version: .witnessV1)!.operations),
+                        .leaf(250, Script(Data(hex: "06424950333431"), version: .witnessV1)!.operations)
                     ))
                 ),
                 intermediary: (
@@ -105,8 +105,8 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "f9f400803e683727b14f463836e1e78e1c64417638aa066919291a225f0e8dd8"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, Script(Data(hex: "2044b178d64c32c4a05cc4f4d1407268f764c940d20ce97abfd44db5c3592b72fdac"), version: .witnessV1).operations),
-                        .leaf(192, Script(Data(hex: "07546170726f6f74"), version: .witnessV1).operations)
+                        .leaf(192, Script(Data(hex: "2044b178d64c32c4a05cc4f4d1407268f764c940d20ce97abfd44db5c3592b72fdac"), version: .witnessV1)!.operations),
+                        .leaf(192, Script(Data(hex: "07546170726f6f74"), version: .witnessV1)!.operations)
                     ))
                 ),
                 intermediary: (
@@ -131,10 +131,10 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "e0dfe2300b0dd746a3f8674dfd4525623639042569d829c7f0eed9602d263e6f"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, Script(Data(hex: "2072ea6adcf1d371dea8fba1035a09f3d24ed5a059799bae114084130ee5898e69ac"), version: .witnessV1).operations),
+                        .leaf(192, Script(Data(hex: "2072ea6adcf1d371dea8fba1035a09f3d24ed5a059799bae114084130ee5898e69ac"), version: .witnessV1)!.operations),
                         .branch(
-                            .leaf(192, Script(Data(hex: "202352d137f2f3ab38d1eaa976758873377fa5ebb817372c71e2c542313d4abda8ac"), version: .witnessV1).operations),
-                            .leaf(192, Script(Data(hex: "207337c0dd4253cb86f2c43a2351aadd82cccb12a172cd120452b9bb8324f2186aac"), version: .witnessV1).operations)
+                            .leaf(192, Script(Data(hex: "202352d137f2f3ab38d1eaa976758873377fa5ebb817372c71e2c542313d4abda8ac"), version: .witnessV1)!.operations),
+                            .leaf(192, Script(Data(hex: "207337c0dd4253cb86f2c43a2351aadd82cccb12a172cd120452b9bb8324f2186aac"), version: .witnessV1)!.operations)
                         )
                     ))
                 ),
@@ -162,10 +162,10 @@ final class BIP341Tests: XCTestCase {
                 given: (
                     internalPubkey: Data(hex: "55adf4e8967fbd2e29f20ac896e60c3b0f1d5b0efa9d34941b5958c7b0a0312d"),
                     scriptTree: ScriptTree?.some(.branch(
-                        .leaf(192, Script(Data(hex: "2071981521ad9fc9036687364118fb6ccd2035b96a423c59c5430e98310a11abe2ac"), version: .witnessV1).operations),
+                        .leaf(192, Script(Data(hex: "2071981521ad9fc9036687364118fb6ccd2035b96a423c59c5430e98310a11abe2ac"), version: .witnessV1)!.operations),
                         .branch(
-                            .leaf(192, Script(Data(hex: "20d5094d2dbe9b76e2c245a2b89b6006888952e2faa6a149ae318d69e520617748ac"), version: .witnessV1).operations),
-                            .leaf(192, Script(Data(hex: "20c440b462ad48c7a77f94cd4532d8f2119dcebbd7c9764557e62726419b08ad4cac"), version: .witnessV1).operations)
+                            .leaf(192, Script(Data(hex: "20d5094d2dbe9b76e2c245a2b89b6006888952e2faa6a149ae318d69e520617748ac"), version: .witnessV1)!.operations),
+                            .leaf(192, Script(Data(hex: "20c440b462ad48c7a77f94cd4532d8f2119dcebbd7c9764557e62726419b08ad4cac"), version: .witnessV1)!.operations)
                         )
                     ))
                 ),
@@ -238,15 +238,15 @@ final class BIP341Tests: XCTestCase {
         var tx = Transaction(.init(hex: "02000000097de20cbff686da83a54981d2b9bab3586f4ca7e48f57f5b55963115f3b334e9c010000000000000000d7b7cab57b1393ace2d064f4d4a2cb8af6def61273e127517d44759b6dafdd990000000000fffffffff8e1f583384333689228c5d28eac13366be082dc57441760d957275419a418420000000000fffffffff0689180aa63b30cb162a73c6d2a38b7eeda2a83ece74310fda0843ad604853b0100000000feffffffaa5202bdf6d8ccd2ee0f0202afbbb7461d9264a25e5bfd3c5a52ee1239e0ba6c0000000000feffffff956149bdc66faa968eb2be2d2faa29718acbfe3941215893a2a3446d32acd050000000000000000000e664b9773b88c09c32cb70a2a3e4da0ced63b7ba3b22f848531bbb1d5d5f4c94010000000000000000e9aa6b8e6c9de67619e6a3924ae25696bb7b694bb677a632a74ef7eadfd4eabf0000000000ffffffffa778eb6a263dc090464cd125c466b5a99667720b1c110468831d058aa1b82af10100000000ffffffff0200ca9a3b000000001976a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac807840cb0000000020ac9a87f5594be208f8532db38cff670c450ed2fea8fcdefcc9a663f78bab962b0065cd1d"))
 
         let utxosSpent = [
-            Transaction.Output(value: 420000000, scriptData: Data(hex: "512053a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343")),
-            Transaction.Output(value: 462000000, scriptData: Data(hex: "5120147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3")),
-            Transaction.Output(value: 294000000, scriptData: Data(hex: "76a914751e76e8199196d454941c45d1b3a323f1433bd688ac")),
-            Transaction.Output(value: 504000000, scriptData: Data(hex: "5120e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e")),
-            Transaction.Output(value: 630000000, scriptData: Data(hex: "512091b64d5324723a985170e4dc5a0f84c041804f2cd12660fa5dec09fc21783605")),
-            Transaction.Output(value: 378000000, scriptData: Data(hex: "00147dd65592d0ab2fe0d0257d571abf032cd9db93dc")),
-            Transaction.Output(value: 672000000, scriptData: Data(hex: "512075169f4001aa68f15bbed28b218df1d0a62cbbcf1188c6665110c293c907b831")),
-            Transaction.Output(value: 546000000, scriptData: Data(hex: "5120712447206d7a5238acc7ff53fbe94a3b64539ad291c7cdbc490b7577e4b17df5")),
-            Transaction.Output(value: 588000000, scriptData: Data(hex: "512077e30a5522dd9f894c3f8b8bd4c4b2cf82ca7da8a3ea6a239655c39c050ab220"))
+            Transaction.Output(value: 420000000, script: Data(hex: "512053a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343")),
+            Transaction.Output(value: 462000000, script: Data(hex: "5120147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3")),
+            Transaction.Output(value: 294000000, script: Data(hex: "76a914751e76e8199196d454941c45d1b3a323f1433bd688ac")),
+            Transaction.Output(value: 504000000, script: Data(hex: "5120e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e")),
+            Transaction.Output(value: 630000000, script: Data(hex: "512091b64d5324723a985170e4dc5a0f84c041804f2cd12660fa5dec09fc21783605")),
+            Transaction.Output(value: 378000000, script: Data(hex: "00147dd65592d0ab2fe0d0257d571abf032cd9db93dc")),
+            Transaction.Output(value: 672000000, script: Data(hex: "512075169f4001aa68f15bbed28b218df1d0a62cbbcf1188c6665110c293c907b831")),
+            Transaction.Output(value: 546000000, script: Data(hex: "5120712447206d7a5238acc7ff53fbe94a3b64539ad291c7cdbc490b7577e4b17df5")),
+            Transaction.Output(value: 588000000, script: Data(hex: "512077e30a5522dd9f894c3f8b8bd4c4b2cf82ca7da8a3ea6a239655c39c050ab220"))
         ]
         
         let intermediary = (

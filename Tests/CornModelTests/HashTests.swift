@@ -31,7 +31,7 @@ final class HashTests: XCTestCase {
         let txHex = "0100000002fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac11000000"
         let tx = Transaction(Data(hex: txHex))
         XCTAssertEqual(tx.data.hex, txHex)
-        let sigMsg = tx.sigMsgV0(hashType: .all, inIdx: 1, scriptCode: .init(Data(hex: "76a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac"), version: .witnessV0), amount: 600_000_000)
+        let sigMsg = tx.sigMsgV0(hashType: .all, inIdx: 1, scriptCode: .init(Data(hex: "76a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac"), version: .witnessV0)!, amount: 600_000_000)
         XCTAssertEqual(sigMsg.hex, "0100000096b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd3752b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3bef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a010000001976a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac0046c32300000000ffffffff863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e51100000001000000")
         let sighash = hash256(sigMsg) // Message
         XCTAssertEqual(sighash.hex, "c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670")
@@ -47,8 +47,8 @@ final class HashTests: XCTestCase {
         var tx = Transaction(Data(hex: "0100000002fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac11000000"))
         
         let prevOuts = [
-            Transaction.Output(value: 625_000_000, scriptData: .init(hex: "2103c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432ac")),
-            Transaction.Output(value: Amount(0x0046c32300000000).byteSwapped, scriptData: .init(hex: "00141d0f172a0ecb48aee1be1f2687d2963ae33f71a1"))
+            Transaction.Output(value: 625_000_000, script: .init(hex: "2103c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432ac")),
+            Transaction.Output(value: Amount(0x0046c32300000000).byteSwapped, script: .init(hex: "00141d0f172a0ecb48aee1be1f2687d2963ae33f71a1"))
         ]
 
         let privKey1 = Data(hex: "619c335025c7f4012e556c2a58b2506e30b8511b53ade95ea316fd8c3286feb9")

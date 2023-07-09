@@ -10,9 +10,7 @@ extension Transaction {
 
 
         let prevOut = prevOuts.count == 1 ? prevOuts[0] : prevOuts[inIdx]
-        // TODO: Do not decode fully! Get the lockType from output
-        let decodedScript = Script(prevOut.script)!
-        switch(decodedScript.lockType) {
+        switch(prevOut.script.lockType) {
         case .pubKey:
             guard let hashType else { preconditionFailure() }
             signP2PK(privKey: privKeys[0], hashType: hashType, inIdx: inIdx, prevOut: prevOut)
@@ -56,21 +54,21 @@ extension Transaction {
     }
 
     mutating func signP2PK(privKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let decodedScript = Script(prevOut.script)!
+        let decodedScript = Script(prevOut.script.data)!
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: decodedScript, opIdx: 0)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
         inputs[inIdx].script = Script.SerializedScript(Script([.pushBytes(sig)]).data)
     }
 
     mutating func signP2PKH(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let decodedScript = Script(prevOut.script)!
+        let decodedScript = Script(prevOut.script.data)!
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: decodedScript, opIdx: 0)
         let sig = signECDSA(msg: sighash, privKey: privKey /*, grind: false)*/) + hashType.data
         inputs[inIdx].script = Script.SerializedScript(Script([.pushBytes(sig), .pushBytes(pubKey)]).data)
     }
 
     mutating func signMultiSig(privKeys: [Data], hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let decodedScript = Script(prevOut.script)!
+        let decodedScript = Script(prevOut.script.data)!
         let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: decodedScript, opIdx: 0)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
         let scriptSigOps = sigs.reversed().map { Script.Operation.pushBytes($0) }

@@ -18,7 +18,7 @@ extension Transaction {
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: Script
         // TODO: get lockType from SerializedScript
-        if Script.lockType(forScriptData: prevOut.script) == .scriptHash {
+        if prevOut.script.lockType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
             if let op = Script(inputs[inIdx].script.data)!.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw)! != scriptCode {
                 preconditionFailure()
@@ -79,7 +79,7 @@ extension Transaction {
                     newOuts.append(out)
                 } else if i < inIdx {
                     // TODO: Verify that "long -1" means  UInt64(bitPattern: -1) aka UInt64.max
-                    newOuts.append(.init(value: Amount.max, script: .init()))
+                    newOuts.append(.init(value: Amount.max, script: Script.SerializedScript.empty))
                 }
             }
             
@@ -228,7 +228,7 @@ extension Transaction {
             if let cached = cache.shaScriptPubKeys {
                 shaScriptPubKeys = cached
             } else {
-                let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.script.varLenData }
+                let scriptPubKeys = prevOuts.reduce(Data()) { $0 + $1.script.prefixedData }
                 shaScriptPubKeys = sha256(scriptPubKeys)
                 cache.shaScriptPubKeys = shaScriptPubKeys
             }
@@ -285,7 +285,7 @@ extension Transaction {
             let amount = prevOuts[inIdx].valueData
             inputData.append(amount)
             // scriptPubKey (35): scriptPubKey of the previous output spent by this input, serialized as script inside CTxOut. Its size is always 35 bytes.
-            let scriptPubKey = prevOuts[inIdx].script.varLenData
+            let scriptPubKey = prevOuts[inIdx].script.prefixedData
             inputData.append(scriptPubKey)
             // nSequence (4): nSequence of this input.
             let sequence = inputs[inIdx].sequence.data

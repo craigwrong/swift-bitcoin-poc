@@ -18,7 +18,7 @@ extension Transaction {
         let prevOut = prevOuts[inIdx]
 
         let scriptSig = Script(input.script.data)!
-        let scriptPubKey = Script(prevOut.script)!
+        let scriptPubKey = Script(prevOut.script.data)!
         
         let scriptPubKey2: Script
         switch scriptPubKey.lockType {

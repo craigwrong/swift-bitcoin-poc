@@ -188,5 +188,13 @@ public struct NewScript: ScriptProtocol, Equatable {
             .checkSig
         ], version: .witnessV0)
     }
+    
+    var witnessProgram: Data {
+        precondition(lockType == .witnessV0KeyHash || lockType == .witnessV0ScriptHash || lockType == .witnessV1TapRoot || lockType == .witnessUnknown)
+        guard case let .pushBytes(programData) = operations[1] else {
+            fatalError()
+        }
+        return programData
+    }
 }
 }

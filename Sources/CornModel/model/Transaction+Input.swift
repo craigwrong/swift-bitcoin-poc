@@ -19,8 +19,7 @@ extension Transaction { public struct Input: Equatable {
         let outpoint = Outpoint(data)
         offset += Outpoint.dataCount
         
-        let scriptData = Data(varLenData: data[offset...])
-        let script = Script.SerializedScript(scriptData)
+        let script = Script.SerializedScript(prefixedData: data[offset...])
         offset += script.prefixedDataCount
         
         guard let sequence = Sequence(data[offset...]) else {

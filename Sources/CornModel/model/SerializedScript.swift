@@ -12,6 +12,10 @@ public struct SerializedScript: ScriptProtocol, Equatable {
         self.version = version
     }
     
+    init(prefixedData: Data, version: Version = .legacy) {
+        self.init(Data(varLenData: prefixedData), version: version)
+    }
+    
     public var dataCount: Int {
        data.count
     }
@@ -174,8 +178,24 @@ public struct SerializedScript: ScriptProtocol, Equatable {
             return .witnessV1TapRoot
         }
         
+        // Witnes unknown version
+        if count == p2wshSize,
+            let op0 = Operation(data), op0 == .constant(1),
+            case let .constant(k) = Operation(data), k > 1, k <= 16,
+            case let .pushBytes(payload) = Operation(data.dropFirst(opCodeSize)), payload.count == witnessScriptHashSize {
+            return .witnessUnknown
+        }
+        
         // In this case non-standard will include undecodable/potentially undecodable scripts.
         return .nonStandard
+    }
+
+    var witnessProgram: Data {
+        precondition(lockType == .witnessV0KeyHash || lockType == .witnessV0ScriptHash || lockType == .witnessV1TapRoot || lockType == .witnessUnknown)
+        guard case let .pushBytes(programData) = Operation(data.dropFirst()) else {
+            fatalError() // Should never reach here
+        }
+        return programData
     }
 }
 }

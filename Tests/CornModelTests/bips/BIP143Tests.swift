@@ -16,7 +16,7 @@ final class BIP143Tests: XCTestCase {
         var tx = Transaction(Data(hex: "0100000001db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a54770100000000feffffff02b8b4eb0b000000001976a914a457b684d7f0d539a46a45bbc043f35b59d0d96388ac0008af2f000000001976a914fd270b1ee6abcaea97fea7ad0402e8bd8ad6d77c88ac92040000"))
         
         // The input comes from a P2SH-P2WPKH witness program:
-        let prevOut0 = Transaction.Output(value: 1_000_000_000, script: Data(hex: "a9144733f37cf4db86fbc2efed2500b4f4e49f31202387"))
+        let prevOut0 = Transaction.Output(value: 1_000_000_000, script: .init(Data(hex: "a9144733f37cf4db86fbc2efed2500b4f4e49f31202387")))
         let redeemScript0 = Script(Data(hex: "001479091972186c449eb1ded22b78e40d009bdf0089"))
         let privKey0 = Data(hex: "eb696a065ef48a2192da5b28b694f87544b30fae8327c4510137a922f32c6dcf")
         let pubKey0 = Data(hex: "03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873")

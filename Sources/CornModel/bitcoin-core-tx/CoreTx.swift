@@ -175,14 +175,14 @@ extension Transaction.Input {
 extension Transaction.Output {
 
     func toBCoreOutput(outputIndex: Int, network: Network = .main) -> CoreTx.Output {
-        let decodedScript = Script(script)!
+        let decodedScript = Script(script.data)!
         return .init(
             value: doubleValue,
             n: outputIndex,
             scriptPubKey: .init(
                 asm: decodedScript.asm,
                 desc: "", // TODO: Create descriptor
-                hex: script.hex,
+                hex: script.data.hex,
                 address: address(network: network),
                 type: .init(rawValue: CoreTx.Output.LockScript.LockType(decodedScript.lockType).rawValue) ?? .unknown
             )
@@ -194,11 +194,10 @@ extension Transaction.Output {
     }
     
     func address(network: Network = .main) -> String {
-        let decodedScript = Script(script)!
-        if decodedScript.lockType == .witnessV0KeyHash || decodedScript.lockType == .witnessV0ScriptHash {
-            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: decodedScript.witnessProgram)) ?? ""
-        } else if decodedScript.lockType == .witnessV1TapRoot {
-            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: decodedScript.witnessProgram)) ?? ""
+        if script.lockType == .witnessV0KeyHash || script.lockType == .witnessV0ScriptHash {
+            return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: script.witnessProgram)) ?? ""
+        } else if script.lockType == .witnessV1TapRoot {
+            return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: script.witnessProgram)) ?? ""
         }
         return ""
     }

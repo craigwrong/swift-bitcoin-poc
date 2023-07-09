@@ -33,7 +33,7 @@ public struct SerializedScript: ScriptProtocol, Equatable {
     }
 
     public func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
-        var context = ScriptContext(transaction: transaction, inputIndex: inIdx, previousOutputs: prevOuts, script: Script(data)!, tapLeafHash: tapLeafHash)
+        var context = ScriptContext(transaction: transaction, inputIndex: inIdx, previousOutputs: prevOuts, script: Script(data, version: version)!, tapLeafHash: tapLeafHash)
         
         var programCounter = 0
         while programCounter < data.count {

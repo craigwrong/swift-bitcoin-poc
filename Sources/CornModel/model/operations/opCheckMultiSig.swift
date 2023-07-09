@@ -17,7 +17,7 @@ func opCheckMultiSig(_ stack: inout [Data], context: ScriptContext) throws {
                 case .legacy:
                 result = context.transaction.checkSig(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)
                 case .witnessV0:
-                result = context.transaction.checkSigV0(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script:  context.script, opIdx: context.operationIndex)
+                result = context.transaction.checkSigV0(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)
                 case .witnessV1:
                 fatalError()
             }

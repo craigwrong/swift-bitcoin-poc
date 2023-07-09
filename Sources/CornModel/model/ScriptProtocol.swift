@@ -2,6 +2,7 @@ import Foundation
 
 public protocol ScriptProtocol: Equatable {
 
+    var version: Script.Version { get }
     var data: Data { get }
     var dataCount: Int { get }
     

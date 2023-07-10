@@ -27,7 +27,7 @@ public struct SerializedScript: Script {
         data.isEmpty
     }
     
-    public var decoded: ParsedScript? {
+    public var parsed: ParsedScript? {
         ParsedScript(data, version: version)
     }
 

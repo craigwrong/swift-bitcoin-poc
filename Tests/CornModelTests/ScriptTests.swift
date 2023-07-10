@@ -158,7 +158,7 @@ final class ScriptTests: XCTestCase {
 
         let tx = Transaction(Data(hex: "0200000001579639e3c861067e4eccedbc3fcf801a825509b393657a0994b0b2ca6b4a5da2000000008a473044022037b8b0c1a33caa83be5eb71f87bce5dbd4890a56a61b98d9d603e754313fadc602201ef00773d2e0b98d558f0a1ac89a1fad1da15f852140fca5f5d737c0025e11ad014104ce88102d2af294198df851e4776e4c505e2f288cb253a244f69fb0ddc656f11e1286fb9309a39a92553e2ce3969eeb92ed30bd402a7cbc62ec7d7a4e32f7c125fdffffff0100e1f505000000001976a9145a1c620bc593fa5ae99df3520c4282fcbded1c6788ac00000000"))
 
-        guard let sigOp = ParsedScript(tx.inputs[0].script.data)!.operations.first, case .pushBytes(let sig) = sigOp else {
+        guard let sigOp = ParsedScript(tx.inputs[0].script.data)?.operations.first, case .pushBytes(let sig) = sigOp else {
             XCTFail("Could not extract signature from transaction.")
             return
         }

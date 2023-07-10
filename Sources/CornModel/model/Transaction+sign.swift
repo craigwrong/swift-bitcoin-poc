@@ -54,22 +54,19 @@ extension Transaction {
     }
 
     mutating func signP2PK(privKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let decodedScript = ParsedScript(prevOut.script.data)!
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: decodedScript.data)
+        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script.data)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
         inputs[inIdx].script = SerializedScript(ParsedScript([.pushBytes(sig)]).data)
     }
 
     mutating func signP2PKH(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let decodedScript = ParsedScript(prevOut.script.data)!
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: decodedScript.data)
+        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script.data)
         let sig = signECDSA(msg: sighash, privKey: privKey /*, grind: false)*/) + hashType.data
         inputs[inIdx].script = SerializedScript(ParsedScript([.pushBytes(sig), .pushBytes(pubKey)]).data)
     }
 
     mutating func signMultiSig(privKeys: [Data], hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let decodedScript = ParsedScript(prevOut.script.data)!
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: decodedScript.data)
+        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script.data)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
         let scriptSigOps = sigs.reversed().map { ScriptOperation.pushBytes($0) }
 

@@ -18,9 +18,9 @@ extension Transaction {
         let prevOut = prevOuts[inIdx]
 
         let scriptSig = input.script
-        let scriptPubKey = ParsedScript(prevOut.script.data)!
+        let scriptPubKey = prevOut.script
         
-        let scriptPubKey2: ParsedScript
+        let scriptPubKey2: SerializedScript
         switch scriptPubKey.outputType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
@@ -30,11 +30,11 @@ extension Transaction {
         case .scriptHash:
             var stack = [Data]()
             guard
-                let decodedScriptSig = scriptSig.decoded else {
+                let parsedScriptSig = scriptSig.parsed else {
                 throw ScriptError.invalidScript
             }
             guard
-                let op = decodedScriptSig.operations.last else {
+                let op = parsedScriptSig.operations.last else {
                 throw ScriptError.invalidScript
             }
             try ParsedScript([op]).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
@@ -42,7 +42,10 @@ extension Transaction {
             guard case let .pushBytes(redeemScriptRaw) = op else {
                 fatalError()
             }
-            let redeemScript = ParsedScript(redeemScriptRaw)!
+            // Looks like we need to parse the redeem script first in order to performe some checks like verifying the number of operations.
+            guard let redeemScript = ParsedScript(redeemScriptRaw) else {
+                throw ScriptError.unparsableRedeemScript
+            }
             switch(redeemScript.outputType) {
                 case .nonStandard:
                     throw ScriptError.nonStandardScript
@@ -50,14 +53,14 @@ extension Transaction {
                     throw ScriptError.unknownWitnessVersion
                 case .witnessV0KeyHash, .witnessV0ScriptHash:
                     // Redeem script is a p2wkh or p2wsh, just need to verify there are no more operations
-                    guard decodedScriptSig.operations.count == 1 else {
+                    guard parsedScriptSig.operations.count == 1 else {
                         // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
                         throw ScriptError.invalidScript
                     }
-                    scriptPubKey2 = redeemScript
+                    scriptPubKey2 = .init(redeemScriptRaw)
                 default:
                     var stack2 = [Data]()
-                    try ParsedScript(decodedScriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+                    try ParsedScript(parsedScriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
                     try redeemScript.run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
                     return
             }
@@ -83,7 +86,7 @@ extension Transaction {
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 throw ScriptError.invalidScript
             }
-            let witnessScript = ParsedScript(witnessScriptRaw, version: .witnessV0)!
+            let witnessScript = SerializedScript(witnessScriptRaw, version: .witnessV0)
             try witnessScript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
@@ -156,7 +159,7 @@ extension Transaction {
                 throw ScriptError.invalidScript
             }
 
-            let tapscript = ParsedScript(tapscriptData, version: .witnessV1)!
+            let tapscript = SerializedScript(tapscriptData, version: .witnessV1)
             try tapscript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts, tapLeafHash: tapLeafHash)
         default:
             fatalError() // Should never reach here

@@ -12,7 +12,7 @@ public protocol Script: Equatable {
 
     static var empty: Self { get }
     var isEmpty: Bool { get }
-    var decoded: ParsedScript? { get }
+    var parsed: ParsedScript? { get }
     var serialized: SerializedScript { get }
 
     func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data?) throws

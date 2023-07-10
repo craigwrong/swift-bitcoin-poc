@@ -148,7 +148,7 @@ extension Transaction {
 
 extension Transaction.Input {
     var bCoreInput: CoreTx.Input {
-        let decodedScript = ParsedScript(script.data)!
+        let parsedScript = ParsedScript(script.data)!
         return isCoinbase
         ? .init(
             coinbase: script.data.hex,
@@ -161,7 +161,7 @@ extension Transaction.Input {
         : .init(
             coinbase: .none,
             scriptSig: .init(
-                asm: decodedScript.asm,
+                asm: parsedScript.asm,
                 hex: script.data.hex
             ),
             txid: outpoint.transaction,
@@ -175,16 +175,16 @@ extension Transaction.Input {
 extension Transaction.Output {
 
     func toBCoreOutput(outputIndex: Int, network: Network = .main) -> CoreTx.Output {
-        let decodedScript = ParsedScript(script.data)!
+        let parsedScript = ParsedScript(script.data)!
         return .init(
             value: doubleValue,
             n: outputIndex,
             scriptPubKey: .init(
-                asm: decodedScript.asm,
+                asm: parsedScript.asm,
                 desc: "", // TODO: Create descriptor
                 hex: script.data.hex,
                 address: address(network: network),
-                type: .init(rawValue: CoreTx.Output.LockScript.LockType(decodedScript.outputType).rawValue) ?? .unknown
+                type: .init(rawValue: CoreTx.Output.LockScript.LockType(parsedScript.outputType).rawValue) ?? .unknown
             )
         )
     }

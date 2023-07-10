@@ -64,7 +64,7 @@ public struct ParsedScript: Script {
         operations.isEmpty
     }
     
-    public var decoded: ParsedScript? { self }
+    public var parsed: ParsedScript? { self }
     
     public var serialized: SerializedScript {
         SerializedScript(data, version: version)

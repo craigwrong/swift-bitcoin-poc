@@ -4,5 +4,7 @@ public enum ScriptError: Error {
     case nonStandardScript,
          unknownWitnessVersion,
          invalidScript,
-         invalidInstruction
+         invalidInstruction,
+         unparsableRedeemScript,
+         unparsableWitnessScript
 }

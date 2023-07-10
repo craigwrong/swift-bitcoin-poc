@@ -1,4 +1,4 @@
-extension Script { enum LockType: Equatable {
+enum OutputType: Equatable {
     case nonStandard,
          pubKey,
          pubKeyHash,
@@ -9,4 +9,4 @@ extension Script { enum LockType: Equatable {
          witnessV0ScriptHash,
          witnessV1TapRoot,
          witnessUnknown
-} }
+}

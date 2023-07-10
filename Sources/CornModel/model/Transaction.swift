@@ -138,8 +138,8 @@ public struct Transaction: Equatable {
     /// Whether this is the coinbase transaction of any given block. Based of whether the first and only input is a coinbase input.
     var isCoinbase: Bool { inputs.first?.isCoinbase ?? false }
     var hasWitness: Bool { inputs.contains { $0.witness != .none } }
-    var insLen: UInt64 { .init(inputs.count) }
-    var outsLen: UInt64 { .init(outputs.count) }
+    private var insLen: UInt64 { .init(inputs.count) }
+    private var outsLen: UInt64 { .init(outputs.count) }
     
     var nonWitnessSize: Int {
         Version.dataCount + insLen.varIntSize + inputs.reduce(0) { $0 + $1.dataCount } + outsLen.varIntSize + outputs.reduce(0) { $0 + $1.dataCount } + Locktime.dataCount

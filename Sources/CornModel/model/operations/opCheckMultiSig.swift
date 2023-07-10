@@ -5,7 +5,6 @@ func opCheckMultiSig(_ stack: inout [Data], context: ScriptContext) throws {
     precondition(m <= n)
     precondition(pubKeys.count == n)
     precondition(sigs.count == m)
-    precondition(context.script.version == .legacy || context.script.version == .witnessV0)
     var leftPubKeys = pubKeys
     var leftSigs = sigs
     while leftPubKeys.count > 0 && leftSigs.count > 0 {
@@ -15,9 +14,12 @@ func opCheckMultiSig(_ stack: inout [Data], context: ScriptContext) throws {
         while i < leftSigs.count {
             switch context.script.version {
                 case .legacy:
-                result = context.transaction.checkSig(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)
+                guard let scriptCode = context.scriptCode else {
+                    throw ScriptError.invalidScript
+                }
+                result = context.transaction.checkSig(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, scriptCode: scriptCode)
                 case .witnessV0:
-                result = context.transaction.checkSigV0(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, script: context.script, opIdx: context.operationIndex)
+                result = context.transaction.checkSigV0(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, scriptCode: context.scriptCodeV0)
                 case .witnessV1:
                 fatalError()
             }

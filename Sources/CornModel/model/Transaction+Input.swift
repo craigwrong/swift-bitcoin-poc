@@ -4,10 +4,14 @@ extension Transaction { public struct Input: Equatable {
 
     public var outpoint: Outpoint
     public var sequence: Sequence
-    public var script: Script.SerializedScript
+    public var script: SerializedScript
     public var witness: Witness?
-    
-    public init(outpoint: Outpoint, sequence: Sequence, script: Script.SerializedScript = .empty, witness: Witness? = .none) {
+
+    public init(outpoint: Outpoint, sequence: Sequence, script: ParsedScript, witness: Witness? = .none) {
+        self.init(outpoint: outpoint, sequence: sequence, script: script.serialized, witness: witness)
+    }
+
+    public init(outpoint: Outpoint, sequence: Sequence, script: SerializedScript = .empty, witness: Witness? = .none) {
         self.outpoint = outpoint
         self.sequence = sequence
         self.script = script
@@ -19,7 +23,7 @@ extension Transaction { public struct Input: Equatable {
         let outpoint = Outpoint(data)
         offset += Outpoint.dataCount
         
-        let script = Script.SerializedScript(prefixedData: data[offset...])
+        let script = SerializedScript(prefixedData: data[offset...])
         offset += script.prefixedDataCount
         
         guard let sequence = Sequence(data[offset...]) else {

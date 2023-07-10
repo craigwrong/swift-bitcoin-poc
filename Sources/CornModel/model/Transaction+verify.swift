@@ -17,16 +17,12 @@ extension Transaction {
         let input = inputs[inIdx]
         let prevOut = prevOuts[inIdx]
 
-        let scriptSig = Script(input.script.data)!
-        let scriptPubKey = Script(prevOut.script.data)!
+        let scriptSig = input.script
+        let scriptPubKey = ParsedScript(prevOut.script.data)!
         
-        let scriptPubKey2: Script
-        switch scriptPubKey.lockType {
-        case .nonStandard:
-            throw ScriptError.nonStandardScript
-        case .witnessUnknown:
-            throw ScriptError.unknownWitnessVersion
-        case .pubKey, .pubKeyHash, .multiSig, .nullData:
+        let scriptPubKey2: ParsedScript
+        switch scriptPubKey.outputType {
+        case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
             try scriptSig.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
             try scriptPubKey.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
@@ -34,47 +30,51 @@ extension Transaction {
         case .scriptHash:
             var stack = [Data]()
             guard
-                let op = scriptSig.operations.last else {
+                let decodedScriptSig = scriptSig.decoded else {
                 throw ScriptError.invalidScript
             }
-            try Script([op]).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            guard
+                let op = decodedScriptSig.operations.last else {
+                throw ScriptError.invalidScript
+            }
+            try ParsedScript([op]).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
             try scriptPubKey.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-            guard let lastOp = scriptSig.operations.last, case let .pushBytes(redeemScriptRaw) = lastOp else {
+            guard case let .pushBytes(redeemScriptRaw) = op else {
                 fatalError()
             }
-            let redeemScript = Script(redeemScriptRaw)!
-            switch(redeemScript.lockType) {
+            let redeemScript = ParsedScript(redeemScriptRaw)!
+            switch(redeemScript.outputType) {
                 case .nonStandard:
                     throw ScriptError.nonStandardScript
                 case .witnessUnknown:
                     throw ScriptError.unknownWitnessVersion
                 case .witnessV0KeyHash, .witnessV0ScriptHash:
                     // Redeem script is a p2wkh or p2wsh, just need to verify there are no more operations
-                    guard scriptSig.operations.count == 1 else {
+                    guard decodedScriptSig.operations.count == 1 else {
                         // The scriptSig must be exactly a push of the BIP16 redeemScript or validation fails. ("P2SH witness program")
                         throw ScriptError.invalidScript
                     }
                     scriptPubKey2 = redeemScript
                 default:
                     var stack2 = [Data]()
-                    try Script(scriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+                    try ParsedScript(decodedScriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
                     try redeemScript.run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
                     return
             }
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
-            guard scriptSig.operations.isEmpty else {
+            guard scriptSig.isEmpty else {
                 // The scriptSig must be exactly empty or validation fails. ("native witness program")
                 throw ScriptError.invalidScript
             }
             scriptPubKey2 = scriptPubKey
         }
-        switch scriptPubKey2.lockType {
+        switch scriptPubKey2.outputType {
         case .witnessV0KeyHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the key
             guard var stack = inputs[inIdx].witness?.elements else {
                 fatalError()
             }
-            try Script.makeP2WPKH(witnessProgram).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try ParsedScript.makeP2WPKH(witnessProgram).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
             guard var stack = inputs[inIdx].witness?.elements, let witnessScriptRaw = stack.popLast() else {
@@ -83,13 +83,13 @@ extension Transaction {
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 throw ScriptError.invalidScript
             }
-            let witnessScript = Script(witnessScriptRaw, version: .witnessV0)!
+            let witnessScript = ParsedScript(witnessScriptRaw, version: .witnessV0)!
             try witnessScript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
 
             // P2SH-wrapped version 1 outputs, remain unencumbered. Not needed.
-            // if prevOut.scriptPubKey.lockType == .scriptHash { return true }
+            // if prevOut.scriptPubKey.outputType == .scriptHash { return true }
 
             // Guard not strictly needed as `outputKey` (aka witnessProgram) would be recognized as non-standard and execute normally
             // guard scriptPubKey2.witnessProgram.count == 32 else { return true }
@@ -156,7 +156,7 @@ extension Transaction {
                 throw ScriptError.invalidScript
             }
 
-            let tapscript = Script(tapscriptData, version: .witnessV1)!
+            let tapscript = ParsedScript(tapscriptData, version: .witnessV1)!
             try tapscript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts, tapLeafHash: tapLeafHash)
         default:
             fatalError() // Should never reach here

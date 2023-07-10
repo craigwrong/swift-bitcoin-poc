@@ -2,7 +2,7 @@ import Foundation
 
 extension Transaction { public struct Output: Equatable {
     
-    init(value: Amount, script: Script.SerializedScript) {
+    init(value: Amount, script: SerializedScript) {
         self.value = value
         self.script = script
     }
@@ -11,9 +11,9 @@ extension Transaction { public struct Output: Equatable {
     var value: Amount
     
     /// Raw content of scriptPubKey. It may contain an invalid / unparsable script.
-    var script: Script.SerializedScript
+    var script: SerializedScript
     
-    public init(value: Amount, script: Script) {
+    public init(value: Amount, script: ParsedScript) {
         self.init(value: value, script: .init(script.data))
     }
     
@@ -21,7 +21,7 @@ extension Transaction { public struct Output: Equatable {
         var data = data
         let value = data.withUnsafeBytes { $0.loadUnaligned(as: Amount.self) }
         data = data.dropFirst(MemoryLayout.size(ofValue: value))
-        let script = Script.SerializedScript(prefixedData: data)
+        let script = SerializedScript(prefixedData: data)
         self.init(value: value, script: script)
     }
     

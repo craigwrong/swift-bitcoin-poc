@@ -16,11 +16,11 @@ final class TapscriptPlaygroundTests: XCTestCase {
         
         let outputKey = scriptTree.getOutputKey(privKey: privKey)
         
-        let prevOuts = [Transaction.Output(value: 100, script: Script.makeP2TR(outputKey: outputKey))]
+        let prevOuts = [Transaction.Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]
         
         var tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
-            outputs: [.init(value: 50, script: Script.makeNullData(""))])
+            outputs: [.init(value: 50, script: ParsedScript.makeNullData(""))])
         
         tx.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
         let result = tx.verify(prevOuts: prevOuts)
@@ -32,11 +32,11 @@ final class TapscriptPlaygroundTests: XCTestCase {
         let scriptTree = ScriptTree.branch(.leaf(0xc0, [.success(80)]), .leaf(0xc0, [.checkSig, .pushBytes(getInternalKey(privKey: privKey)), .checkSigAdd, .constant(1), .equal]))
         let outputKey = scriptTree.getOutputKey(privKey: privKey)
         
-        let prevOuts = [Transaction.Output(value: 100, script: Script.makeP2TR(outputKey: outputKey))]
+        let prevOuts = [Transaction.Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]
         
         let tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
-            outputs: [.init(value: 50, script: Script.makeNullData(""))])
+            outputs: [.init(value: 50, script: ParsedScript.makeNullData(""))])
         
         var tx0 = tx
         tx0.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 0, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)

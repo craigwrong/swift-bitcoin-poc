@@ -10,42 +10,20 @@ extension Transaction {
     ///   - inIdx: Transaction input index.
     ///   - prevOut: Previous unspent transaction output corresponding to the transaction input being signed/verified.
     ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
-    ///   - opIdx: The index of the  signature operation being executed.
     /// - Returns: A hash value for use while either signing or verifying a transaction input.
-    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: Script, opIdx: Int) -> Data {
-        precondition(scriptCode.version == .legacy)
-
-        // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
-        let subScript: Script
-        // TODO: get lockType from SerializedScript
-        if prevOut.script.lockType == .scriptHash {
-            // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
-            if let op = Script(inputs[inIdx].script.data)!.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw)! != scriptCode {
-                preconditionFailure()
-            }
-            subScript = scriptCode
-        } else {
-            // TODO: Account for code separators. Find the last executed one and remove anything before it. After that, remove all remaining OP_CODESEPARATOR instances from script code
-            var scriptCode = scriptCode
-            scriptCode.removeSubScripts(before: opIdx)
-            scriptCode.removeCodeSeparators()
-            subScript = scriptCode
-            // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).
-        }
-        let sigMsg = sigMsg(hashType: hashType, inIdx: inIdx, subScript: subScript)
+    func sighash(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: Data) -> Data {
+        let sigMsg = sigMsg(hashType: hashType, inIdx: inIdx, subScript: scriptCode)
         return hash256(sigMsg)
     }
     
     /// https://en.bitcoin.it/wiki/OP_CHECKSIG
-    func sigMsg(hashType: HashType, inIdx: Int, subScript: Script) -> Data {
-        precondition(subScript.version == .legacy)
-
+    func sigMsg(hashType: HashType, inIdx: Int, subScript: Data) -> Data {
         var newIns = [Transaction.Input]()
         if hashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
             // The current transaction input (with scriptPubKey modified to subScript) is set as the first and only member of this vector.
-            newIns.append(.init(outpoint: inputs[inIdx].outpoint, sequence: inputs[inIdx].sequence, script: .init(subScript.data)))
+            newIns.append(.init(outpoint: inputs[inIdx].outpoint, sequence: inputs[inIdx].sequence, script: .init(subScript)))
         } else {
             inputs.enumerated().forEach { i, input in
                 newIns.append(.init(
@@ -54,7 +32,7 @@ extension Transaction {
                     sequence: i == inIdx || hashType.isAll ? input.sequence : .initial,
                     // The scripts for all transaction inputs in txCopy are set to empty scripts (exactly 1 byte 0x00)
                     // The script for the current transaction input in txCopy is set to subScript (lead in by its length as a var-integer encoded!)
-                    script: i == inIdx ? .init(subScript.data) : .empty
+                    script: i == inIdx ? .init(subScript) : .empty
                 ))
             }
         }
@@ -79,7 +57,7 @@ extension Transaction {
                     newOuts.append(out)
                 } else if i < inIdx {
                     // TODO: Verify that "long -1" means  UInt64(bitPattern: -1) aka UInt64.max
-                    newOuts.append(.init(value: Amount.max, script: Script.SerializedScript.empty))
+                    newOuts.append(.init(value: Amount.max, script: SerializedScript.empty))
                 }
             }
             
@@ -99,18 +77,12 @@ extension Transaction {
 
     // -MARK: Segregated Witnes version 0 (SegWit)
     
-    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: Script, opIdx: Int) -> Data {
-        precondition(scriptCode.version == .witnessV0)
-        // if the witnessScript contains any OP_CODESEPARATOR, the scriptCode is the witnessScript but removing everything up to and including the last executed OP_CODESEPARATOR before the signature checking opcode being executed, serialized as scripts inside CTxOut.
-        var scriptCode = scriptCode
-        scriptCode.removeSubScripts(before: opIdx)
-        let amount = prevOut.value
-        return hash256(sigMsgV0(hashType: hashType, inIdx: inIdx, scriptCode: scriptCode, amount: amount))
+    func sighashV0(_ hashType: HashType, inIdx: Int, prevOut: Transaction.Output, scriptCode: Data) -> Data {
+        hash256(sigMsgV0(hashType: hashType, inIdx: inIdx, scriptCode: scriptCode, amount: prevOut.value))
     }
 
     /// SegWit v0 signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification .
-    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: Script, amount: Amount) -> Data {
-        precondition(scriptCode.version == .witnessV0)
+    func sigMsgV0(hashType: HashType, inIdx: Int, scriptCode: Data, amount: Amount) -> Data {
         //If the ANYONECANPAY flag is not set, hashPrevouts is the double SHA256 of the serialization of all input outpoints;
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.
         var hashPrevouts: Data
@@ -135,7 +107,7 @@ extension Transaction {
         
         let outpointData = inputs[inIdx].outpoint.data
         
-        let scriptCodeData = scriptCode.data.varLenData
+        let scriptCodeData = scriptCode.varLenData
         
         let amountData = withUnsafeBytes(of: amount) { Data($0) }
         let sequenceData = inputs[inIdx].sequence.data

@@ -1,10 +1,10 @@
 import Foundation
 
-public extension Script { enum Operation: Equatable {
+public enum ScriptOperation: Equatable {
     case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, ver, `if`, notIf, verIf, verNotIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
-} }
+}
 
-extension Script.Operation {
+extension ScriptOperation {
     var dataCount: Int {
         let additionalSize: Int
         switch(self) {
@@ -349,7 +349,7 @@ extension Script.Operation {
         return opCodeData + lengthData + rawData
     }
 
-    private init?(pushOpCode opCode: UInt8, _ data: Data, version: Script.Version) {
+    private init?(pushOpCode opCode: UInt8, _ data: Data, version: ScriptVersion) {
         var data = data
         switch(opCode) {
         case 0x01 ... 0x4b:
@@ -387,7 +387,7 @@ extension Script.Operation {
         }
     }
 
-    init?(_ data: Data, version: Script.Version = .legacy) {
+    init?(_ data: Data, version: ScriptVersion = .legacy) {
         var data = data
         guard data.count > 0 else {
             return nil

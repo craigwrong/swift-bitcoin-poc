@@ -148,7 +148,7 @@ extension Transaction {
 
 extension Transaction.Input {
     var bCoreInput: CoreTx.Input {
-        let decodedScript = Script(script.data)!
+        let decodedScript = ParsedScript(script.data)!
         return isCoinbase
         ? .init(
             coinbase: script.data.hex,
@@ -175,7 +175,7 @@ extension Transaction.Input {
 extension Transaction.Output {
 
     func toBCoreOutput(outputIndex: Int, network: Network = .main) -> CoreTx.Output {
-        let decodedScript = Script(script.data)!
+        let decodedScript = ParsedScript(script.data)!
         return .init(
             value: doubleValue,
             n: outputIndex,
@@ -184,7 +184,7 @@ extension Transaction.Output {
                 desc: "", // TODO: Create descriptor
                 hex: script.data.hex,
                 address: address(network: network),
-                type: .init(rawValue: CoreTx.Output.LockScript.LockType(decodedScript.lockType).rawValue) ?? .unknown
+                type: .init(rawValue: CoreTx.Output.LockScript.LockType(decodedScript.outputType).rawValue) ?? .unknown
             )
         )
     }
@@ -194,9 +194,9 @@ extension Transaction.Output {
     }
     
     func address(network: Network = .main) -> String {
-        if script.lockType == .witnessV0KeyHash || script.lockType == .witnessV0ScriptHash {
+        if script.outputType == .witnessV0KeyHash || script.outputType == .witnessV0ScriptHash {
             return (try? SegwitAddrCoder(bech32m: false).encode(hrp: network.bech32HRP, version: 0, program: script.witnessProgram)) ?? ""
-        } else if script.lockType == .witnessV1TapRoot {
+        } else if script.outputType == .witnessV1TapRoot {
             return (try? SegwitAddrCoder(bech32m: true).encode(hrp: network.bech32HRP, version: 1, program: script.witnessProgram)) ?? ""
         }
         return ""
@@ -205,7 +205,7 @@ extension Transaction.Output {
 
 extension CoreTx.Output.LockScript.LockType {
     
-    init(_ scriptType: Script.LockType) {
+    init(_ scriptType: OutputType) {
         switch scriptType {
         case .nonStandard:
             self = .nonStandard

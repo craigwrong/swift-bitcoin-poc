@@ -1,8 +1,10 @@
 import Foundation
 
 public indirect enum ScriptTree: Equatable {
-    // leaf_version is 0xc0 (or 0xc1) for BIP342
-    case leaf(Int, [ScriptOperation]), branch(Self, Self)
+    // Int is the leaf_version. Its value should be 0xc0 (or 0xc1) for BIP342.
+    // Data is the script data.
+    case leaf(Int, Data)
+    case branch(Self, Self)
 
     /// Calculates the merkle root as well as some additional tree info for generating control blocks.
     func calcMerkleRoot() -> ([(ScriptTree, Data)], Data) {
@@ -35,11 +37,10 @@ public indirect enum ScriptTree: Equatable {
     }
     
     var leafHash: Data {
-        guard case .leaf(let version, let script) = self else {
+        guard case .leaf(let version, let scriptData) = self else {
             preconditionFailure("Needs to be a leaf.")
         }
         let leafVersionData = withUnsafeBytes(of: UInt8(version)) { Data($0) }
-        let scriptData = ParsedScript(script, version: .witnessV1).data
         return taggedHash(tag: "TapLeaf", payload: leafVersionData + scriptData.varLenData)
     }
     

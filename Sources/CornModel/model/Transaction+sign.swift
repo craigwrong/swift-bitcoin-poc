@@ -135,7 +135,7 @@ extension Transaction {
             let controlBlock = computeControlBlock(internalPubKey: internalKey, leafInfo: treeInfo[leafIdx], merkleRoot: merkleRoot)
             
             witnessElements.append(outputKey)
-            witnessElements.append(ParsedScript(tapscript, version: .witnessV1).data)
+            witnessElements.append(tapscript)
             witnessElements.append(controlBlock)
         }
         

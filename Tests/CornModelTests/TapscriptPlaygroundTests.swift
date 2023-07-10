@@ -12,7 +12,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
     
     func testTapscriptSpend() {
         let privKey = createPrivKey()
-        let scriptTree = ScriptTree.branch(.leaf(0xc0, [.success(80)]), .leaf(0xc0, [.checkSigVerify]))
+        let scriptTree = ScriptTree.branch(.leaf(0xc0, ParsedScript([.success(80)], version: .witnessV1).data), .leaf(0xc0, ParsedScript([.checkSigVerify], version: .witnessV1).data))
         
         let outputKey = scriptTree.getOutputKey(privKey: privKey)
         
@@ -29,7 +29,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
 
     func testOpCheckSigAdd() {
         let privKey = createPrivKey()
-        let scriptTree = ScriptTree.branch(.leaf(0xc0, [.success(80)]), .leaf(0xc0, [.checkSig, .pushBytes(getInternalKey(privKey: privKey)), .checkSigAdd, .constant(1), .equal]))
+        let scriptTree = ScriptTree.branch(.leaf(0xc0, ParsedScript([.success(80)], version: .witnessV1).data), .leaf(0xc0, ParsedScript([.checkSig, .pushBytes(getInternalKey(privKey: privKey)), .checkSigAdd, .constant(1), .equal], version: .witnessV1).data))
         let outputKey = scriptTree.getOutputKey(privKey: privKey)
         
         let prevOuts = [Transaction.Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]

@@ -6,22 +6,22 @@ extension Transaction {
         precondition(extendedSignature.count > 69, "Signature too short or missing hash type suffix.")
         precondition(extendedSignature.count < 72, "Signature too long.")
         var sigTmp = extendedSignature
-        guard let rawValue = sigTmp.popLast(), let hashType = SighashType(rawValue: rawValue) else {
+        guard let rawValue = sigTmp.popLast(), let sighashType = SighashType(rawValue: rawValue) else {
             preconditionFailure()
         }
         let sig = sigTmp
-        let sighash = signatureHash(sighashType: hashType, inputIndex: inputIndex, previousOutput: previousOutput, scriptCode: scriptCode)
+        let sighash = signatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutput: previousOutput, scriptCode: scriptCode)
         let result = verifyECDSA(sig: sig, msg: sighash, pubKey: publicKey)
         return result
     }
     
     func checkSegwitSignature(extendedSignature: Data, publicKey: Data, inputIndex: Int, previousOutputs: Transaction.Output, scriptCode: Data) -> Bool {
         var sigTmp = extendedSignature
-        guard let hashTypeRaw = sigTmp.popLast(), let hashType = SighashType(rawValue: hashTypeRaw) else {
+        guard let sighashTypeRaw = sigTmp.popLast(), let sighashType = SighashType(rawValue: sighashTypeRaw) else {
             fatalError()
         }
         let sig = sigTmp
-        let sighash = segwitSignatureHash(sighashType: hashType, inputIndex: inputIndex, previousOutput: previousOutputs, scriptCode: scriptCode)
+        let sighash = segwitSignatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutput: previousOutputs, scriptCode: scriptCode)
         let result = verifyECDSA(sig: sig, msg: sighash, pubKey: publicKey)
         return result
     }
@@ -31,11 +31,11 @@ extension Transaction {
         // If the sig is 65 bytes long, return sig[64] ≠ 0x00 and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
         // Otherwise, fail.
         var sigTmp = extendedSignature
-        let hashType: SighashType?
+        let sighashType: SighashType?
         if sigTmp.count == 65, let rawValue = sigTmp.popLast(), let maybeHashType = SighashType(rawValue: rawValue) {
-            hashType = maybeHashType
+            sighashType = maybeHashType
         } else if sigTmp.count == 64 {
-            hashType = SighashType?.none
+            sighashType = SighashType?.none
         } else {
             return false
         }
@@ -43,7 +43,7 @@ extension Transaction {
         
         var txCopy = self
         var cache = SighashCache() // TODO: Hold on to cache.
-        let sighash = txCopy.taprootSignatureHash(sighashType: hashType, inputIndex: inputIndex, previousOutputs: previousOutputs, tapscriptExtension: tapscriptExtension, sighashCache: &cache)
+        let sighash = txCopy.taprootSignatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutputs: previousOutputs, tapscriptExtension: tapscriptExtension, sighashCache: &cache)
         let result = verifySchnorr(sig: sig, msg: sighash, pubKey: publicKey)
         return result
     }

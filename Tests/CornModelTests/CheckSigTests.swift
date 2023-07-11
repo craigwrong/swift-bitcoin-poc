@@ -30,13 +30,13 @@ final class CheckSigTests: XCTestCase {
         let script = ParsedScript([
             .checkSig
         ])
-        let hashType = SighashType.all
-        let sig = signECDSA(msg: tx.signatureHash(sighashType: hashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + hashType.data
+        let sighashType = SighashType.all
+        let sig = signECDSA(msg: tx.signatureHash(sighashType: sighashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + sighashType.data
         var stack = [
             sig,
             pubKey
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
         let expectedStack = [Data]([.one])
         XCTAssertEqual(stack, expectedStack)
     }

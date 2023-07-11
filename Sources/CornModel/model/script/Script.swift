@@ -15,15 +15,15 @@ public protocol Script: Equatable {
     var parsed: ParsedScript? { get }
     var serialized: SerializedScript { get }
 
-    func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data?) throws
+    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, prevOuts: [Transaction.Output], tapLeafHash: Data?) throws
     
-    func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output]) throws
+    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, prevOuts: [Transaction.Output]) throws
 }
 
 extension Script {
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output]) throws {
-        try run(&stack, transaction: transaction, inIdx: inIdx, prevOuts: prevOuts, tapLeafHash: .none)
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, prevOuts: [Transaction.Output]) throws {
+        try run(&stack, transaction: transaction, inputIndex: inputIndex, prevOuts: prevOuts, tapLeafHash: .none)
     }
 
     public var prefixedData: Data {

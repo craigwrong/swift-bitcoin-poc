@@ -5,7 +5,7 @@ extension Transaction {
     public func verify(prevOuts: [Transaction.Output]) -> Bool {
         for i in inputs.indices {
             do {
-                try verify(inIdx: i, prevOuts: prevOuts)
+                try verify(inputIndex: i, prevOuts: prevOuts)
             } catch {
                 return false
             }
@@ -13,9 +13,9 @@ extension Transaction {
         return true
     }
     
-    func verify(inIdx: Int, prevOuts: [Transaction.Output]) throws {
-        let input = inputs[inIdx]
-        let prevOut = prevOuts[inIdx]
+    func verify(inputIndex: Int, prevOuts: [Transaction.Output]) throws {
+        let input = inputs[inputIndex]
+        let prevOut = prevOuts[inputIndex]
 
         let scriptSig = input.script
         let scriptPubKey = prevOut.script
@@ -24,8 +24,8 @@ extension Transaction {
         switch scriptPubKey.outputType {
         case .pubKey, .pubKeyHash, .multiSig, .nullData, .nonStandard, .witnessUnknown:
             var stack = [Data]()
-            try scriptSig.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-            try scriptPubKey.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try scriptSig.run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
+            try scriptPubKey.run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
             return
         case .scriptHash:
             var stack = [Data]()
@@ -37,8 +37,8 @@ extension Transaction {
                 let op = parsedScriptSig.operations.last else {
                 throw ScriptError.invalidScript
             }
-            try ParsedScript([op]).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-            try scriptPubKey.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try ParsedScript([op]).run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
+            try scriptPubKey.run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
             guard case let .pushBytes(redeemScriptRaw) = op else {
                 fatalError()
             }
@@ -60,8 +60,8 @@ extension Transaction {
                     scriptPubKey2 = .init(redeemScriptRaw)
                 default:
                     var stack2 = [Data]()
-                    try ParsedScript(parsedScriptSig.operations.dropLast()).run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
-                    try redeemScript.run(&stack2, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+                    try ParsedScript(parsedScriptSig.operations.dropLast()).run(&stack2, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
+                    try redeemScript.run(&stack2, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
                     return
             }
         case .witnessV0KeyHash, .witnessV0ScriptHash, .witnessV1TapRoot:
@@ -74,20 +74,20 @@ extension Transaction {
         switch scriptPubKey2.outputType {
         case .witnessV0KeyHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the hash of the key
-            guard var stack = inputs[inIdx].witness?.elements else {
+            guard var stack = inputs[inputIndex].witness?.elements else {
                 fatalError()
             }
-            try ParsedScript.makeP2WPKH(witnessProgram).run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try ParsedScript.makeP2WPKH(witnessProgram).run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
         case .witnessV0ScriptHash:
             let witnessProgram = scriptPubKey2.witnessProgram // In this case it is the sha256 of the witness script
-            guard var stack = inputs[inIdx].witness?.elements, let witnessScriptRaw = stack.popLast() else {
+            guard var stack = inputs[inputIndex].witness?.elements, let witnessScriptRaw = stack.popLast() else {
                 fatalError()
             }
             guard sha256(witnessScriptRaw) == witnessProgram else {
                 throw ScriptError.invalidScript
             }
             let witnessScript = SerializedScript(witnessScriptRaw, version: .witnessV0)
-            try witnessScript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts)
+            try witnessScript.run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts)
         case .witnessV1TapRoot:
             // A Taproot output is a native SegWit output (see BIP141) with version number 1, and a 32-byte witness program. The following rules only apply when such an output is being spent. Any other outputs, including version 1 outputs with lengths other than 32 bytes, remain unencumbered.
 
@@ -97,7 +97,7 @@ extension Transaction {
             // Guard not strictly needed as `outputKey` (aka witnessProgram) would be recognized as non-standard and execute normally
             // guard scriptPubKey2.witnessProgram.count == 32 else { return true }
 
-            guard let witness = inputs[inIdx].witness else { preconditionFailure() }
+            guard let witness = inputs[inputIndex].witness else { preconditionFailure() }
             
             var stack = witness.elements
             
@@ -114,7 +114,7 @@ extension Transaction {
                 // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig)[20], where Verify is defined in BIP340.
                 // If the sig is 65 bytes long, return sig[64] ≠ 0x00[21] and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
                 // Otherwise, fail[22].
-                guard checkTaprootSignature(extendedSignature: stack[0], publicKey: outputKey, inputIndex: inIdx, previousOutputs: prevOuts) else {
+                guard checkTaprootSignature(extendedSignature: stack[0], publicKey: outputKey, inputIndex: inputIndex, previousOutputs: prevOuts) else {
                     throw ScriptError.invalidScript
                 }
                 return
@@ -160,7 +160,7 @@ extension Transaction {
             }
 
             let tapscript = SerializedScript(tapscriptData, version: .witnessV1)
-            try tapscript.run(&stack, transaction: self, inIdx: inIdx, prevOuts: prevOuts, tapLeafHash: tapLeafHash)
+            try tapscript.run(&stack, transaction: self, inputIndex: inputIndex, prevOuts: prevOuts, tapLeafHash: tapLeafHash)
         default:
             fatalError() // Should never reach here
         }

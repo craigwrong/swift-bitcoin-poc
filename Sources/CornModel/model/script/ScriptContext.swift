@@ -53,7 +53,7 @@ struct ScriptContext {
         let subScript: Script
         if prevOut.script.outputType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
-            if let op = Script(inputs[inIdx].script.data)!.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw)! != scriptCode {
+            if let op = Script(inputs[inputIndex].script.data)!.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw)! != scriptCode {
                 preconditionFailure()
             }
             subScript = scriptCode

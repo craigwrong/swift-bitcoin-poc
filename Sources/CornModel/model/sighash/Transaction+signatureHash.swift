@@ -6,8 +6,8 @@ extension Transaction {
     
     /// Signature hash for legacy inputs.
     /// - Parameters:
-    ///   - hashType: Signature hash type.
-    ///   - inIdx: Transaction input index.
+    ///   - sighashType: Signature hash type.
+    ///   - inputIndex: Transaction input index.
     ///   - prevOut: Previous unspent transaction output corresponding to the transaction input being signed/verified.
     ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
     /// - Returns: A hash value for use while either signing or verifying a transaction input.

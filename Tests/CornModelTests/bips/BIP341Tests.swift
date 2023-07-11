@@ -275,7 +275,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 0,
                     internalPrivkey: Data(hex: "6b973d88838f27366ed61c9ad6367663045cb456e28335c109e30717ae0c6baa"),
                     merkleRoot: Data?.none,
-                    hashType: SighashType?.some(.single)
+                    sighashType: SighashType?.some(.single)
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "d6889cb081036e0faefa3a35157ad71086b123b2b144b649798b494c300a961d"),
@@ -300,7 +300,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 1,
                     internalPrivkey: Data(hex: "1e4da49f6aaf4e5cd175fe08a32bb5cb4863d963921255f33d3bc31e1343907f"),
                     merkleRoot: Data?.some(Data(hex: "5b75adecf53548f3ec6ad7d78383bf84cc57b55a3127c72b9a2481752dd88b21")),
-                    hashType: SighashType?.some(.singleAnyCanPay) // .init(rawValue: 131)
+                    sighashType: SighashType?.some(.singleAnyCanPay) // .init(rawValue: 131)
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27"),
@@ -325,7 +325,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 3,
                     internalPrivkey: Data(hex: "d3c7af07da2d54f7a7735d3d0fc4f0a73164db638b2f2f7c43f711f6d4aa7e64"),
                     merkleRoot: Data?.some(Data(hex: "c525714a7f49c28aedbbba78c005931a81c234b2f6c99a73e4d06082adc8bf2b")),
-                    hashType: .all
+                    sighashType: .all
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820"),
@@ -350,7 +350,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 4,
                     internalPrivkey: Data(hex: "f36bb07a11e469ce941d16b63b11b9b9120a84d9d87cff2c84a8d4affb438f4e"),
                     merkleRoot: Data?.some(Data(hex: "ccbd66c6f7e8fdab47b3a486f59d28262be857f30d4773f2d5ea47f7761ce0e2")),
-                    hashType: Optional.none
+                    sighashType: Optional.none
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "e0dfe2300b0dd746a3f8674dfd4525623639042569d829c7f0eed9602d263e6f"),
@@ -375,7 +375,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 6,
                     internalPrivkey: Data(hex: "415cfe9c15d9cea27d8104d5517c06e9de48e2f986b695e4f5ffebf230e725d8"),
                     merkleRoot: Data?.some(Data(hex: "2f6b2c5397b6d68ca18e09a3f05161668ffe93a988582d55c6f07bd5b3329def")),
-                    hashType: SighashType.none
+                    sighashType: SighashType.none
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "55adf4e8967fbd2e29f20ac896e60c3b0f1d5b0efa9d34941b5958c7b0a0312d"),
@@ -400,7 +400,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 7,
                     internalPrivkey: Data(hex: "c7b0e81f0a9a0b0499e112279d718cca98e79a12e2f137c72ae5b213aad0d103"),
                     merkleRoot: Data?.some(Data(hex: "6c2dc106ab816b73f9d07e3cd1ef2c8c1256f519748e0813e4edd2405d277bef")),
-                    hashType: .noneAnyCanPay
+                    sighashType: .noneAnyCanPay
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "ee4fe085983462a184015d1f782d6a5f8b9c2b60130aff050ce221ecf3786592"),
@@ -425,7 +425,7 @@ final class BIP341Tests: XCTestCase {
                     txinIndex: 8,
                     internalPrivkey: Data(hex: "77863416be0d0665e517e1c375fd6f75839544eca553675ef7fdf4949518ebaa"),
                     merkleRoot: Data(hex: "ab179431c28d3b68fb798957faf5497d69c883c6fb1e1cd9f81483d87bac90cc"),
-                    hashType: .allAnyCanPay
+                    sighashType: .allAnyCanPay
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "f9f400803e683727b14f463836e1e78e1c64417638aa066919291a225f0e8dd8"),
@@ -451,8 +451,8 @@ final class BIP341Tests: XCTestCase {
             // Given
             let privKey = testCase.given.internalPrivkey
             let merkleRoot = testCase.given.merkleRoot
-            let hashType = testCase.given.hashType
-            let inIdx = testCase.given.txinIndex
+            let sighashType = testCase.given.sighashType
+            let inputIndex = testCase.given.txinIndex
             
             // Expected
             let expectedInternalPubKey = testCase.intermediary.internalPubkey
@@ -471,7 +471,7 @@ final class BIP341Tests: XCTestCase {
             let tweakedPrivKey = createPrivKeyTapTweak(privKey: privKey, merkleRoot: merkleRoot)
             XCTAssertEqual(tweakedPrivKey, expectedTweakedPrivkey)
 
-            let sigMsg = tx.taprootSignatureMessage(sighashType: hashType, inputIndex: inIdx, previousOutputs: utxosSpent, sighashCache: &cache)
+            let sigMsg = tx.taprootSignatureMessage(sighashType: sighashType, inputIndex: inputIndex, previousOutputs: utxosSpent, sighashCache: &cache)
 
             XCTAssertEqual(cache.shaAmountsUsed, testCase.intermediary.precomputedUsed.hashAmounts)
             XCTAssertEqual(cache.shaOutsUsed, testCase.intermediary.precomputedUsed.hashOutputs)
@@ -480,12 +480,12 @@ final class BIP341Tests: XCTestCase {
             XCTAssertEqual(cache.shaScriptPubKeysUsed, testCase.intermediary.precomputedUsed.hashScriptPubkeys)
             XCTAssertEqual(sigMsg, expectedSigMsg)
 
-            let sighash = tx.taprootSignatureHash(sighashType: hashType, inputIndex: inIdx, previousOutputs: utxosSpent, sighashCache: &cache)
+            let sighash = tx.taprootSignatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutputs: utxosSpent, sighashCache: &cache)
             XCTAssertEqual(sighash, expectedSighash)
             
             let hashTypeSuffix: Data
-            if let hashType {
-                hashTypeSuffix = hashType.data
+            if let sighashType {
+                hashTypeSuffix = sighashType.data
             } else {
                 hashTypeSuffix = Data()
             }

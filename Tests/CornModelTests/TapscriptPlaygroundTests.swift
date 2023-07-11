@@ -22,7 +22,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
             inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
             outputs: [.init(value: 50, script: ParsedScript.makeNullData(""))])
         
-        tx.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
+        tx.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inputIndex: 0, prevOuts: prevOuts)
         let result = tx.verify(prevOuts: prevOuts)
         XCTAssert(result)
     }
@@ -39,12 +39,12 @@ final class TapscriptPlaygroundTests: XCTestCase {
             outputs: [.init(value: 50, script: ParsedScript.makeNullData(""))])
         
         var tx0 = tx
-        tx0.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 0, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
+        tx0.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 0, taprootAnnex: .none, inputIndex: 0, prevOuts: prevOuts)
         tx0.inputs[0].witness = .init([Data.zero] + tx0.inputs[0].witness!.elements)
         var result = tx0.verify(prevOuts: prevOuts)
 
         var tx1 = tx
-        tx1.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inIdx: 0, prevOuts: prevOuts)
+        tx1.sign(privKeys: [privKey], scriptTree: scriptTree, leafIdx: 1, taprootAnnex: .none, inputIndex: 0, prevOuts: prevOuts)
         tx1.inputs[0].witness = .init([Data.zero] + tx1.inputs[0].witness!.elements)
         result = tx1.verify(prevOuts: prevOuts)
         XCTAssert(result)
@@ -54,16 +54,16 @@ final class TapscriptPlaygroundTests: XCTestCase {
         for testCase in coreTestAssets {
             let unsigned = Transaction(Data(hex: testCase.tx))
             let prevOuts = testCase.prevOuts.map { Transaction.Output(Data(hex: $0)) }
-            let inIdx = testCase.inIdx
+            let inputIndex = testCase.inputIndex
             var tx = unsigned
-            tx.inputs[inIdx].script = .init(Data(hex: testCase.success.scriptSig))
-            tx.inputs[inIdx].witness = .init(testCase.success.witness.map { Data(hex: $0) })
-            XCTAssertNoThrow(try tx.verify(inIdx: inIdx, prevOuts: prevOuts))
+            tx.inputs[inputIndex].script = .init(Data(hex: testCase.success.scriptSig))
+            tx.inputs[inputIndex].witness = .init(testCase.success.witness.map { Data(hex: $0) })
+            XCTAssertNoThrow(try tx.verify(inputIndex: inputIndex, prevOuts: prevOuts))
             if let failure = testCase.failure {
                 var failTx = unsigned
-                failTx.inputs[inIdx].script = .init(Data(hex: failure.scriptSig))
-                failTx.inputs[inIdx].witness = .init(failure.witness.map { Data(hex: $0) })
-                XCTAssertThrowsError(try failTx.verify(inIdx: inIdx, prevOuts: prevOuts))
+                failTx.inputs[inputIndex].script = .init(Data(hex: failure.scriptSig))
+                failTx.inputs[inputIndex].witness = .init(failure.witness.map { Data(hex: $0) })
+                XCTAssertThrowsError(try failTx.verify(inputIndex: inputIndex, prevOuts: prevOuts))
             }
         }
     }

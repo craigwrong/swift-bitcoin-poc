@@ -33,13 +33,13 @@ final class CheckMultiSigTests: XCTestCase {
             .constant(1),
             .checkMultiSig
         ])
-        let hashType = SighashType.all
-        let sig = signECDSA(msg: tx.signatureHash(sighashType: hashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + hashType.data
+        let sighashType = SighashType.all
+        let sig = signECDSA(msg: tx.signatureHash(sighashType: sighashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + sighashType.data
         var stack = [
             Data(),
             sig
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
         let expectedStack = [Data]([.one])
         XCTAssertEqual(stack, expectedStack)
     }
@@ -68,9 +68,9 @@ final class CheckMultiSigTests: XCTestCase {
             .constant(3),
             .checkMultiSigVerify
         ])
-        let hashType = SighashType.all
+        let sighashType = SighashType.all
         let allSigs = privKeys.map {
-            signECDSA(msg: tx.signatureHash(sighashType: hashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: $0) + hashType.data
+            signECDSA(msg: tx.signatureHash(sighashType: sighashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: $0) + sighashType.data
         }
 
         var stack = [
@@ -78,27 +78,27 @@ final class CheckMultiSigTests: XCTestCase {
             allSigs[1],
             allSigs[0]
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[2],
             allSigs[0]
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[2],
             allSigs[1]
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
         
         stack = [
             Data(),
             allSigs[1],
             allSigs[2]
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inIdx: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
     }
 }

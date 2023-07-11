@@ -15,16 +15,16 @@ final class BitcoinCoreTaprootTests: XCTestCase {
         for testCase in coreTestAssets {
             let unsigned = Transaction(Data(hex: testCase.tx))
             let prevOuts = testCase.prevOuts.map { Transaction.Output(Data(hex: $0)) }
-            let inIdx = testCase.inIdx
+            let inputIndex = testCase.inputIndex
             var tx = unsigned
-            tx.inputs[inIdx].script = .init(Data(hex: testCase.success.scriptSig))
-            tx.inputs[inIdx].witness = .init(testCase.success.witness.map { Data(hex: $0) })
-            XCTAssertNoThrow(try tx.verify(inIdx: inIdx, prevOuts: prevOuts))
+            tx.inputs[inputIndex].script = .init(Data(hex: testCase.success.scriptSig))
+            tx.inputs[inputIndex].witness = .init(testCase.success.witness.map { Data(hex: $0) })
+            XCTAssertNoThrow(try tx.verify(inputIndex: inputIndex, prevOuts: prevOuts))
             if let failure = testCase.failure {
                 var failTx = unsigned
-                failTx.inputs[inIdx].script = .init(Data(hex: failure.scriptSig))
-                failTx.inputs[inIdx].witness = .init(failure.witness.map { Data(hex: $0) })
-                XCTAssertThrowsError(try failTx.verify(inIdx: inIdx, prevOuts: prevOuts))
+                failTx.inputs[inputIndex].script = .init(Data(hex: failure.scriptSig))
+                failTx.inputs[inputIndex].witness = .init(failure.witness.map { Data(hex: $0) })
+                XCTAssertThrowsError(try failTx.verify(inputIndex: inputIndex, prevOuts: prevOuts))
             }
         }
     }

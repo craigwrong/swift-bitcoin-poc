@@ -33,8 +33,8 @@ public struct SerializedScript: Script {
 
     public var serialized: SerializedScript { self }
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inIdx: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
-        var context = ScriptContext(transaction: transaction, inputIndex: inIdx, previousOutputs: prevOuts, script: self, tapLeafHash: tapLeafHash)
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
+        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: prevOuts, script: self, tapLeafHash: tapLeafHash)
         
         while context.programCounter < data.count {
             let startIndex = data.startIndex + context.programCounter

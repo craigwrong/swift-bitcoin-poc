@@ -1,6 +1,6 @@
 import Foundation
 
-public enum HashType: UInt8 {
+public enum SighashType: UInt8 {
     case all = 0x01, none = 0x02, single = 0x03, allAnyCanPay = 0x81, noneAnyCanPay = 0x82, singleAnyCanPay = 0x83
     
     init?(_ uInt32: UInt32) {
@@ -33,9 +33,9 @@ public enum HashType: UInt8 {
 }
 
 /// Used to represent BIP 341's `default` signature hash type.
-extension Optional where Wrapped == HashType {
+extension Optional where Wrapped == SighashType {
     
-    private var assumed: HashType { .all }
+    private var assumed: SighashType { .all }
 
     var isNone: Bool {
         if case let .some(wrapped) = self {

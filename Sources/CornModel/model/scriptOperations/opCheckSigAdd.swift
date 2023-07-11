@@ -30,7 +30,7 @@ func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
         // If the signature is not the empty vector, the signature is validated against the public key (see the next subsection). Validation failure in this case immediately terminates script execution with failure.
         
         // Tapscript semantics
-        let result = context.transaction.checkSigV1(sig, pubKey: pubKey, inIdx: context.inputIndex, prevOuts: context.previousOutputs, extFlag: 1, tapscriptExt: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
+        let result = context.transaction.checkTaprootSignature(extendedSignature: sig, publicKey: pubKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutputs, extFlag: 1, tapscriptExtension: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
         
         if !result {
             throw ScriptError.invalidScript

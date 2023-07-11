@@ -114,7 +114,7 @@ extension Transaction {
                 // If the sig is 64 bytes long, return Verify(q, hashTapSighash(0x00 || SigMsg(0x00, 0)), sig)[20], where Verify is defined in BIP340.
                 // If the sig is 65 bytes long, return sig[64] ≠ 0x00[21] and Verify(q, hashTapSighash(0x00 || SigMsg(sig[64], 0)), sig[0:64]).
                 // Otherwise, fail[22].
-                guard checkSigV1(stack[0], pubKey: outputKey, inIdx: inIdx, prevOuts: prevOuts) else {
+                guard checkTaprootSignature(extendedSignature: stack[0], publicKey: outputKey, inputIndex: inIdx, previousOutputs: prevOuts) else {
                     throw ScriptError.invalidScript
                 }
                 return

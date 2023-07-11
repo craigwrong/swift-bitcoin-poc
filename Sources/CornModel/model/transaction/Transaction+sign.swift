@@ -3,7 +3,7 @@ import Foundation
 extension Transaction {
 
     /// Populates unlocking script / witness with signatures.
-    public mutating func sign(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: ParsedScript? = .none, redeemScriptV0: ParsedScript? = .none, scriptTree: ScriptTree? = .none, leafIdx: Int? = .none, taprootAnnex: Data? = .none, hashType: HashType? = Optional.none, inIdx: Int, prevOuts: [Transaction.Output]) {
+    public mutating func sign(privKeys: [Data], pubKeys: [Data]? = .none, redeemScript: ParsedScript? = .none, redeemScriptV0: ParsedScript? = .none, scriptTree: ScriptTree? = .none, leafIdx: Int? = .none, taprootAnnex: Data? = .none, hashType: SighashType? = Optional.none, inIdx: Int, prevOuts: [Transaction.Output]) {
 
         if let redeemScript { precondition(redeemScript.version == .legacy) }
         if let redeemScriptV0 { precondition(redeemScriptV0.version == .witnessV0) }
@@ -53,20 +53,20 @@ extension Transaction {
         }
     }
 
-    mutating func signP2PK(privKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script.data)
+    mutating func signP2PK(privKey: Data, hashType: SighashType, inIdx: Int, prevOut: Transaction.Output) {
+        let sighash = signatureHash(sighashType: hashType, inputIndex: inIdx, previousOutput: prevOut, scriptCode: prevOut.script.data)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
         inputs[inIdx].script = SerializedScript(ParsedScript([.pushBytes(sig)]).data)
     }
 
-    mutating func signP2PKH(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script.data)
+    mutating func signP2PKH(privKey: Data, pubKey: Data, hashType: SighashType, inIdx: Int, prevOut: Transaction.Output) {
+        let sighash = signatureHash(sighashType: hashType, inputIndex: inIdx, previousOutput: prevOut, scriptCode: prevOut.script.data)
         let sig = signECDSA(msg: sighash, privKey: privKey /*, grind: false)*/) + hashType.data
         inputs[inIdx].script = SerializedScript(ParsedScript([.pushBytes(sig), .pushBytes(pubKey)]).data)
     }
 
-    mutating func signMultiSig(privKeys: [Data], hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: prevOut.script.data)
+    mutating func signMultiSig(privKeys: [Data], hashType: SighashType, inIdx: Int, prevOut: Transaction.Output) {
+        let sighash = signatureHash(sighashType: hashType, inputIndex: inIdx, previousOutput: prevOut, scriptCode: prevOut.script.data)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
         let scriptSigOps = sigs.reversed().map { ScriptOperation.pushBytes($0) }
 
@@ -75,10 +75,10 @@ extension Transaction {
         inputs[inIdx].script = SerializedScript(ParsedScript(nullDummy + scriptSigOps).data)
     }
     
-    mutating func signP2SH(privKeys: [Data], redeemScript: ParsedScript, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
+    mutating func signP2SH(privKeys: [Data], redeemScript: ParsedScript, hashType: SighashType, inIdx: Int, prevOut: Transaction.Output) {
         precondition(redeemScript.version == .legacy)
         
-        let sighash = sighash(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: redeemScript.data)
+        let sighash = signatureHash(sighashType: hashType, inputIndex: inIdx, previousOutput: prevOut, scriptCode: redeemScript.data)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }
         let scriptSigOps = sigs.reversed().map { ScriptOperation.pushBytes($0) }
         
@@ -87,20 +87,20 @@ extension Transaction {
         inputs[inIdx].script = SerializedScript(ParsedScript(nullDummy + scriptSigOps + [.pushBytes(redeemScript.data)]).data)
     }
     
-    mutating func signP2WKH(privKey: Data, pubKey: Data, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
+    mutating func signP2WKH(privKey: Data, pubKey: Data, hashType: SighashType, inIdx: Int, prevOut: Transaction.Output) {
         let scriptCode = ParsedScript.makeP2WPKH(hash160(pubKey)).data
-        let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode)
+        let sighash = segwitSignatureHash(sighashType: hashType, inputIndex: inIdx, previousOutput: prevOut, scriptCode: scriptCode)
         let sig = signECDSA(msg: sighash, privKey: privKey) + hashType.data
         inputs[inIdx].witness = .init([sig, pubKey])
     }
 
-    mutating func signP2WSH(privKeys: [Data], redeemScript: ParsedScript, hashType: HashType, inIdx: Int, prevOut: Transaction.Output) {
+    mutating func signP2WSH(privKeys: [Data], redeemScript: ParsedScript, hashType: SighashType, inIdx: Int, prevOut: Transaction.Output) {
         precondition(redeemScript.version == .witnessV0)
 
         // TODO: Request and operation index an remove code separators from redeem script up to that index.
         let scriptCode = redeemScript.data
 
-        let sighash = sighashV0(hashType, inIdx: inIdx, prevOut: prevOut, scriptCode: scriptCode)
+        let sighash = segwitSignatureHash(sighashType: hashType, inputIndex: inIdx, previousOutput: prevOut, scriptCode: scriptCode)
         let sigs = privKeys.map { signECDSA(msg: sighash, privKey: $0) + hashType.data }.reversed()
         
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
@@ -108,7 +108,7 @@ extension Transaction {
         inputs[inIdx].witness = .init(nullDummy + sigs + [redeemScript.data])
     }
 
-    mutating func signP2TR(privKey: Data, scriptTree: ScriptTree?, leafIdx: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, hashType: HashType?, inIdx: Int, prevOuts: [Transaction.Output]) {
+    mutating func signP2TR(privKey: Data, scriptTree: ScriptTree?, leafIdx: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, hashType: SighashType?, inIdx: Int, prevOuts: [Transaction.Output]) {
     
         precondition(scriptTree == .none || (scriptTree != .none && leafIdx != .none))
         
@@ -143,7 +143,7 @@ extension Transaction {
             witnessElements.append(annex)
         }
         
-        let tapscriptExt: TapscriptExt?
+        let tapscriptExt: TapscriptExtension?
         if let treeInfo, let leafIdx {
             let (leaf, _) = treeInfo[leafIdx]
             // Only 1 signature supported for this method so codesepPos and tapscriptExt does not have to vary
@@ -154,7 +154,7 @@ extension Transaction {
         }
         
         // Again we are only adding a single signature. Note that the script might be required to consume multiple signatures with different code separator positions even.
-        let sighash = sighashV1(hashType, inIdx: inIdx, prevOuts: prevOuts, tapscriptExt: tapscriptExt)
+        let sighash = taprootSignatureHash(sighashType: hashType, inputIndex: inIdx, previousOutputs: prevOuts, tapscriptExtension: tapscriptExt)
         let aux = getRandBytes(32)
         
         let hashTypeSuffix: Data

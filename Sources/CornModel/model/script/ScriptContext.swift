@@ -29,10 +29,8 @@ struct ScriptContext {
         return lastEvaluatedIfResult
     }
 
-    var scriptCode: Data? {
+    func getScriptCode(signature: Data) -> Data? {
         var scriptData = script.data
-        
-        // SubScript
         if let codesepOffset = lastCodeSeparatorOffset {
             scriptData.removeFirst(codesepOffset + 1)
         }
@@ -43,7 +41,7 @@ struct ScriptContext {
             guard let operation = ScriptOperation(scriptData[programCounter2...], version: script.version) else {
                 return .none
             }
-            if operation != .codeSeparator {
+            if operation != .codeSeparator && operation != .pushBytes(signature) {
                 scriptCode.append(operation.data)
             }
             programCounter2 += operation.dataCount

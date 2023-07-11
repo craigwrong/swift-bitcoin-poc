@@ -14,12 +14,12 @@ func opCheckMultiSig(_ stack: inout [Data], context: ScriptContext) throws {
         while i < leftSigs.count {
             switch context.script.version {
                 case .legacy:
-                guard let scriptCode = context.scriptCode else {
+                guard let scriptCode = context.getScriptCode(signature: leftSigs[i]) else {
                     throw ScriptError.invalidScript
                 }
-                result = context.transaction.checkSig(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, scriptCode: scriptCode)
+                result = context.transaction.checkSignature(extendedSignature: leftSigs[i], publicKey: pubKey, inputIndex: context.inputIndex, previousOutput: context.previousOutput, scriptCode: scriptCode)
                 case .witnessV0:
-                result = context.transaction.checkSigV0(leftSigs[i], pubKey: pubKey, inIdx: context.inputIndex, prevOut: context.previousOutput, scriptCode: context.scriptCodeV0)
+                result = context.transaction.checkSegwitSignature(extendedSignature: leftSigs[i], publicKey: pubKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutput, scriptCode: context.scriptCodeV0)
                 case .witnessV1:
                 fatalError()
             }

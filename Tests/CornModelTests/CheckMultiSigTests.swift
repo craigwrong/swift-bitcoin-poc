@@ -33,8 +33,8 @@ final class CheckMultiSigTests: XCTestCase {
             .constant(1),
             .checkMultiSig
         ])
-        let hashType = HashType.all
-        let sig = signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script.data), privKey: privKey) + hashType.data
+        let hashType = SighashType.all
+        let sig = signECDSA(msg: tx.signatureHash(sighashType: hashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + hashType.data
         var stack = [
             Data(),
             sig
@@ -68,9 +68,9 @@ final class CheckMultiSigTests: XCTestCase {
             .constant(3),
             .checkMultiSigVerify
         ])
-        let hashType = HashType.all
+        let hashType = SighashType.all
         let allSigs = privKeys.map {
-            signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script.data), privKey: $0) + hashType.data
+            signECDSA(msg: tx.signatureHash(sighashType: hashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: $0) + hashType.data
         }
 
         var stack = [

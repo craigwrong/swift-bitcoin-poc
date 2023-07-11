@@ -30,8 +30,8 @@ final class CheckSigTests: XCTestCase {
         let script = ParsedScript([
             .checkSig
         ])
-        let hashType = HashType.all
-        let sig = signECDSA(msg: tx.sighash(hashType, inIdx: 0, prevOut: prevOuts[0], scriptCode: script.data), privKey: privKey) + hashType.data
+        let hashType = SighashType.all
+        let sig = signECDSA(msg: tx.signatureHash(sighashType: hashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + hashType.data
         var stack = [
             sig,
             pubKey

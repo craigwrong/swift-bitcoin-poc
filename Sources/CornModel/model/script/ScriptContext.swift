@@ -11,6 +11,7 @@ struct ScriptContext {
     var lastCodeSeparatorIndex: Int? = .none // For tapscript
     var lastCodeSeparatorOffset: Int? = .none // For segwit and legacy
     private(set) var succeedUnconditionally = false
+    let merkleRoot: Data?
     let tapLeafHash: Data?
     let keyVersion: UInt8? = 0
     var altStack: [Data] = []
@@ -51,7 +52,7 @@ struct ScriptContext {
         /*
         // the scriptCode is the actually executed script - either the scriptPubKey for non-segwit, non-P2SH scripts, or the redeemscript in non-segwit P2SH scripts
         let subScript: Script
-        if prevOut.script.outputType == .scriptHash {
+        if previousOutput.script.outputType == .scriptHash {
             // TODO: This check might be redundant as the given script code should always be the redeem script in p2sh checksig
             if let op = Script(inputs[inputIndex].script.data)!.operations.last, case let .pushBytes(redeemScriptRaw) = op, Script(redeemScriptRaw)! != scriptCode {
                 preconditionFailure()
@@ -60,7 +61,7 @@ struct ScriptContext {
         } else {
             // TODO: Account for code separators. Find the last executed one and remove anything before it. After that, remove all remaining OP_CODESEPARATOR instances from script code
             var scriptCode = scriptCode
-            scriptCode.removeSubScripts(before: opIdx)
+            scriptCode.removeSubScripts(before: opIndex)
             scriptCode.removeCodeSeparators()
             subScript = scriptCode
             // TODO: FindAndDelete any signature data in subScript (coming scriptPubKey, not standard to have sigs there anyway).

@@ -33,8 +33,8 @@ public struct SerializedScript: Script {
 
     public var serialized: SerializedScript { self }
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
-        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: prevOuts, script: self, tapLeafHash: tapLeafHash)
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], merkleRoot: Data? = .none, tapLeafHash: Data? = .none) throws {
+        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, script: self, merkleRoot: merkleRoot, tapLeafHash: tapLeafHash)
         
         while context.programCounter < data.count {
             let startIndex = data.startIndex + context.programCounter
@@ -73,13 +73,13 @@ public struct SerializedScript: Script {
         let compressedPKSize = 33
         let p2pkCompressedSize = opCodeSize + compressedPKSize + opCodeSize // 35
         if count == p2pkCompressedSize, case let .pushBytes(payload) = ScriptOperation(data), payload.count == compressedPKSize, let lastOp = ScriptOperation(data.dropFirst(opCodeSize + compressedPKSize)), lastOp == .checkSig {
-            return .pubKey
+            return .publicKey
         }
 
         let uncompressedPKSize = 65
         let p2pkUncompressedSize = opCodeSize + uncompressedPKSize + opCodeSize // 67
         if count == p2pkUncompressedSize, case let .pushBytes(payload) = ScriptOperation(data), payload.count == uncompressedPKSize, let lastOp = ScriptOperation(data.dropFirst(opCodeSize + uncompressedPKSize)), lastOp == .checkSig {
-            return .pubKey
+            return .publicKey
         }
 
         let pkHashSize = 20
@@ -90,7 +90,7 @@ public struct SerializedScript: Script {
             case let .pushBytes(payload) = ScriptOperation(data.dropFirst(opCodeSize + opCodeSize)), payload.count == pkHashSize,
             let op3 = ScriptOperation(data.dropFirst(opCodeSize + opCodeSize + opCodeSize + pkHashSize)), op3 == .equalVerify,
             let op4 = ScriptOperation(data.dropFirst(opCodeSize + opCodeSize + opCodeSize + pkHashSize + opCodeSize)), op4 == .checkSig {
-            return .pubKeyHash
+            return .publicKeyHash
         }
 
         let p2shSize = opCodeSize + opCodeSize + pkHashSize + opCodeSize // 23

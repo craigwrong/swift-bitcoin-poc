@@ -27,17 +27,17 @@ final class BIP340Tests: XCTestCase {
             ("C90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B14E5C9", "DD308AFEC5777E13121FA72B9CC1B7CC0139715309B086C960E18FD969774EB8", "C87AA53824B4D7AE2EB035A2B5BBBCCC080E76CDC6D1692C4B0B62D798E6D906", "7E2D58D8B3BCDF1ABADEC7829054F90DDA9805AAB56C77333024B9D0A508B75C", "5831AAEED7B44BB74E5EAB94BA9D4294C49BCF2A60728D8B4C200F50DD313C1BAB745879A5AD954A72C45A91C3A51D3C7ADEA98D82F8481E0E1E03674A6F3FB7"),
             ("0B432B2677937381AEF05BB02A66ECD012773062CF3FA2549E44F58ED2401710", "25D1DFF95105F5253C4022F628A996AD3A0D95FBF21D468A1B33F8C160D8F517", "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", "7EB0509757E246F19449885651611CB965ECC1A187DD51B64FDA1EDC9637D5EC97582B9CB13DB3933705B32BA982AF5AF25FD78881EBB32771FC5922EFC66EA3")
         ]
-        for (privKeyHex, pubKeyHex, aux, msg, sig) in signVectors {
-            let privKey = Data(hex: privKeyHex)
-            let pubKey = Data(hex: pubKeyHex)
+        for (secretKeyHex, publicKeyHex, aux, msg, sig) in signVectors {
+            let secretKey = Data(hex: secretKeyHex)
+            let publicKey = Data(hex: publicKeyHex)
             let auxData = Data(hex: aux)
             let msgData = Data(hex: msg)
             let sigData = Data(hex: sig)
 
-            let newSignature = signSchnorr(msg: msgData, privKey: privKey, merkleRoot: .none, skipTweak: true, aux: auxData)
+            let newSignature = signSchnorr(msg: msgData, secretKey: secretKey, merkleRoot: .none, skipTweak: true, aux: auxData)
             XCTAssertEqual(newSignature, sigData)
             // Verify those sigs for good measure.
-            XCTAssert(verifySchnorr(sig: newSignature, msg: msgData, pubKey: pubKey))
+            XCTAssert(verifySchnorr(sig: newSignature, msg: msgData, publicKey: publicKey))
             
             // Do 10 iterations where we sign with a random Merkle root to tweak,
             // and compare against the resulting tweaked keys, with random aux.
@@ -45,11 +45,11 @@ final class BIP340Tests: XCTestCase {
             for i in 0 ..< 10 {
                 let merkleRoot: Data? = i == 0 ? .none : insecureRand256()
                 let auxRnd = insecureRand256()
-                let (tweakedKey: tweakedKey, parity: parity) = createTapTweak(pubKey: pubKey, merkleRoot: merkleRoot)
-                XCTAssert(checkTapTweak(pubKey: pubKey, tweakedKey: tweakedKey, merkleRoot: merkleRoot, parity: parity))
+                let (tweakedKey: tweakedKey, parity: parity) = createTapTweak(publicKey: publicKey, merkleRoot: merkleRoot)
+                XCTAssert(checkTapTweak(publicKey: publicKey, tweakedKey: tweakedKey, merkleRoot: merkleRoot, parity: parity))
                 
-                let altSignature = signSchnorr(msg: msgData, privKey: privKey, merkleRoot: merkleRoot, aux: auxRnd)
-                let verificationResult = verifySchnorr(sig: altSignature, msg: msgData, pubKey: tweakedKey)
+                let altSignature = signSchnorr(msg: msgData, secretKey: secretKey, merkleRoot: merkleRoot, aux: auxRnd)
+                let verificationResult = verifySchnorr(sig: altSignature, msg: msgData, publicKey: tweakedKey)
                 XCTAssert(verificationResult)
 
             }
@@ -78,11 +78,11 @@ final class BIP340Tests: XCTestCase {
         (("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC30", "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89", "6CFF5C3BA86C69EA4B7376F31A9BCB4F74C1976089B2D9963DA2E5543E17776969E89B4C5564D00349106B8497785DD7D1D713A8AE82B32FA79D5F7FC407D39B"), false)
         ]
 
-        for ((pubKey, msg, sig), result) in vectors {
-            let pubKeyData = Data(hex: pubKey)
+        for ((publicKey, msg, sig), result) in vectors {
+            let publicKeyData = Data(hex: publicKey)
             let msgData = Data(hex: msg)
             let sigData = Data(hex:  sig)
-            XCTAssertEqual(verifySchnorr(sig: sigData, msg: msgData, pubKey: pubKeyData), result)
+            XCTAssertEqual(verifySchnorr(sig: sigData, msg: msgData, publicKey: publicKeyData), result)
         }
     }
 }

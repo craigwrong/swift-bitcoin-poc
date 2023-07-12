@@ -60,21 +60,21 @@ public struct Transaction: Equatable {
             isSegwit = false
         }
         
-        let insLen = data.varInt
-        data = data.dropFirst(insLen.varIntSize)
+        let inputsCount = data.varInt
+        data = data.dropFirst(inputsCount.varIntSize)
         
         var inputs = [Input]()
-        for _ in 0 ..< insLen {
+        for _ in 0 ..< inputsCount {
             let input = Input(data)
             inputs.append(input)
             data = data.dropFirst(input.dataCount)
         }
         
-        let outsLen = data.varInt
-        data = data.dropFirst(outsLen.varIntSize)
+        let outputsCount = data.varInt
+        data = data.dropFirst(outputsCount.varIntSize)
         
         var outputs = [Output]()
-        for _ in 0 ..< outsLen {
+        for _ in 0 ..< outputsCount {
             let out = Output(data)
             outputs.append(out)
             data = data.dropFirst(out.dataCount)
@@ -102,9 +102,9 @@ public struct Transaction: Equatable {
         if hasWitness {
             ret += Data([Transaction.segwitMarker, Transaction.segwitFlag])
         }
-        ret += Data(varInt: insLen)
+        ret += Data(varInt: inputsCount)
         ret += inputs.reduce(Data()) { $0 + $1.data }
-        ret += Data(varInt: outsLen)
+        ret += Data(varInt: outputsCount)
         ret += outputs.reduce(Data()) { $0 + $1.data }
         if hasWitness {
             ret += inputs.reduce(Data()) {
@@ -121,9 +121,9 @@ public struct Transaction: Equatable {
     var idData: Data {
         var ret = Data()
         ret += version.data
-        ret += Data(varInt: insLen)
+        ret += Data(varInt: inputsCount)
         ret += inputs.reduce(Data()) { $0 + $1.data }
-        ret += Data(varInt: outsLen)
+        ret += Data(varInt: outputsCount)
         ret += outputs.reduce(Data()) { $0 + $1.data }
         ret += locktime.data
         return ret
@@ -138,11 +138,11 @@ public struct Transaction: Equatable {
     /// Whether this is the coinbase transaction of any given block. Based of whether the first and only input is a coinbase input.
     var isCoinbase: Bool { inputs.first?.isCoinbase ?? false }
     var hasWitness: Bool { inputs.contains { $0.witness != .none } }
-    private var insLen: UInt64 { .init(inputs.count) }
-    private var outsLen: UInt64 { .init(outputs.count) }
+    private var inputsCount: UInt64 { .init(inputs.count) }
+    private var outputsCount: UInt64 { .init(outputs.count) }
     
     var nonWitnessSize: Int {
-        Version.dataCount + insLen.varIntSize + inputs.reduce(0) { $0 + $1.dataCount } + outsLen.varIntSize + outputs.reduce(0) { $0 + $1.dataCount } + Locktime.dataCount
+        Version.dataCount + inputsCount.varIntSize + inputs.reduce(0) { $0 + $1.dataCount } + outputsCount.varIntSize + outputs.reduce(0) { $0 + $1.dataCount } + Locktime.dataCount
     }
     
     var witnessSize: Int {

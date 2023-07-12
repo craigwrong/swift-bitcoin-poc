@@ -4,19 +4,19 @@ import Foundation
 /// pk0, checksig, pk1, checksigadd, pk2, checksigadd, 3, equal
 func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
 
-    guard let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
+    guard let merkleRoot = context.merkleRoot, let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
         preconditionFailure()
     }
 
     // If fewer than 3 elements are on the stack, the script MUST fail and terminate immediately.
-    let (sig, nData, pubKey) = try getTernaryParams(&stack)
+    let (sig, nData, publicKey) = try getTernaryParams(&stack)
 
     guard let n = nData.asUInt32 else {
         // - If n is larger than 4 bytes, the script MUST fail and terminate immediately.
         throw ScriptError.invalidScript
     }
     
-    if pubKey.isEmpty {
+    if publicKey.isEmpty {
         // - If the public key size is zero, the script MUST fail and terminate immediately.
         throw ScriptError.invalidScript
     }
@@ -24,13 +24,14 @@ func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
     // If the public key size is not zero and not 32 bytes, the public key is of an unknown public key type and no actual signature verification is applied. During script execution of signature opcodes they behave exactly as known public key types except that signature validation is considered to be successful.
         
 
-    if pubKey.count == 32 && !sig.isEmpty {
+    if publicKey.count == 32 && !sig.isEmpty {
         // If the public key size is 32 bytes, it is considered to be a public key as described in BIP340:
     
         // If the signature is not the empty vector, the signature is validated against the public key (see the next subsection). Validation failure in this case immediately terminates script execution with failure.
         
         // Tapscript semantics
-        let result = context.transaction.checkTaprootSignature(extendedSignature: sig, publicKey: pubKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutputs, extFlag: 1, tapscriptExtension: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
+        let tweakedPublicKey = getOutputKey(internalKey: publicKey, merkleRoot: merkleRoot)
+        let result = context.transaction.checkTaprootSignature(extendedSignature: sig, publicKey: tweakedPublicKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutputs, extFlag: 1, tapscriptExtension: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
         
         if !result {
             throw ScriptError.invalidScript

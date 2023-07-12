@@ -1,7 +1,7 @@
 enum OutputType: Equatable {
     case nonStandard,
-         pubKey,
-         pubKeyHash,
+         publicKey,
+         publicKeyHash,
          scriptHash,
          multiSig,
          nullData,

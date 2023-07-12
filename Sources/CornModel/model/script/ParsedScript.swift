@@ -48,11 +48,11 @@ public struct ParsedScript: Script {
         UInt64(dataCount).varIntSize + dataCount
     }
 
-    mutating func removeSubScripts(before opIdx: Int) {
-        if let previousCodeSeparatorIdx = operations.indices.last(where : { i in
-            operations[i] == .codeSeparator && i < opIdx
+    mutating func removeSubScripts(before opIndex: Int) {
+        if let previousCodeSeparatorIndex = operations.indices.last(where : { i in
+            operations[i] == .codeSeparator && i < opIndex
         }) {
-            operations = .init(operations.dropFirst(previousCodeSeparatorIdx + 1))
+            operations = .init(operations.dropFirst(previousCodeSeparatorIndex + 1))
         }
     }
     
@@ -70,8 +70,8 @@ public struct ParsedScript: Script {
         SerializedScript(data, version: version)
     }
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, prevOuts: [Transaction.Output], tapLeafHash: Data? = .none) throws {
-        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: prevOuts, script: self, tapLeafHash: tapLeafHash)
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], merkleRoot: Data? = .none, tapLeafHash: Data? = .none) throws {
+        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, script: self, merkleRoot: merkleRoot, tapLeafHash: tapLeafHash)
         
         for operation in operations {
         
@@ -98,10 +98,10 @@ public struct ParsedScript: Script {
     var outputType: OutputType {
         // Compressed pk are 33 bytes, uncompressed 65
         if operations.count == 2, operations[1] == .checkSig, case let .pushBytes(data) = operations[0], (data.count == 33 || data.count == 65) {
-            return .pubKey
+            return .publicKey
         }
         if operations.count == 5, operations[0] == .dup, operations[1] == .hash160, operations[3] == .equalVerify, operations[4] == .checkSig, case let .pushBytes(data) = operations[2], data.count == 20 {
-            return .pubKeyHash
+            return .publicKeyHash
         }
         if operations.count == 3, operations[0] == .hash160, operations[2] == .equal, case let .pushBytes(data) = operations[1], data.count == 20 {
             return .scriptHash
@@ -148,19 +148,19 @@ public struct ParsedScript: Script {
         ])
     }
 
-    public static func makeP2PK(pubKey: Data) -> Self {
-        precondition(pubKey.count == 33)
+    public static func makeP2PK(publicKey: Data) -> Self {
+        precondition(publicKey.count == 33)
         return .init([
-            .pushBytes(pubKey),
+            .pushBytes(publicKey),
             .checkSig
         ])
     }
 
-    public static func makeP2PKH(pubKey: Data) -> Self {
+    public static func makeP2PKH(publicKey: Data) -> Self {
         .init([
             .dup,
             .hash160,
-            .pushBytes(hash160(pubKey)),
+            .pushBytes(hash160(publicKey)),
             .equalVerify,
             .checkSig
         ])
@@ -185,10 +185,10 @@ public struct ParsedScript: Script {
         ])
     }
 
-    public static func makeP2WKH(pubKey: Data) -> Self {
+    public static func makeP2WKH(publicKey: Data) -> Self {
         .init([
             .zero,
-            .pushBytes(hash160(pubKey))
+            .pushBytes(hash160(publicKey))
         ])
     }
 
@@ -207,13 +207,13 @@ public struct ParsedScript: Script {
         ])
     }
 
-    static func makeP2WPKH(_ pubKeyHash: Data) -> Self {
+    static func makeP2WPKH(_ publicKeyHash: Data) -> Self {
         // For P2WPKH witness program, the scriptCode is 0x1976a914{20-byte-pubkey-hash}88ac.
         // OP_DUP OP_HASH160 1d0f172a0ecb48aee1be1f2687d2963ae33f71a1 OP_EQUALVERIFY OP_CHECKSIG
         .init([
             .dup,
             .hash160,
-            .pushBytes(pubKeyHash), // prevOut.script.ops[1], // pushBytes 20
+            .pushBytes(publicKeyHash), // previousOutput.script.ops[1], // pushBytes 20
             .equalVerify,
             .checkSig
         ], version: .witnessV0)

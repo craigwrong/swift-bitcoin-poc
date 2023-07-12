@@ -8,7 +8,7 @@ extension Transaction {
     /// - Parameters:
     ///   - sighashType: Signature hash type.
     ///   - inputIndex: Transaction input index.
-    ///   - prevOut: Previous unspent transaction output corresponding to the transaction input being signed/verified.
+    ///   - previousOutput: Previous unspent transaction output corresponding to the transaction input being signed/verified.
     ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
     /// - Returns: A hash value for use while either signing or verifying a transaction input.
     func signatureHash(sighashType: SighashType, inputIndex: Int, previousOutput: Transaction.Output, scriptCode: Data) -> Data {

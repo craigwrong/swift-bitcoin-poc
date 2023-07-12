@@ -11,6 +11,6 @@ static const size_t PUBKEY_COMPRESSED_LEN = 33;
 
 void cECCStart(void (*getRandBytes)(u_char*, const size_t));
 void cECCStop();
-int createPrivKey(void (*getRandBytes)(u_char*, const size_t), u_char *privKeyOut32, size_t* privKeyLenOut);
-int getPubKey(u_char *pubKeyOut, size_t* pubKeyLenOut, const u_char *privKey32, const int compress);
+int createSecretKey(void (*getRandBytes)(u_char*, const size_t), u_char *secretKeyOut32, size_t* secretKeyLenOut);
+int getPublicKey(u_char *pubKeyOut, size_t* pubKeyLenOut, const u_char *secretKey32, const int compress);
 #endif /* ecc_h */

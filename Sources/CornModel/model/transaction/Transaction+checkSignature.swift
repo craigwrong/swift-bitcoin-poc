@@ -11,7 +11,7 @@ extension Transaction {
         }
         let sig = sigTmp
         let sighash = signatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutput: previousOutput, scriptCode: scriptCode)
-        let result = verifyECDSA(sig: sig, msg: sighash, pubKey: publicKey)
+        let result = verifyECDSA(sig: sig, msg: sighash, publicKey: publicKey)
         return result
     }
     
@@ -22,7 +22,7 @@ extension Transaction {
         }
         let sig = sigTmp
         let sighash = segwitSignatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutput: previousOutputs, scriptCode: scriptCode)
-        let result = verifyECDSA(sig: sig, msg: sighash, pubKey: publicKey)
+        let result = verifyECDSA(sig: sig, msg: sighash, publicKey: publicKey)
         return result
     }
     
@@ -44,7 +44,7 @@ extension Transaction {
         var txCopy = self
         var cache = SighashCache() // TODO: Hold on to cache.
         let sighash = txCopy.taprootSignatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutputs: previousOutputs, tapscriptExtension: tapscriptExtension, sighashCache: &cache)
-        let result = verifySchnorr(sig: sig, msg: sighash, pubKey: publicKey)
+        let result = verifySchnorr(sig: sig, msg: sighash, publicKey: publicKey)
         return result
     }
 }

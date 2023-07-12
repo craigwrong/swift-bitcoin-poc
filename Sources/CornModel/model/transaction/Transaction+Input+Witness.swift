@@ -10,10 +10,10 @@ public extension Transaction.Input { struct Witness: Equatable {
     
     init(_ data: Data) {
         var data = data
-        let witnessLen = data.varInt
-        data = data.dropFirst(witnessLen.varIntSize)
+        let elementsCount = data.varInt
+        data = data.dropFirst(elementsCount.varIntSize)
         elements = [Data]()
-        for _ in 0 ..< witnessLen {
+        for _ in 0 ..< elementsCount {
             let element = Data(varLenData: data)
             elements.append(element)
             data = data.dropFirst(element.varLenSize)

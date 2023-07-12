@@ -13,9 +13,9 @@ final class CheckSigTests: XCTestCase {
     }
     
     func testOne() {
-        let privKey = createPrivKey()
-        let pubKey = getPubKey(privKey: privKey)
-        let prevOuts = [
+        let secretKey = createSecretKey()
+        let publicKey = getPublicKey(secretKey: secretKey)
+        let previousOutputs = [
             Transaction.Output(value: 0, script:.init([]))
         ]
         let tx = Transaction(version: .v1, locktime: .disabled,
@@ -31,12 +31,12 @@ final class CheckSigTests: XCTestCase {
             .checkSig
         ])
         let sighashType = SighashType.all
-        let sig = signECDSA(msg: tx.signatureHash(sighashType: sighashType, inputIndex: 0, previousOutput: prevOuts[0], scriptCode: script.data), privKey: privKey) + sighashType.data
+        let sig = tx.createSignature(inputIndex: 0, secretKey: secretKey, sighashType: sighashType, previousOutput: previousOutputs[0], scriptCode: script.data)
         var stack = [
             sig,
-            pubKey
+            publicKey
         ]
-        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, prevOuts: prevOuts))
+        XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, previousOutputs: previousOutputs))
         let expectedStack = [Data]([.one])
         XCTAssertEqual(stack, expectedStack)
     }

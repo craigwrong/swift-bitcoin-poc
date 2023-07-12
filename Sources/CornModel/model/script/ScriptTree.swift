@@ -44,8 +44,8 @@ public indirect enum ScriptTree: Equatable {
         return taggedHash(tag: "TapLeaf", payload: leafVersionData + scriptData.varLenData)
     }
     
-    public func getOutputKey(privKey: Data) -> Data {
+    public func getOutputKey(secretKey: Data) -> Data {
         let (_, merkleRoot) = calcMerkleRoot()
-        return CornModel.getOutputKey(privKey: privKey, merkleRoot: merkleRoot)
+        return CornModel.getOutputKey(secretKey: secretKey, merkleRoot: merkleRoot)
     }
 }

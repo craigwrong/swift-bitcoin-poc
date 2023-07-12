@@ -11,54 +11,54 @@ final class DataTests: XCTestCase {
     }
     
     func testTx() {
-        let privKey0 = createPrivKey()
-        let pubKey0 = getPubKey(privKey: privKey0)
-        let privKey1 = createPrivKey()
-        let pubKey1 = getPubKey(privKey: privKey1)
-        let prevOuts = [
+        let secretKey0 = createSecretKey()
+        let publicKey0 = getPublicKey(secretKey: secretKey0)
+        let secretKey1 = createSecretKey()
+        let publicKey1 = getPublicKey(secretKey: secretKey1)
+        let previousOutputs = [
             Transaction.Output(value: 0,
-                   script: ParsedScript.makeP2PKH(pubKey: pubKey0)),
+                   script: ParsedScript.makeP2PKH(publicKey: publicKey0)),
             Transaction.Output(value: 0,
-                   script: ParsedScript.makeP2PKH(pubKey: pubKey1))
+                   script: ParsedScript.makeP2PKH(publicKey: publicKey1))
         ]
         var tx = Transaction(version: .v1, locktime: .disabled,
                     inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
                     outputs: [.init(value: 0, script:ParsedScript.makeNullData(""))]
         )
-        tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], sighashType: .singleAnyCanPay, inputIndex: 0, prevOuts: prevOuts)
-        var res = tx.verify(prevOuts: prevOuts)
+        tx.sign(secretKeys: [secretKey0], publicKeys: [publicKey0], sighashType: .singleAnyCanPay, inputIndex: 0, previousOutputs: previousOutputs)
+        var res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
         //signed.outputs.removeAll()
         tx.outputs.append(.init(value: 0, script:ParsedScript.makeNullData("")))
-        res = tx.verify(prevOuts: prevOuts)
+        res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
         
         tx.inputs.append(Transaction.Input(outpoint: .init(transaction: "", output: 0), sequence: .initial))
-        tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], sighashType: .all, inputIndex: 1, prevOuts: prevOuts)
-        res = tx.verify(prevOuts: prevOuts)
+        tx.sign(secretKeys: [secretKey1], publicKeys: [publicKey1], sighashType: .all, inputIndex: 1, previousOutputs: previousOutputs)
+        res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
     }
     
     func testSighashAll() {
         // Some keys
-        let privKey0 = createPrivKey()
-        let pubKey0 = getPubKey(privKey: privKey0)
-        let privKey1 = createPrivKey()
-        let pubKey1 = getPubKey(privKey: privKey1)
-        let privKey2 = createPrivKey()
-        let pubKey2 = getPubKey(privKey: privKey2)
+        let secretKey0 = createSecretKey()
+        let publicKey0 = getPublicKey(secretKey: secretKey0)
+        let secretKey1 = createSecretKey()
+        let publicKey1 = getPublicKey(secretKey: secretKey1)
+        let secretKey2 = createSecretKey()
+        let publicKey2 = getPublicKey(secretKey: secretKey2)
         
         // Some previous outputs
-        let prevOuts = [
+        let previousOutputs = [
             Transaction.Output(value: 0,
-                   script: ParsedScript.makeP2PKH(pubKey: pubKey0)),
+                   script: ParsedScript.makeP2PKH(publicKey: publicKey0)),
             Transaction.Output(value: 0,
-                   script: ParsedScript.makeP2PKH(pubKey: pubKey1))
+                   script: ParsedScript.makeP2PKH(publicKey: publicKey1))
         ]
         
-        let prevOutsPlus = prevOuts + [
+        let previousOutputsPlus = previousOutputs + [
             Transaction.Output(value: 0,
-                   script: ParsedScript.makeP2WKH(pubKey: pubKey2))
+                   script: ParsedScript.makeP2WKH(publicKey: publicKey2))
         ]
         
         // Our transaction with 2 inputs and 2 outputs
@@ -76,77 +76,77 @@ final class DataTests: XCTestCase {
         )
         
         // Sign both inputs
-        tx.sign(privKeys: [privKey0], pubKeys: [pubKey0], sighashType: .allAnyCanPay, inputIndex: 0, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKey1], pubKeys: [pubKey1], sighashType: .noneAnyCanPay, inputIndex: 1, prevOuts: prevOuts)
+        tx.sign(secretKeys: [secretKey0], publicKeys: [publicKey0], sighashType: .allAnyCanPay, inputIndex: 0, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKey1], publicKeys: [publicKey1], sighashType: .noneAnyCanPay, inputIndex: 1, previousOutputs: previousOutputs)
         
         // Verify the signed transaction as is
-        var res = tx.verify(prevOuts: prevOuts)
+        var res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
         
         // Appending an additional output
         var signedOneMoreOut = tx
         signedOneMoreOut.outputs.append(.init(value: 0, script:ParsedScript.makeNullData("")))
-        res = signedOneMoreOut.verify(prevOuts: prevOuts)
+        res = signedOneMoreOut.verify(previousOutputs: previousOutputs)
         XCTAssertFalse(res)
         
         // Removing one of the outputs
         var signedOutRemoved = tx
         signedOutRemoved.outputs.remove(at: 0)
-        res = signedOutRemoved.verify(prevOuts: prevOuts)
+        res = signedOutRemoved.verify(previousOutputs: previousOutputs)
         XCTAssertFalse(res)
         
         // Appending an additional input
         var signedOneMoreIn = tx
         signedOneMoreIn.inputs.append(.init(outpoint: .init(transaction: "", output: 0), sequence: .initial))
-        signedOneMoreIn.sign(privKeys: [privKey2], pubKeys: [pubKey2], sighashType: .noneAnyCanPay, inputIndex: 2, prevOuts: prevOutsPlus)
-        res = signedOneMoreIn.verify(prevOuts: prevOutsPlus)
+        signedOneMoreIn.sign(secretKeys: [secretKey2], publicKeys: [publicKey2], sighashType: .noneAnyCanPay, inputIndex: 2, previousOutputs: previousOutputsPlus)
+        res = signedOneMoreIn.verify(previousOutputs: previousOutputsPlus)
         XCTAssert(res)
         
         // Removing the last one of the inputs
         var signedInRemoved = tx
         signedInRemoved.inputs.remove(at: 1)
-        res = signedInRemoved.verify(prevOuts: [prevOuts[0]])
+        res = signedInRemoved.verify(previousOutputs: [previousOutputs[0]])
         XCTAssert(res)
     }
     
     func testMultipleInputTypes() {
-        let privKeys = (0...10).map { _ in createPrivKey() }
-        let pubKeys = privKeys.map { getPubKey(privKey: $0) }
+        let secretKeys = (0...10).map { _ in createSecretKey() }
+        let publicKeys = secretKeys.map { getPublicKey(secretKey: $0) }
         
         let redeemScript2 = ParsedScript([
             .constant(2),
-            .pushBytes(pubKeys[3]),
-            .pushBytes(pubKeys[2]),
+            .pushBytes(publicKeys[3]),
+            .pushBytes(publicKeys[2]),
             .constant(2),
             .checkMultiSig
         ])
 
-        let redeemScript4 = ParsedScript.makeP2WKH(pubKey: pubKeys[4])
+        let redeemScript4 = ParsedScript.makeP2WKH(publicKey: publicKeys[4])
         let redeemScript5 = ParsedScript([
             .constant(2),
-            .pushBytes(pubKeys[6]),
-            .pushBytes(pubKeys[5]),
+            .pushBytes(publicKeys[6]),
+            .pushBytes(publicKeys[5]),
             .constant(2),
             .checkMultiSig
         ], version: .witnessV0)
         let redeemScriptV06 = ParsedScript([
             .constant(2),
-            .pushBytes(pubKeys[7]),
-            .pushBytes(pubKeys[6]),
+            .pushBytes(publicKeys[7]),
+            .pushBytes(publicKeys[6]),
             .constant(2),
             .checkMultiSig
         ], version: .witnessV0)
         let redeemScript6 = ParsedScript.makeP2WSH(redeemScriptV0: redeemScriptV06)
         
-        let outputKey7 = getOutputKey(privKey: privKeys[7])
+        let outputKey7 = getOutputKey(secretKey: secretKeys[7])
 
         // Sprevious outputs
-        let prevOuts = [
+        let previousOutputs = [
             // p2pk
-            Transaction.Output(value: 0, script:ParsedScript.makeP2PK(pubKey: pubKeys[0])),
+            Transaction.Output(value: 0, script:ParsedScript.makeP2PK(publicKey: publicKeys[0])),
             
             // p2pkh
-            Transaction.Output(value: 0, script:ParsedScript.makeP2PKH(pubKey: pubKeys[1])),
+            Transaction.Output(value: 0, script:ParsedScript.makeP2PKH(publicKey: publicKeys[1])),
             
             // p2sh
             Transaction.Output( value: 0,
@@ -154,7 +154,7 @@ final class DataTests: XCTestCase {
             ),
             
             // p2wkh
-            Transaction.Output(value: 0, script:ParsedScript.makeP2WKH(pubKey: pubKeys[3])),
+            Transaction.Output(value: 0, script:ParsedScript.makeP2WKH(publicKey: publicKeys[3])),
             
             // p2sh-p2wkh
             Transaction.Output(value: 0,
@@ -180,8 +180,8 @@ final class DataTests: XCTestCase {
             Transaction.Output(value: 0,
                 script: .init([
                     .constant(2),
-                    .pushBytes(pubKeys[9]),
-                    .pushBytes(pubKeys[8]),
+                    .pushBytes(publicKeys[9]),
+                    .pushBytes(publicKeys[8]),
                     .constant(2),
                     .checkMultiSig
                 ])
@@ -208,17 +208,17 @@ final class DataTests: XCTestCase {
                 .init(value: 0, script:ParsedScript.makeNullData(""))
             ]
         )
-        tx.sign(privKeys: [privKeys[0]], sighashType: .all, inputIndex: 0, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[1]], pubKeys: [pubKeys[1]], sighashType: .all, inputIndex: 1, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[2], privKeys[3]], redeemScript: redeemScript2, sighashType: .all, inputIndex: 2, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[3]], pubKeys: [pubKeys[3]], sighashType: .all, inputIndex: 3, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[4]], pubKeys: [pubKeys[4]], redeemScript: redeemScript4, sighashType: .all, inputIndex: 4, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[5], privKeys[6]], redeemScriptV0: redeemScript5, sighashType: .all, inputIndex: 5, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[6], privKeys[7]], redeemScript: redeemScript6, redeemScriptV0: redeemScriptV06, sighashType: .all, inputIndex: 6, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[7]], inputIndex: 7, prevOuts: prevOuts)
-        tx.sign(privKeys: [privKeys[8], privKeys[9]], sighashType: .all, inputIndex: 8, prevOuts: prevOuts)
+        tx.sign(secretKeys: [secretKeys[0]], sighashType: .all, inputIndex: 0, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[1]], publicKeys: [publicKeys[1]], sighashType: .all, inputIndex: 1, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[2], secretKeys[3]], redeemScript: redeemScript2, sighashType: .all, inputIndex: 2, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[3]], publicKeys: [publicKeys[3]], sighashType: .all, inputIndex: 3, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[4]], publicKeys: [publicKeys[4]], redeemScript: redeemScript4, sighashType: .all, inputIndex: 4, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[5], secretKeys[6]], redeemScriptV0: redeemScript5, sighashType: .all, inputIndex: 5, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[6], secretKeys[7]], redeemScript: redeemScript6, redeemScriptV0: redeemScriptV06, sighashType: .all, inputIndex: 6, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[7]], inputIndex: 7, previousOutputs: previousOutputs)
+        tx.sign(secretKeys: [secretKeys[8], secretKeys[9]], sighashType: .all, inputIndex: 8, previousOutputs: previousOutputs)
         
-        let res = tx.verify(prevOuts: prevOuts)
+        let res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
     }
 }

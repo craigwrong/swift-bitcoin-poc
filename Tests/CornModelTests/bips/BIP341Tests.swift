@@ -207,15 +207,15 @@ final class BIP341Tests: XCTestCase {
                     return leaf.leafHash
                 }
                 controlBlocks = treeInfo.map {
-                    computeControlBlock(internalPubKey: testCase.given.internalPubkey, leafInfo: $0, merkleRoot: merkleRoot)
+                    computeControlBlock(internalPublicKey: testCase.given.internalPubkey, leafInfo: $0, merkleRoot: merkleRoot)
                 }
             } else {
                 merkleRoot = .none
                 leafHashes = []
                 controlBlocks = []
             }
-            let tweak = computeTapTweakHash(xOnlyPubKey: testCase.given.internalPubkey, merkleRoot: merkleRoot)
-            let (tweakedPubkey, _) = createTapTweak(pubKey: testCase.given.internalPubkey, merkleRoot: merkleRoot)
+            let tweak = computeTapTweakHash(xOnlyPublicKey: testCase.given.internalPubkey, merkleRoot: merkleRoot)
+            let (tweakedPubkey, _) = createTapTweak(publicKey: testCase.given.internalPubkey, merkleRoot: merkleRoot)
             let scriptPubKey = ParsedScript([.constant(1), .pushBytes(tweakedPubkey)]).data
             guard let bip350Address = try? SegwitAddrCoder(bech32m: true).encode(hrp: "bc", version: 1, program: tweakedPubkey) else {
                 XCTFail()
@@ -273,14 +273,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 0,
-                    internalPrivkey: Data(hex: "6b973d88838f27366ed61c9ad6367663045cb456e28335c109e30717ae0c6baa"),
+                    internalSecretKey: Data(hex: "6b973d88838f27366ed61c9ad6367663045cb456e28335c109e30717ae0c6baa"),
                     merkleRoot: Data?.none,
                     sighashType: SighashType?.some(.single)
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "d6889cb081036e0faefa3a35157ad71086b123b2b144b649798b494c300a961d"),
                     tweak: Data(hex: "b86e7be8f39bab32a6f2c0443abbc210f0edac0e2c53d501b36b64437d9c6c70"),
-                    tweakedPrivkey: Data(hex: "2405b971772ad26915c8dcdf10f238753a9b837e5f8e6a86fd7c0cce5b7296d9"),
+                    tweakedSecretKey: Data(hex: "2405b971772ad26915c8dcdf10f238753a9b837e5f8e6a86fd7c0cce5b7296d9"),
                     sigMsg: Data(hex: "0003020000000065cd1de3b33bb4ef3a52ad1fffb555c0d82828eb22737036eaeb02a235d82b909c4c3f58a6964a4f5f8f0b642ded0a8a553be7622a719da71d1f5befcefcdee8e0fde623ad0f61ad2bca5ba6a7693f50fce988e17c3780bf2b1e720cfbb38fbdd52e2118959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957e0000000000d0418f0e9a36245b9a50ec87f8bf5be5bcae434337b87139c3a5b1f56e33cba0"),
                     precomputedUsed: (
                         hashAmounts: true,
@@ -298,14 +298,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 1,
-                    internalPrivkey: Data(hex: "1e4da49f6aaf4e5cd175fe08a32bb5cb4863d963921255f33d3bc31e1343907f"),
+                    internalSecretKey: Data(hex: "1e4da49f6aaf4e5cd175fe08a32bb5cb4863d963921255f33d3bc31e1343907f"),
                     merkleRoot: Data?.some(Data(hex: "5b75adecf53548f3ec6ad7d78383bf84cc57b55a3127c72b9a2481752dd88b21")),
                     sighashType: SighashType?.some(.singleAnyCanPay) // .init(rawValue: 131)
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27"),
                     tweak: Data(hex: "cbd8679ba636c1110ea247542cfbd964131a6be84f873f7f3b62a777528ed001"),
-                    tweakedPrivkey: Data(hex: "ea260c3b10e60f6de018455cd0278f2f5b7e454be1999572789e6a9565d26080"),
+                    tweakedSecretKey: Data(hex: "ea260c3b10e60f6de018455cd0278f2f5b7e454be1999572789e6a9565d26080"),
                     sigMsg: Data(hex: "0083020000000065cd1d00d7b7cab57b1393ace2d064f4d4a2cb8af6def61273e127517d44759b6dafdd9900000000808f891b00000000225120147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3ffffffffffcef8fb4ca7efc5433f591ecfc57391811ce1e186a3793024def5c884cba51d"),
                     precomputedUsed: (
                         hashAmounts: false,
@@ -323,14 +323,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 3,
-                    internalPrivkey: Data(hex: "d3c7af07da2d54f7a7735d3d0fc4f0a73164db638b2f2f7c43f711f6d4aa7e64"),
+                    internalSecretKey: Data(hex: "d3c7af07da2d54f7a7735d3d0fc4f0a73164db638b2f2f7c43f711f6d4aa7e64"),
                     merkleRoot: Data?.some(Data(hex: "c525714a7f49c28aedbbba78c005931a81c234b2f6c99a73e4d06082adc8bf2b")),
                     sighashType: .all
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820"),
                     tweak: Data(hex: "6af9e28dbf9d6aaf027696e2598a5b3d056f5fd2355a7fd5a37a0e5008132d30"),
-                    tweakedPrivkey: Data(hex: "97323385e57015b75b0339a549c56a948eb961555973f0951f555ae6039ef00d"),
+                    tweakedSecretKey: Data(hex: "97323385e57015b75b0339a549c56a948eb961555973f0951f555ae6039ef00d"),
                     sigMsg: Data(hex: "0001020000000065cd1de3b33bb4ef3a52ad1fffb555c0d82828eb22737036eaeb02a235d82b909c4c3f58a6964a4f5f8f0b642ded0a8a553be7622a719da71d1f5befcefcdee8e0fde623ad0f61ad2bca5ba6a7693f50fce988e17c3780bf2b1e720cfbb38fbdd52e2118959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957ea2e6dab7c1f0dcd297c8d61647fd17d821541ea69c3cc37dcbad7f90d4eb4bc50003000000"),
                     precomputedUsed: (
                         hashAmounts: true,
@@ -348,14 +348,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 4,
-                    internalPrivkey: Data(hex: "f36bb07a11e469ce941d16b63b11b9b9120a84d9d87cff2c84a8d4affb438f4e"),
+                    internalSecretKey: Data(hex: "f36bb07a11e469ce941d16b63b11b9b9120a84d9d87cff2c84a8d4affb438f4e"),
                     merkleRoot: Data?.some(Data(hex: "ccbd66c6f7e8fdab47b3a486f59d28262be857f30d4773f2d5ea47f7761ce0e2")),
                     sighashType: Optional.none
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "e0dfe2300b0dd746a3f8674dfd4525623639042569d829c7f0eed9602d263e6f"),
                     tweak: Data(hex: "b57bfa183d28eeb6ad688ddaabb265b4a41fbf68e5fed2c72c74de70d5a786f4"),
-                    tweakedPrivkey: Data(hex: "a8e7aa924f0d58854185a490e6c41f6efb7b675c0f3331b7f14b549400b4d501"),
+                    tweakedSecretKey: Data(hex: "a8e7aa924f0d58854185a490e6c41f6efb7b675c0f3331b7f14b549400b4d501"),
                     sigMsg: Data(hex: "0000020000000065cd1de3b33bb4ef3a52ad1fffb555c0d82828eb22737036eaeb02a235d82b909c4c3f58a6964a4f5f8f0b642ded0a8a553be7622a719da71d1f5befcefcdee8e0fde623ad0f61ad2bca5ba6a7693f50fce988e17c3780bf2b1e720cfbb38fbdd52e2118959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957ea2e6dab7c1f0dcd297c8d61647fd17d821541ea69c3cc37dcbad7f90d4eb4bc50004000000"),
                     precomputedUsed: (
                         hashAmounts: true,
@@ -373,14 +373,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 6,
-                    internalPrivkey: Data(hex: "415cfe9c15d9cea27d8104d5517c06e9de48e2f986b695e4f5ffebf230e725d8"),
+                    internalSecretKey: Data(hex: "415cfe9c15d9cea27d8104d5517c06e9de48e2f986b695e4f5ffebf230e725d8"),
                     merkleRoot: Data?.some(Data(hex: "2f6b2c5397b6d68ca18e09a3f05161668ffe93a988582d55c6f07bd5b3329def")),
                     sighashType: SighashType.none
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "55adf4e8967fbd2e29f20ac896e60c3b0f1d5b0efa9d34941b5958c7b0a0312d"),
                     tweak: Data(hex: "6579138e7976dc13b6a92f7bfd5a2fc7684f5ea42419d43368301470f3b74ed9"),
-                    tweakedPrivkey: Data(hex: "241c14f2639d0d7139282aa6abde28dd8a067baa9d633e4e7230287ec2d02901"),
+                    tweakedSecretKey: Data(hex: "241c14f2639d0d7139282aa6abde28dd8a067baa9d633e4e7230287ec2d02901"),
                     sigMsg: Data(hex: "0002020000000065cd1de3b33bb4ef3a52ad1fffb555c0d82828eb22737036eaeb02a235d82b909c4c3f58a6964a4f5f8f0b642ded0a8a553be7622a719da71d1f5befcefcdee8e0fde623ad0f61ad2bca5ba6a7693f50fce988e17c3780bf2b1e720cfbb38fbdd52e2118959c7221ab5ce9e26c3cd67b22c24f8baa54bac281d8e6b05e400e6c3a957e0006000000"),
                     precomputedUsed: (
                         hashAmounts: true,
@@ -398,14 +398,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 7,
-                    internalPrivkey: Data(hex: "c7b0e81f0a9a0b0499e112279d718cca98e79a12e2f137c72ae5b213aad0d103"),
+                    internalSecretKey: Data(hex: "c7b0e81f0a9a0b0499e112279d718cca98e79a12e2f137c72ae5b213aad0d103"),
                     merkleRoot: Data?.some(Data(hex: "6c2dc106ab816b73f9d07e3cd1ef2c8c1256f519748e0813e4edd2405d277bef")),
                     sighashType: .noneAnyCanPay
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "ee4fe085983462a184015d1f782d6a5f8b9c2b60130aff050ce221ecf3786592"),
                     tweak: Data(hex: "9e0517edc8259bb3359255400b23ca9507f2a91cd1e4250ba068b4eafceba4a9"),
-                    tweakedPrivkey: Data(hex: "65b6000cd2bfa6b7cf736767a8955760e62b6649058cbc970b7c0871d786346b"),
+                    tweakedSecretKey: Data(hex: "65b6000cd2bfa6b7cf736767a8955760e62b6649058cbc970b7c0871d786346b"),
                     sigMsg: Data(hex: "0082020000000065cd1d00e9aa6b8e6c9de67619e6a3924ae25696bb7b694bb677a632a74ef7eadfd4eabf00000000804c8b2000000000225120712447206d7a5238acc7ff53fbe94a3b64539ad291c7cdbc490b7577e4b17df5ffffffff"),
                     precomputedUsed: (
                         hashAmounts: false,
@@ -423,14 +423,14 @@ final class BIP341Tests: XCTestCase {
             (
                 given: (
                     txinIndex: 8,
-                    internalPrivkey: Data(hex: "77863416be0d0665e517e1c375fd6f75839544eca553675ef7fdf4949518ebaa"),
+                    internalSecretKey: Data(hex: "77863416be0d0665e517e1c375fd6f75839544eca553675ef7fdf4949518ebaa"),
                     merkleRoot: Data(hex: "ab179431c28d3b68fb798957faf5497d69c883c6fb1e1cd9f81483d87bac90cc"),
                     sighashType: .allAnyCanPay
                 ),
                 intermediary: (
                     internalPubkey: Data(hex: "f9f400803e683727b14f463836e1e78e1c64417638aa066919291a225f0e8dd8"),
                     tweak: Data(hex: "639f0281b7ac49e742cd25b7f188657626da1ad169209078e2761cefd91fd65e"),
-                    tweakedPrivkey: Data(hex: "ec18ce6af99f43815db543f47b8af5ff5df3b2cb7315c955aa4a86e8143d2bf5"),
+                    tweakedSecretKey: Data(hex: "ec18ce6af99f43815db543f47b8af5ff5df3b2cb7315c955aa4a86e8143d2bf5"),
                     sigMsg: Data(hex: "0081020000000065cd1da2e6dab7c1f0dcd297c8d61647fd17d821541ea69c3cc37dcbad7f90d4eb4bc500a778eb6a263dc090464cd125c466b5a99667720b1c110468831d058aa1b82af101000000002b0c230000000022512077e30a5522dd9f894c3f8b8bd4c4b2cf82ca7da8a3ea6a239655c39c050ab220ffffffff"),
                     precomputedUsed: (
                         hashAmounts: false,
@@ -449,27 +449,27 @@ final class BIP341Tests: XCTestCase {
         
         for testCase in inputSpending {
             // Given
-            let privKey = testCase.given.internalPrivkey
+            let secretKey = testCase.given.internalSecretKey
             let merkleRoot = testCase.given.merkleRoot
             let sighashType = testCase.given.sighashType
             let inputIndex = testCase.given.txinIndex
             
             // Expected
-            let expectedInternalPubKey = testCase.intermediary.internalPubkey
+            let expectedInternalPublicKey = testCase.intermediary.internalPubkey
             let expectedTweak = testCase.intermediary.tweak
-            let expectedTweakedPrivkey = testCase.intermediary.tweakedPrivkey
+            let expectedTweakedSecretKey = testCase.intermediary.tweakedSecretKey
             let expectedSigMsg = testCase.intermediary.sigMsg
             let expectedSighash = testCase.intermediary.sighash
             let expectedWitness = testCase.expectedWitness
             
-            let internalPubKey = getInternalKey(privKey: privKey)
-            XCTAssertEqual(internalPubKey, expectedInternalPubKey)
+            let internalPublicKey = getInternalKey(secretKey: secretKey)
+            XCTAssertEqual(internalPublicKey, expectedInternalPublicKey)
 
-            let tweak = computeTapTweakHash(xOnlyPubKey: internalPubKey, merkleRoot: merkleRoot)
+            let tweak = computeTapTweakHash(xOnlyPublicKey: internalPublicKey, merkleRoot: merkleRoot)
             XCTAssertEqual(tweak, expectedTweak)
             
-            let tweakedPrivKey = createPrivKeyTapTweak(privKey: privKey, merkleRoot: merkleRoot)
-            XCTAssertEqual(tweakedPrivKey, expectedTweakedPrivkey)
+            let tweakedSecretKey = createSecretKeyTapTweak(secretKey: secretKey, merkleRoot: merkleRoot)
+            XCTAssertEqual(tweakedSecretKey, expectedTweakedSecretKey)
 
             let sigMsg = tx.taprootSignatureMessage(sighashType: sighashType, inputIndex: inputIndex, previousOutputs: utxosSpent, sighashCache: &cache)
 
@@ -489,7 +489,7 @@ final class BIP341Tests: XCTestCase {
             } else {
                 hashTypeSuffix = Data()
             }
-            let sig = signSchnorr(msg: sighash, privKey: privKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + hashTypeSuffix
+            let sig = signSchnorr(msg: sighash, secretKey: secretKey, merkleRoot: merkleRoot, aux: Data(repeating: 0, count: 256)) + hashTypeSuffix
             XCTAssertEqual([sig], expectedWitness)
         }
 

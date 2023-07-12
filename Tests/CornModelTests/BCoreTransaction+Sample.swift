@@ -33,7 +33,7 @@ extension CoreTx {
                         desc: "addr(mwxFkyeJJDvq2VmrbJA2eVN4ywSdyVXEdk)#mjqgx25y",
                         hex: "76a914b44afd6e2b4dd224e3eb7050c46dd11f9be78a9688ac",
                         address: "mwxFkyeJJDvq2VmrbJA2eVN4ywSdyVXEdk",
-                        type: .pubKeyHash
+                        type: .publicKeyHash
                     )
                 ),
                 .init(
@@ -82,7 +82,7 @@ extension CoreTx {
                         desc: "",
                         hex: "76a914b44afd6e2b4dd224e3eb7050c46dd11f9be78a9688ac",
                         address: "",
-                        type: .pubKeyHash
+                        type: .publicKeyHash
                     )
                 ),
                 .init(

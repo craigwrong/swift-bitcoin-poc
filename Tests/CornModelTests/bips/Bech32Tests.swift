@@ -131,7 +131,7 @@ class Bech32Tests: XCTestCase {
                 continue
             }
 
-            let scriptPk = segwitPubKey(version: decoded!.version, program: decoded!.program)
+            let scriptPk = segwitPublicKey(version: decoded!.version, program: decoded!.program)
             XCTAssert(scriptPk == script, "Decoded script mismatch: \(scriptPk.hex) != \(script.hex)")
             
             do {
@@ -188,7 +188,7 @@ class Bech32Tests: XCTestCase {
         }
     }
     
-    private func segwitPubKey(version: Int, program: Data) -> Data {
+    private func segwitPublicKey(version: Int, program: Data) -> Data {
         var result = Data()
         result.append(version != 0 ? (0x80 | UInt8(version)) : 0x00)
         result.append(UInt8(program.count))

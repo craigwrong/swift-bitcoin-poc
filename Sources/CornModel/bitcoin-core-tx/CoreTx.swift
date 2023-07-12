@@ -96,8 +96,8 @@ extension CoreTx {
             
             enum LockType: String, Equatable, Decodable {
                 case nonStandard = "nonstandard",
-                     pubKey = "pubkey",
-                     pubKeyHash = "pubkeyhash",
+                     publicKey = "pubkey",
+                     publicKeyHash = "pubkeyhash",
                      scriptHash = "scripthash",
                      multiSig = "multisig",
                      nullData = "nulldata",
@@ -209,10 +209,10 @@ extension CoreTx.Output.LockScript.LockType {
         switch scriptType {
         case .nonStandard:
             self = .nonStandard
-        case .pubKey:
-            self = .pubKey
-        case .pubKeyHash:
-            self = .pubKeyHash
+        case .publicKey:
+            self = .publicKey
+        case .publicKeyHash:
+            self = .publicKeyHash
         case .scriptHash:
             self = .scriptHash
         case .multiSig:

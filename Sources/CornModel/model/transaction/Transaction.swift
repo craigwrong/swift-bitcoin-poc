@@ -14,7 +14,7 @@ public struct Transaction: Equatable {
     /// Its presence withn transaction data indicates the number of witness sections present. At the time of writing only one possible witness data section may exist.
     static let segwitFlag = UInt8(0x01)
 
-    static let empty = Self(version: .v1, locktime: .disabled, inputs: [], outputs: [])
+    public static let empty = Self(version: .v1, locktime: .disabled, inputs: [], outputs: [])
     static let coinbaseID = String(repeating: "0", count: Transaction.identifierDataCount * 2)
 
     /// The transaction format version.

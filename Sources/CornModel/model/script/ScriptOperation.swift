@@ -1,7 +1,7 @@
 import Foundation
 
 public enum ScriptOperation: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, ver, `if`, notIf, verIf, verNotIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, ifDup, drop, dup, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, /* legacy,V0 */ reserved(UInt8), /* V1+ */ success(UInt8), constant(UInt8), noOp, ver, `if`, notIf, verIf, verNotIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, twoDrop, twoDup, ifDup, drop, dup, swap, equal, equalVerify, negate, add, boolAnd, ripemd160, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, checkLockTimeVerify, checkSequenceVerify, /* V1+ */ checkSigAdd, undefined
 }
 
 extension ScriptOperation {
@@ -24,190 +24,101 @@ extension ScriptOperation {
     
     var opCode: UInt8 {
         switch(self) {
-        case .zero:
-            return 0x00
-        case .pushBytes(let d):
-            precondition(d.count >= 0x01 && d.count <= 0x4b)
-            return UInt8(d.count)
-        case .pushData1(_):
-            return 0x4c
-        case .pushData2(_):
-            return 0x4d
-        case .pushData4(_):
-            return 0x4e
-        case .oneNegate:
-            return 0x4f
-        case .reserved(let k):
-            precondition(k == 80 || (k >= 137 && k <= 138))
-            return k
-        case .success(let k):
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // 80, 98, 126-129, 131-134, 137-138, 141-142, 149-153, 187-254
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            return k
-        case .constant(let k):
-            precondition(k > 0 && k < 17)
-            return 0x50 + k
-        case .noOp:
-            return 0x61
-        case .ver:
-            return 0x62
-        case .if:
-            return 0x63
-        case .notIf:
-            return 0x64
-        case .verIf:
-            return 0x65
-        case .verNotIf:
-            return 0x66
-        case .else:
-            return 0x67
-        case .endIf:
-            return 0x68
-        case .verify:
-            return 0x69
-        case .return:
-            return 0x6a
-        case .toAltStack:
-            return 0x6b
-        case .fromAltStack:
-            return 0x6c
-        case .ifDup:
-            return 0x73
-        case .drop:
-            return 0x75
-        case .dup:
-            return 0x76
-        case .equal:
-            return 0x87
-        case .equalVerify:
-            return 0x88
-        case .negate:
-            return 0x8f
-        case .add:
-            return 0x93
-        case .boolAnd:
-            return 0x9a
-        case .ripemd160:
-            return 0xa6
-        case .sha256:
-            return 0xa8
-        case .hash160:
-            return 0xa9
-        case .hash256:
-            return 0xaa
-        case .codeSeparator:
-            return 0xab
-        case .checkSig:
-            return 0xac
-        case .checkSigVerify:
-            return 0xad
-        case .checkMultiSig:
-            return 0xae
-        case .checkMultiSigVerify:
-            return 0xaf
-        case .checkLockTimeVerify:
-            return 0xb1
-        case .checkSequenceVerify:
-            return 0xb2
-        case .checkSigAdd:
-            return 0xba
-        case .undefined:
-            return 0xff
+        case .zero: 0x00
+        case .pushBytes(let d): UInt8(d.count)
+        case .pushData1(_): 0x4c
+        case .pushData2(_): 0x4d
+        case .pushData4(_): 0x4e
+        case .oneNegate: 0x4f
+        case .reserved(let k): k
+        case .success(let k): k
+        case .constant(let k): 0x50 + k
+        case .noOp: 0x61
+        case .ver: 0x62
+        case .if: 0x63
+        case .notIf: 0x64
+        case .verIf: 0x65
+        case .verNotIf: 0x66
+        case .else: 0x67
+        case .endIf: 0x68
+        case .verify: 0x69
+        case .return: 0x6a
+        case .toAltStack: 0x6b
+        case .fromAltStack: 0x6c
+        case .twoDrop: 0x6d
+        case .twoDup: 0x6e
+        case .ifDup: 0x73
+        case .drop: 0x75
+        case .dup: 0x76
+        case .swap: 0x7c
+        case .equal: 0x87
+        case .equalVerify: 0x88
+        case .negate: 0x8f
+        case .add: 0x93
+        case .boolAnd: 0x9a
+        case .ripemd160: 0xa6
+        case .sha256: 0xa8
+        case .hash160: 0xa9
+        case .hash256: 0xaa
+        case .codeSeparator: 0xab
+        case .checkSig: 0xac
+        case .checkSigVerify: 0xad
+        case .checkMultiSig: 0xae
+        case .checkMultiSigVerify: 0xaf
+        case .checkLockTimeVerify: 0xb1
+        case .checkSequenceVerify: 0xb2
+        case .checkSigAdd: 0xba
+        case .undefined: 0xff
         }
     }
     
-    var keyword: String? {
+    var keyword: String {
         switch(self) {
-        case .zero:
-            return "OP_0"
-        case .pushBytes(_):
-            return .none
-        case .pushData1(_):
-            return "OP_PUSHDATA1"
-        case .pushData2(_):
-            return "OP_PUSHDATA2"
-        case .pushData4(_):
-            return "OP_PUSHDATA4"
-        case .oneNegate:
-            return "OP_1NEGATE"
-        case .reserved(let k):
-            precondition(k == 80 || (k >= 137 && k <= 138))
-            return "OP_RESERVED\(k == 80 ? "" : k == 137 ? "1" : "2")"
-        case .success(let k):
-            precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254) )
-            // https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
-            // These opcodes are renamed to OP_SUCCESS80, ..., OP_SUCCESS254, and collectively known as OP_SUCCESSx[1].
-            return "OP_SUCCESS\(k)"
-        case .constant(let k):
-            precondition(k > 0 && k < 17)
-            return "OP_\(k)"
-        case .noOp:
-            return "OP_NOP"
-        case .ver:
-            return "OP_VER"
-        case .if:
-            return "OP_IF"
-        case .notIf:
-            return "OP_NOTIF"
-        case .verIf:
-            return "OP_VERIF"
-        case .verNotIf:
-            return "OP_VERNOTIF"
-        case .else:
-            return "OP_ELSE"
-        case .endIf:
-            return "OP_ENDIF"
-        case .verify:
-            return "OP_VERIFY"
-        case .return:
-            return "OP_RETURN"
-        case .toAltStack:
-            return "OP_TOALTSTACK"
-        case .fromAltStack:
-            return "OP_FROMALTSTACK"
-        case .ifDup:
-            return "OP_IFDUP"
-        case .drop:
-            return "OP_DROP"
-        case .dup:
-            return "OP_DUP"
-        case .equal:
-            return "OP_EQUAL"
-        case .equalVerify:
-            return "OP_EQUALVERIFY"
-        case .negate:
-            return "OP_NEGATE"
-        case .add:
-            return "OP_ADD"
-        case .boolAnd:
-            return "OP_BOOLAND"
-        case .ripemd160:
-            return "OP_RIPEMD160"
-        case .sha256:
-            return "OP_SHA256"
-        case .hash160:
-            return "OP_HASH160"
-        case .hash256:
-            return "OP_HASH256"
-        case .codeSeparator:
-            return "OP_CODESEPARATOR"
-        case .checkSig:
-            return "OP_CHECKSIG"
-        case .checkSigVerify:
-            return "OP_CHECKSIGVERIFY"
-        case .checkMultiSig:
-            return "OP_CHECKMULTISIG"
-        case .checkMultiSigVerify:
-            return "OP_CHECKMULTISIGVERIFY"
-        case .checkLockTimeVerify:
-            return "OP_CHECKLOCKTIMEVERIFY"
-        case .checkSequenceVerify:
-            return "OP_CHECKSEQUENCEVERIFY"
-        case .checkSigAdd:
-            return "OP_CHECKSIGADD"
-        case .undefined:
-            return "undefined"
+        case .zero: "OP_0"
+        case .pushBytes(_): "OP_PUSHBYTES"
+        case .pushData1(_): "OP_PUSHDATA1"
+        case .pushData2(_): "OP_PUSHDATA2"
+        case .pushData4(_): "OP_PUSHDATA4"
+        case .oneNegate: "OP_1NEGATE"
+        case .reserved(let k): "OP_RESERVED\(k == 80 ? "" : k == 137 ? "1" : "2")"
+        case .success(let k): "OP_SUCCESS\(k)"
+        case .constant(let k): "OP_\(k)"
+        case .noOp: "OP_NOP"
+        case .ver: "OP_VER"
+        case .if: "OP_IF"
+        case .notIf: "OP_NOTIF"
+        case .verIf: "OP_VERIF"
+        case .verNotIf: "OP_VERNOTIF"
+        case .else: "OP_ELSE"
+        case .endIf: "OP_ENDIF"
+        case .verify: "OP_VERIFY"
+        case .return: "OP_RETURN"
+        case .toAltStack: "OP_TOALTSTACK"
+        case .fromAltStack: "OP_FROMALTSTACK"
+        case .twoDrop: "OP_2DROP"
+        case .twoDup: "OP_2DUP"
+        case .ifDup: "OP_IFDUP"
+        case .drop: "OP_DROP"
+        case .dup: "OP_DUP"
+        case .swap: "OP_SWAP"
+        case .equal: "OP_EQUAL"
+        case .equalVerify: "OP_EQUALVERIFY"
+        case .negate: "OP_NEGATE"
+        case .add: "OP_ADD"
+        case .boolAnd: "OP_BOOLAND"
+        case .ripemd160: "OP_RIPEMD160"
+        case .sha256: "OP_SHA256"
+        case .hash160: "OP_HASH160"
+        case .hash256: "OP_HASH256"
+        case .codeSeparator: "OP_CODESEPARATOR"
+        case .checkSig: "OP_CHECKSIG"
+        case .checkSigVerify: "OP_CHECKSIGVERIFY"
+        case .checkMultiSig: "OP_CHECKMULTISIG"
+        case .checkMultiSigVerify: "OP_CHECKMULTISIGVERIFY"
+        case .checkLockTimeVerify: "OP_CHECKLOCKTIMEVERIFY"
+        case .checkSequenceVerify: "OP_CHECKSEQUENCEVERIFY"
+        case .checkSigAdd: "OP_CHECKSIGADD"
+        case .undefined: "undefined"
         }
     }
     
@@ -258,12 +169,18 @@ extension ScriptOperation {
             try opToAltStack(&stack, context: &context)
         case .fromAltStack:
             try opFromAltStack(&stack, context: &context)
+        case .twoDrop:
+            try op2Drop(&stack)
+        case .twoDup:
+            try op2Dup(&stack)
         case .ifDup:
             try opIfDup(&stack)
         case .drop:
             try opDrop(&stack)
         case .dup:
             try opDup(&stack)
+        case .swap:
+            try opSwap(&stack)
         case .equal:
             try opEqual(&stack)
         case .equalVerify:
@@ -312,9 +229,6 @@ extension ScriptOperation {
     var asm: String {
         if case .pushBytes(let d) = self {
             return d.hex
-        }
-        guard let keyword else {
-            fatalError()
         }
         switch(self) {
         case .zero:
@@ -445,9 +359,12 @@ extension ScriptOperation {
         case Self.return.opCode: self = .return
         case Self.toAltStack.opCode: self = .toAltStack
         case Self.fromAltStack.opCode: self = .fromAltStack
+        case Self.twoDrop.opCode: self = .twoDrop
+        case Self.twoDup.opCode: self = .twoDup
         case Self.ifDup.opCode: self = .ifDup
         case Self.drop.opCode: self = .drop
         case Self.dup.opCode: self = .dup
+        case Self.swap.opCode: self = .swap
         case Self.equal.opCode: self = .equal
         case Self.equalVerify.opCode: self = .equalVerify
         case Self.negate.opCode: self = .negate

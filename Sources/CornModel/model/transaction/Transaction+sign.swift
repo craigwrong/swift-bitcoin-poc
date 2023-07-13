@@ -44,8 +44,8 @@ extension Transaction {
             guard let redeemScriptV0 else { preconditionFailure() }
             signP2WSH(secretKeys: secretKeys, redeemScript: redeemScriptV0, sighashType: sighashType, inputIndex: inputIndex, previousOutput: previousOutput)
         case .witnessV1TapRoot:
-            if scriptTree != .none {
-                precondition(leafIndex != .none)
+            if leafIndex != .none {
+                precondition(scriptTree != .none)
             }
             signP2TR(secretKey: secretKeys[0], scriptTree: scriptTree, leafIndex: leafIndex, annex: taprootAnnex, sighashType: sighashType, inputIndex: inputIndex, previousOutputs: previousOutputs)
         default:
@@ -177,7 +177,7 @@ extension Transaction {
 
     mutating func signP2TR(secretKey: Data, scriptTree: ScriptTree?, leafIndex: Int?, codesepPos: UInt32 = 0xffffffff, annex: Data?, sighashType: SighashType?, inputIndex: Int, previousOutputs: [Transaction.Output]) {
     
-        precondition(scriptTree == .none || (scriptTree != .none && leafIndex != .none))
+        precondition(leafIndex == .none || (leafIndex != .none && scriptTree != .none))
         
         // WARN: We support adding only a single signature for now. Therefore we only take one codesepPos (OP_CODESEPARATOR position)
         var witnessElements = [Data()] // Placeholder for the signature
@@ -197,11 +197,10 @@ extension Transaction {
                 fatalError()
             }
             let internalKey = getInternalKey(secretKey: secretKey)
-            let outputKey = getOutputKey(secretKey: secretKey, merkleRoot: merkleRoot)
 
             let controlBlock = computeControlBlock(internalPublicKey: internalKey, leafInfo: treeInfo[leafIndex], merkleRoot: merkleRoot)
             
-            witnessElements.append(outputKey)
+            witnessElements.append(internalKey)
             witnessElements.append(tapscript)
             witnessElements.append(controlBlock)
         }
@@ -211,7 +210,7 @@ extension Transaction {
         }
         
         let tapscriptExt: TapscriptExtension?
-        if let treeInfo, let leafIndex {
+        if let leafIndex, let treeInfo {
             let (leaf, _) = treeInfo[leafIndex]
             // Only 1 signature supported for this method so codesepPos and tapscriptExt does not have to vary
             let tapLeafHash = leaf.leafHash
@@ -230,7 +229,7 @@ extension Transaction {
         } else {
             sighashTypeSuffix = Data()
         }
-        let sig = signSchnorr(msg: sighash, secretKey: secretKey, merkleRoot: merkleRoot, aux: aux) + sighashTypeSuffix
+        let sig = signSchnorr(msg: sighash, secretKey: secretKey, merkleRoot: merkleRoot, skipTweak: leafIndex != .none, aux: aux) + sighashTypeSuffix
 
         witnessElements[0] = sig
         inputs[inputIndex].witness = .init(witnessElements)

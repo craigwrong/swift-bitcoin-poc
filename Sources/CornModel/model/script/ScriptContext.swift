@@ -11,7 +11,6 @@ struct ScriptContext {
     var lastCodeSeparatorIndex: Int? = .none // For tapscript
     var lastCodeSeparatorOffset: Int? = .none // For segwit and legacy
     private(set) var succeedUnconditionally = false
-    let merkleRoot: Data?
     let tapLeafHash: Data?
     let keyVersion: UInt8? = 0
     var altStack: [Data] = []

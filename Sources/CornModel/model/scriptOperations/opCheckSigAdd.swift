@@ -4,7 +4,7 @@ import Foundation
 /// pk0, checksig, pk1, checksigadd, pk2, checksigadd, 3, equal
 func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
 
-    guard let merkleRoot = context.merkleRoot, let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
+    guard let tapLeafHash = context.tapLeafHash, let keyVersion = context.keyVersion else {
         preconditionFailure()
     }
 
@@ -30,8 +30,7 @@ func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
         // If the signature is not the empty vector, the signature is validated against the public key (see the next subsection). Validation failure in this case immediately terminates script execution with failure.
         
         // Tapscript semantics
-        let tweakedPublicKey = getOutputKey(internalKey: publicKey, merkleRoot: merkleRoot)
-        let result = context.transaction.checkTaprootSignature(extendedSignature: sig, publicKey: tweakedPublicKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutputs, extFlag: 1, tapscriptExtension: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
+        let result = context.transaction.checkTaprootSignature(extendedSignature: sig, publicKey: publicKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutputs, extFlag: 1, tapscriptExtension: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
         
         if !result {
             throw ScriptError.invalidScript

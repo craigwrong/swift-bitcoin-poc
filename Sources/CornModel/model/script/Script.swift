@@ -15,7 +15,7 @@ public protocol Script: Equatable {
     var parsed: ParsedScript? { get }
     var serialized: SerializedScript { get }
 
-    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], merkleRoot: Data?, tapLeafHash: Data?) throws
+    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], tapLeafHash: Data?) throws
     
     func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output]) throws
 }
@@ -23,7 +23,7 @@ public protocol Script: Equatable {
 extension Script {
 
     public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output]) throws {
-        try run(&stack, transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, merkleRoot: .none, tapLeafHash: .none)
+        try run(&stack, transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, tapLeafHash: .none)
     }
 
     public var prefixedData: Data {

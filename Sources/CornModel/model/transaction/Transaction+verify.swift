@@ -160,7 +160,7 @@ extension Transaction {
             }
 
             let tapscript = SerializedScript(tapscriptData, version: .witnessV1)
-            try tapscript.run(&stack, transaction: self, inputIndex: inputIndex, previousOutputs: previousOutputs, merkleRoot: merkleRoot, tapLeafHash: tapLeafHash)
+            try tapscript.run(&stack, transaction: self, inputIndex: inputIndex, previousOutputs: previousOutputs, tapLeafHash: tapLeafHash)
         default:
             fatalError() // Should never reach here
         }

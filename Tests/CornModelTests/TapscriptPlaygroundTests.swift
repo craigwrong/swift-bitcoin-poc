@@ -46,18 +46,30 @@ final class TapscriptPlaygroundTests: XCTestCase {
             inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
             outputs: [.init(value: 50, script: ParsedScript.makeNullData(""))])
         
+        // OP_SUCCESS branch
         var tx0 = tx
         tx0.sign(secretKeys: [secretKey], scriptTree: scriptTree, leafIndex: 0, taprootAnnex: .none, inputIndex: 0, previousOutputs: previousOutputs)
-        tx0.inputs[0].witness = .init([])
+        var newElements = tx0.inputs[0].witness!.elements
+        newElements.removeFirst(2) // No need for signature and key since there is no signature checking, only OP_SUCCESS
+        tx0.inputs[0].witness = .init(newElements)
         var result = tx0.verify(previousOutputs: previousOutputs)
+        XCTAssert(result)
 
+        // CHECKSIGADD 2 of 2 branch
+        // Second keypair (validated by checksigadd)
         var tx2 = tx
         tx2.sign(secretKeys: [secretKey2], scriptTree: scriptTree, leafIndex: 1, taprootAnnex: .none, inputIndex: 0, previousOutputs: previousOutputs)
-
+        // First keypair (validated by checksig)
         var tx1 = tx
         tx1.sign(secretKeys: [secretKey], scriptTree: scriptTree, leafIndex: 1, taprootAnnex: .none, inputIndex: 0, previousOutputs: previousOutputs)
         tx1.inputs[0].witness = .init([tx2.inputs[0].witness!.elements[0]] + tx1.inputs[0].witness!.elements)
         result = tx1.verify(previousOutputs: previousOutputs)
+        XCTAssert(result)
+        
+        // Keypath spending
+        var tx3 = tx
+        tx3.sign(secretKeys: [secretKey], scriptTree: scriptTree, taprootAnnex: .none, inputIndex: 0, previousOutputs: previousOutputs)
+        result = tx3.verify(previousOutputs: previousOutputs)
         XCTAssert(result)
     }
     

@@ -70,8 +70,8 @@ public struct ParsedScript: Script {
         SerializedScript(data, version: version)
     }
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], merkleRoot: Data? = .none, tapLeafHash: Data? = .none) throws {
-        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, script: self, merkleRoot: merkleRoot, tapLeafHash: tapLeafHash)
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], tapLeafHash: Data? = .none) throws {
+        var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, script: self, tapLeafHash: tapLeafHash)
         
         for operation in operations {
         

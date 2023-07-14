@@ -5,5 +5,5 @@ func opAdd(_ stack: inout [Data]) throws {
     guard let first = first.asInt32, let second = second.asInt32 else {
         throw ScriptError.invalidScript
     }
-    stack.pushInt(first + second)
+    stack.pushInt(first &+ second)
 }

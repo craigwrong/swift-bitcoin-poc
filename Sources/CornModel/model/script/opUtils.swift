@@ -26,6 +26,25 @@ func getTernaryParams(_ stack: inout [Data]) throws -> (Data, Data, Data) {
     return (first, second, third)
 }
 
+func getQuaternaryParams(_ stack: inout [Data]) throws -> (Data, Data, Data, Data) {
+    guard stack.count > 3 else {
+        throw ScriptError.invalidScript
+    }
+    let fourth = stack.removeLast()
+    let (first, second, third) = try getTernaryParams(&stack)
+    return (first, second, third, fourth)
+}
+
+func getSernaryParams(_ stack: inout [Data]) throws -> (Data, Data, Data, Data, Data, Data) {
+    guard stack.count > 5 else {
+        throw ScriptError.invalidScript
+    }
+    let sixth = stack.removeLast()
+    let fifth = stack.removeLast()
+    let (first, second, third, fourth) = try getQuaternaryParams(&stack)
+    return (first, second, third, fourth, fifth, sixth)
+}
+
 func getCheckMultiSigParams(_ stack: inout [Data]) throws -> (Int, [Data], Int, [Data]) {
     guard stack.count > 4 else {
         throw ScriptError.invalidScript

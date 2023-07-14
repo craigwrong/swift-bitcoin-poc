@@ -270,7 +270,7 @@ public enum ScriptOperation: Equatable {
         switch(self) {
         case .zero: opConstant(0, stack: &stack)
         case .pushBytes(let d), .pushData1(let d), .pushData2(let d), .pushData4(let d): opPushData(data: d, stack: &stack)
-        case .oneNegate: opOneNegate(&stack)
+        case .oneNegate: op1Negate(&stack)
         case .reserved(_): throw ScriptError.invalidScript
         case .success(_): opSuccess(context: &context)
         case .constant(let k): opConstant(k, stack: &stack)
@@ -287,34 +287,34 @@ public enum ScriptOperation: Equatable {
         case .fromAltStack: try opFromAltStack(&stack, context: &context)
         case .twoDrop: try op2Drop(&stack)
         case .twoDup: try op2Dup(&stack)
-        case .threeDup: break // TODO: Implement op code.
-        case .twoOver: break // TODO: Implement op code.
-        case .twoRot: break // TODO: Implement op code.
-        case .twoSwap: break // TODO: Implement op code.
+        case .threeDup: try op3Dup(&stack)
+        case .twoOver: try op2Over(&stack)
+        case .twoRot: try op2Rot(&stack)
+        case .twoSwap: try op2Swap(&stack)
         case .ifDup: try opIfDup(&stack)
-        case .depth: break // TODO: Implement op code.
+        case .depth: opDepth(&stack)
         case .drop: try opDrop(&stack)
         case .dup: try opDup(&stack)
-        case .nip: break // TODO: Implement op code.
-        case .over: break // TODO: Implement op code.
-        case .pick: break // TODO: Implement op code.
-        case .roll: break // TODO: Implement op code.
-        case .rot: break // TODO: Implement op code.
+        case .nip: try opNip(&stack)
+        case .over: try opOver(&stack)
+        case .pick: try opPick(&stack)
+        case .roll: try opRoll(&stack)
+        case .rot: try opRot(&stack)
         case .swap: try opSwap(&stack)
-        case .tuck: break // TODO: Implement op code.
+        case .tuck: try opTuck(&stack)
         case .cat: throw ScriptError.disabledOperation
         case .subStr: throw ScriptError.disabledOperation
         case .left: throw ScriptError.disabledOperation
         case .right: throw ScriptError.disabledOperation
-        case .size: break // TODO: Implement op code.
+        case .size: try opSize(&stack)
         case .invert: throw ScriptError.disabledOperation
         case .and: throw ScriptError.disabledOperation
         case .or: throw ScriptError.disabledOperation
         case .xor: throw ScriptError.disabledOperation
         case .equal: try opEqual(&stack)
         case .equalVerify: try opEqualVerify(&stack)
-        case .oneAdd: break // TODO: Implement op code.
-        case .oneSub: break // TODO: Implement op code.
+        case .oneAdd:  try op1Add(&stack)
+        case .oneSub:  try op1Sub(&stack)
         case .twoMul: throw ScriptError.disabledOperation
         case .twoDiv: throw ScriptError.disabledOperation
         case .negate: try opNegate(&stack)

@@ -7,5 +7,6 @@ public enum ScriptError: Error {
          invalidInstruction,
          unparsableRedeemScript,
          unparsableWitnessScript,
-         disabledOperation
+         disabledOperation,
+         numberOverflow
 }

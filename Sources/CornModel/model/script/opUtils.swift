@@ -49,10 +49,10 @@ func getCheckMultiSigParams(_ stack: inout [Data]) throws -> (Int, [Data], Int, 
     guard stack.count > 4 else {
         throw ScriptError.invalidScript
     }
-    let n = Int(stack.popInt8())
+    let n = ScriptNumber(stack.removeLast()).asInt
     let publicKeys = Array(stack[(stack.endIndex - n)...].reversed())
     stack.removeLast(n)
-    let m = Int(stack.popInt8())
+    let m = ScriptNumber(stack.removeLast()).asInt
     let sigs = Array(stack[(stack.endIndex - m)...].reversed())
     stack.removeLast(m)
     let nullDummy = stack.removeLast()

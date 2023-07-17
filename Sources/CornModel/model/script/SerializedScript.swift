@@ -57,7 +57,7 @@ public struct SerializedScript: Script {
         guard context.pendingIfOperations.isEmpty, context.pendingElseOperations == 0 else {
             throw ScriptError.invalidScript
         }
-        if let last = stack.last, last.isZeroIsh {
+        if let last = stack.last, ScriptNumber(last) == .zero {
             throw ScriptError.invalidScript
         }
     }

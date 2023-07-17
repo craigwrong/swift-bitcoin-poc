@@ -40,7 +40,7 @@ final class CheckMultiSigTests: XCTestCase {
             sig
         ]
         XCTAssertNoThrow(try script.run(&stack, transaction: tx, inputIndex: 0, previousOutputs: previousOutputs))
-        let expectedStack = [Data]([.one])
+        let expectedStack = [Data]([ScriptNumber.one.data])
         XCTAssertEqual(stack, expectedStack)
     }
 

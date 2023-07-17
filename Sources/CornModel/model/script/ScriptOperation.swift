@@ -1,7 +1,7 @@
 import Foundation
 
 public enum ScriptOperation: Equatable {
-    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved(UInt8), success(UInt8), constant(UInt8), noOp, ver, `if`, notIf, verIf, verNotIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, twoDrop, twoDup, threeDup, twoOver, twoRot, twoSwap, ifDup, depth, drop, dup, nip, over, pick, roll, rot, swap, tuck, cat, subStr, left, right, size, invert, and, or, xor, equal, equalVerify, oneAdd, oneSub, twoMul, twoDiv, negate, abs, not, zeroNotEqual, add, sub, mul, div, mod, lShift, rShift, boolAnd, boolOr, numEqual, numEqualVerify, numNotEqual, lessThan, greaterThan, lessThanOrEqual, greaterThanOrEqual, min, max, within, ripemd160, sha1, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, noOp1, checkLockTimeVerify, checkSequenceVerify, noOp4, noOp5, noOp6, noOp7, noOp8, noOp9, noOp10, checkSigAdd, undefined(UInt8), pubKeyHash, pubKey, invalidOpCode
+    case zero, pushBytes(Data), pushData1(Data), pushData2(Data), pushData4(Data), oneNegate, reserved(UInt8), success(UInt8), constant(UInt8), noOp, ver, `if`, notIf, verIf, verNotIf, `else`, endIf, verify, `return`, toAltStack, fromAltStack, twoDrop, twoDup, threeDup, twoOver, twoRot, twoSwap, ifDup, depth, drop, dup, nip, over, pick, roll, rot, swap, tuck, cat, subStr, left, right, size, invert, and, or, xor, equal, equalVerify, oneAdd, oneSub, twoMul, twoDiv, negate, abs, not, zeroNotEqual, add, sub, mul, div, mod, lShift, rShift, boolAnd, boolOr, numEqual, numEqualVerify, numNotEqual, lessThan, greaterThan, lessThanOrEqual, greaterThanOrEqual, min, max, within, ripemd160, sha1, sha256, hash160, hash256, codeSeparator, checkSig, checkSigVerify, checkMultiSig, checkMultiSigVerify, noOp1, checkLockTimeVerify, checkSequenceVerify, noOp4, noOp5, noOp6, noOp7, noOp8, noOp9, noOp10, checkSigAdd, unknown(UInt8), pubKeyHash, pubKey, invalidOpCode
     
     private func operationPreconditions() {
         switch(self) {
@@ -11,7 +11,7 @@ public enum ScriptOperation: Equatable {
             precondition(k == 80 || k == 98 || (k >= 126 && k <= 129) || (k >= 131 && k <= 134) || (k >= 137 && k <= 138) || (k >= 141 && k <= 142) || (k >= 149 && k <= 153) || (k >= 187 && k <= 254))
         case .constant(let k):
             precondition(k > 0 && k < 17)
-        case .undefined(let k):
+        case .unknown(let k):
             precondition(k >= 0xbb && k <= 0xfc)
         default: break
         }
@@ -139,7 +139,7 @@ public enum ScriptOperation: Equatable {
         case .noOp9: 0xb8
         case .noOp10: 0xb9
         case .checkSigAdd: 0xba
-        case .undefined(let k): k
+        case .unknown(let k): k
         case .pubKeyHash: 0xfd
         case .pubKey: 0xfe
         case .invalidOpCode: 0xff
@@ -247,7 +247,7 @@ public enum ScriptOperation: Equatable {
         case .noOp9: "OP_NOP9"
         case .noOp10: "OP_NOP10"
         case .checkSigAdd: "OP_CHECKSIGADD"
-        case .undefined(_): "undefined"
+        case .unknown(_): "OP_UNKNOWN"
         case .pubKeyHash: "OP_PUBKEYHASH"
         case .pubKey: "OP_PUBKEY"
         case .invalidOpCode: "OP_INVALIDOPCODE"
@@ -292,7 +292,7 @@ public enum ScriptOperation: Equatable {
         case .twoRot: try op2Rot(&stack)
         case .twoSwap: try op2Swap(&stack)
         case .ifDup: try opIfDup(&stack)
-        case .depth: opDepth(&stack)
+        case .depth: try opDepth(&stack)
         case .drop: try opDrop(&stack)
         case .dup: try opDup(&stack)
         case .nip: try opNip(&stack)
@@ -363,7 +363,7 @@ public enum ScriptOperation: Equatable {
         case .checkSequenceVerify: try opCheckSequenceVerify(&stack, context: context)
         case .noOp4, .noOp5, .noOp6, .noOp7, .noOp8, .noOp9, .noOp10: break
         case .checkSigAdd: try opCheckSigAdd(&stack, context: context)
-        case .undefined(_): throw ScriptError.invalidScript
+        case .unknown(_): throw ScriptError.invalidScript
         case .pubKeyHash: throw ScriptError.disabledOperation
         case .pubKey:  throw ScriptError.disabledOperation
         case .invalidOpCode: throw ScriptError.disabledOperation
@@ -579,7 +579,7 @@ public enum ScriptOperation: Equatable {
         case Self.noOp9.opCode: self = .noOp9
         case Self.noOp10.opCode: self = .noOp10
         case Self.checkSigAdd.opCode: self = .checkSigAdd
-        case Self.undefined(0xbb).opCode ... Self.undefined(0xfc).opCode: self = .undefined(opCode)
+        case Self.unknown(0xbb).opCode ... Self.unknown(0xfc).opCode: self = .unknown(opCode)
         case Self.pubKeyHash.opCode: self = .pubKeyHash
         case Self.pubKey.opCode: self = .pubKey
         case Self.invalidOpCode.opCode: self = .invalidOpCode

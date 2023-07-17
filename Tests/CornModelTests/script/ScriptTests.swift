@@ -12,8 +12,8 @@ final class ScriptTests: XCTestCase {
     }
     
     func testBoolAnd() {
-        let zero = Data.zero
-        let one = Data.one
+        let zero = ScriptNumber.zero.data
+        let one = ScriptNumber.one.data
         let two = withUnsafeBytes(of: Int32(2)) { Data($0) }
         let big = withUnsafeBytes(of: (Int32.max / 2) - 1) { Data($0) }
         
@@ -172,7 +172,7 @@ final class ScriptTests: XCTestCase {
         XCTAssertNoThrow(try scriptSig.run(&stack, transaction: tx, inputIndex: 0, previousOutputs: [previousOutput]))
         XCTAssertNoThrow(try scriptPubKey.run(&stack, transaction: tx, inputIndex: 0, previousOutputs: [previousOutput]))
         
-        let expected = [Data]([.one])
+        let expected = [Data]([ScriptNumber.one.data])
         XCTAssertEqual(stack, expected)
 
         XCTAssert(tx.verify(previousOutputs: [previousOutput]))

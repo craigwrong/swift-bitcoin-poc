@@ -171,7 +171,7 @@ extension Transaction {
         let sigs = secretKeys.map { createSegwitSignature(inputIndex: inputIndex, secretKey: $0, sighashType: sighashType, previousOutput: previousOutput, scriptCode: scriptCode, sighashCache: &sighashCache) }.reversed()
         
         // https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
-        let nullDummy = redeemScript.operations.last == .checkMultiSig || redeemScript.operations.last == .checkMultiSig ? [Data.zero] : []
+        let nullDummy = redeemScript.operations.last == .checkMultiSig || redeemScript.operations.last == .checkMultiSig ? [ScriptNumber.zero.data] : []
         inputs[inputIndex].witness = .init(nullDummy + sigs + [redeemScript.data])
     }
 

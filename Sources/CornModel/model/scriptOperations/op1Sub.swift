@@ -2,8 +2,7 @@ import Foundation
 
 func op1Sub(_ stack: inout [Data]) throws {
     let first = try getUnaryParam(&stack)
-    guard let first = first.asInt32 else {
-        throw ScriptError.invalidScript
-    }
-    stack.pushInt(first &- 1)
+    var a = ScriptNumber(first)
+    try a.add(.negativeOne)
+    stack.append(a.data)
 }

@@ -11,7 +11,8 @@ func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
     // If fewer than 3 elements are on the stack, the script MUST fail and terminate immediately.
     let (sig, nData, publicKey) = try getTernaryParams(&stack)
 
-    guard let n = nData.asUInt32 else {
+    var n = ScriptNumber(nData)
+    guard n.dataCount <= 4 else {
         // - If n is larger than 4 bytes, the script MUST fail and terminate immediately.
         throw ScriptError.invalidScript
     }
@@ -46,7 +47,7 @@ func opCheckSigAdd(_ stack: inout [Data], context: ScriptContext) throws {
     } else {
         // If the signature is not the empty vector, the opcode is counted towards the sigops budget (see further).
         // For OP_CHECKSIGADD, a CScriptNum with value of n + 1 is pushed onto the stack.
-        let nPlus1 = n + 1
-        stack.pushInt(nPlus1)
+        try n.add(.one)
+        stack.append(n.data)
     }
 }

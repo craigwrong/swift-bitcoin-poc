@@ -318,30 +318,30 @@ public enum ScriptOperation: Equatable {
         case .twoMul: throw ScriptError.disabledOperation
         case .twoDiv: throw ScriptError.disabledOperation
         case .negate: try opNegate(&stack)
-        case .abs: break // TODO: Implement op code.
-        case .not: break // TODO: Implement op code.
-        case .zeroNotEqual: break // TODO: Implement op code.
+        case .abs: try opAbs(&stack)
+        case .not: try opNot(&stack)
+        case .zeroNotEqual: try op0NotEqual(&stack)
         case .add: try opAdd(&stack)
-        case .sub: break // TODO: Implement op code.
+        case .sub: try opSub(&stack)
         case .mul: throw ScriptError.disabledOperation
         case .div: throw ScriptError.disabledOperation
         case .mod: throw ScriptError.disabledOperation
         case .lShift: throw ScriptError.disabledOperation
         case .rShift: throw ScriptError.disabledOperation
         case .boolAnd: try opBoolAnd(&stack)
-        case .boolOr: break // TODO: Implement op code.
-        case .numEqual: break // TODO: Implement op code.
-        case .numEqualVerify: break // TODO: Implement op code.
-        case .numNotEqual: break // TODO: Implement op code.
-        case .lessThan: break // TODO: Implement op code.
-        case .greaterThan: break // TODO: Implement op code.
-        case .lessThanOrEqual: break // TODO: Implement op code.
-        case .greaterThanOrEqual: break // TODO: Implement op code.
-        case .min: break // TODO: Implement op code.
-        case .max: break // TODO: Implement op code.
-        case .within: break // TODO: Implement op code.
+        case .boolOr: try opBoolOr(&stack)
+        case .numEqual: try opNumEqual(&stack)
+        case .numEqualVerify: try opNumEqualVerify(&stack)
+        case .numNotEqual: try opNumNotEqual(&stack)
+        case .lessThan: try opLessThan(&stack)
+        case .greaterThan: try opGreaterThan(&stack)
+        case .lessThanOrEqual: try opLessThanOrEqual(&stack)
+        case .greaterThanOrEqual: try opGreaterThanOrEqual(&stack)
+        case .min: try opMin(&stack)
+        case .max: try opMax(&stack)
+        case .within: try opWithin(&stack)
         case .ripemd160: try opRIPEMD160(&stack)
-        case .sha1: break // TODO: Implement op code.
+        case .sha1: try opSHA1(&stack)
         case .sha256: try opSHA256(&stack)
         case .hash160: try opHash160(&stack)
         case .hash256: try opHash256(&stack)

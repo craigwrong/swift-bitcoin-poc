@@ -6,11 +6,8 @@ func opIf(_ stack: inout [Data], isNotIf: Bool = false, context: inout ScriptCon
         context.pendingIfOperations.append(.none)
         return
     }
-    let a = try getUnaryParam(&stack)
-    let evalIfBranch = (!isNotIf && ScriptNumber.isTrue(a)) || (isNotIf && ScriptNumber.isFalse(a))
-    let evalElseBranch = (!isNotIf && ScriptNumber.isFalse(a)) || (isNotIf && ScriptNumber.isTrue(a))
-    guard evalIfBranch || evalElseBranch else {
-        throw ScriptError.invalidScript // Minimalif rule violated
-    }
+    let first = try getUnaryParam(&stack)
+    let condition = try ScriptBoolean(minimalData: first)
+    let evalIfBranch = (!isNotIf && condition.value) || (isNotIf && !condition.value)
     context.pendingIfOperations.append(evalIfBranch)
 }

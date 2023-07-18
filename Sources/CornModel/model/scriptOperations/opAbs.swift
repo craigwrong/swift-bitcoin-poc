@@ -1,8 +1,10 @@
 import Foundation
 
-func op1Sub(_ stack: inout [Data]) throws {
+func opAbs(_ stack: inout [Data]) throws {
     let first = try getUnaryParam(&stack)
     var a = try ScriptNumber(first)
-    try a.add(.negativeOne)
+    if a.value < 0 {
+        a.negate()
+    }
     stack.append(a.data)
 }

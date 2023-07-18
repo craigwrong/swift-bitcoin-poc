@@ -32,5 +32,5 @@ func opCheckMultiSig(_ stack: inout [Data], context: ScriptContext) throws {
             leftSigs.remove(at: i)
         }
     }
-    stack.append(ScriptNumber(leftSigs.count == 0).data)
+    stack.append(ScriptBoolean(leftSigs.count == 0).data)
 }

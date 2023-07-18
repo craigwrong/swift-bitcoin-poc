@@ -2,7 +2,7 @@ import Foundation
 
 func opPick(_ stack: inout [Data]) throws {
     let first = try getUnaryParam(&stack)
-    let i = ScriptNumber(first).asInt
+    let i = try ScriptNumber(first).value
     guard stack.count > i else {
         throw ScriptError.invalidScript
     }

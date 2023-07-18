@@ -22,5 +22,5 @@ func opCheckSig(_ stack: inout [Data], context: ScriptContext) throws {
         // Tapscript semantics
         result = context.transaction.checkTaprootSignature(extendedSignature: sig, publicKey: publicKey, inputIndex: context.inputIndex, previousOutputs: context.previousOutputs, extFlag: 1, tapscriptExtension: .init(tapLeafHash: tapLeafHash, keyVersion: keyVersion, codesepPos: context.codeSeparatorPosition))
     }
-    stack.append(ScriptNumber(result).data)
+    stack.append(ScriptBoolean(result).data)
 }

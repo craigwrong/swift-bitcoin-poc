@@ -8,5 +8,6 @@ public enum ScriptError: Error {
          unparsableRedeemScript,
          unparsableWitnessScript,
          disabledOperation,
-         numberOverflow
+         numberOverflow,
+         nonMinimalBoolean
 }

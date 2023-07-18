@@ -9,7 +9,7 @@ public struct ScriptNumber: Equatable {
     private static let maxValue: Int = 0x0000007fffffffff
     private static let minValue: Int = -0x0000007fffffffff
     
-    private var value: Int
+    public private(set) var value: Int
     
     public init(_ value: Int) throws {
         guard value.magnitude <= Self.maxValue else {
@@ -21,25 +21,21 @@ public struct ScriptNumber: Equatable {
         self.init(unsafeValue: Int(value))
     }
     
-    public init(_ value: Bool) {
-        self.init(unsafeValue: Int(value ? 1 : 0))
-    }
-    
-    public init(_ data: Data) {
+    // TODO: optionally check for minimal data (no leading zero bytes unless next previous byte is max)
+    public init(_ data: Data, extendedLength: Bool = false) throws {
         if data.isEmpty {
             value = 0
             return
         }
-        var data = data
-        //guard data.count <= MemoryLayout<Int>.size - 3 else { return nil }
-        let countLimit = MemoryLayout<Int>.size - 3 // 5 bytes
+        let countLimit = extendedLength ? 5 : 4
         if data.count > countLimit {
-            data = data.dropLast(data.count - countLimit)
+            throw ScriptError.numberOverflow
         }
         let negative = if let last = data.last { last & 0b10000000 != 0 } else { false }
+        var data = data
         data[data.endIndex - 1] &= 0b01111111 // We make it positive
         let padded = data + Data(repeating: 0, count: MemoryLayout<Int>.size - data.count)
-        let magnitude = padded.withUnsafeBytes { $0.loadUnaligned(as: Int.self) }
+        let magnitude = padded.withUnsafeBytes { $0.load(as: Int.self) }
         value = (negative ? -1 : 1) * magnitude
     }
 
@@ -47,14 +43,6 @@ public struct ScriptNumber: Equatable {
         self.value = value
     }
     
-    public static func isFalse(_ data: Data) -> Bool {
-        data == Self.zero.data
-    }
-
-    public static func isTrue(_ data: Data) -> Bool {
-        data == Self.one.data
-    }
-
     public var data: Data {
         if value == 0 {
             return Data()
@@ -113,10 +101,6 @@ public struct ScriptNumber: Equatable {
             return 5
         }
         fatalError() // Should never reach here
-    }
-
-    public var asInt: Int {
-        value
     }
 
     private var isNegative: Bool {

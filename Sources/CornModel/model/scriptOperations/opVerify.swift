@@ -2,7 +2,7 @@ import Foundation
 
 func opVerify(_ stack: inout [Data]) throws {
     let first = try getUnaryParam(&stack)
-    guard ScriptNumber(first) != .zero else {
+    guard ScriptBoolean(first).value else {
         throw ScriptError.invalidScript
     }
 }

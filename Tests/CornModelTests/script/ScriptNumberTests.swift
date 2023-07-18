@@ -17,78 +17,84 @@ final class ScriptNumberTests: XCTestCase {
     let fiveByteMinData = Data([0xff, 0xff, 0xff, 0xff, 0xff])
     let fiveByteMaxData = Data([0xff, 0xff, 0xff, 0xff, 0x7f])
 
-    func testDataRoundTrips() {
+    func testDataRoundTrips() throws {
     
         // Zero (0)
-        let zeroNum = ScriptNumber(zeroData)
+        let zeroNum: ScriptNumber
+        do {
+            zeroNum = try ScriptNumber(zeroData)
+        } catch {
+            XCTFail()
+            return
+        }
         let zeroDataBack = zeroNum.data
         XCTAssertEqual(zeroDataBack, zeroData)
         
         // One (1)
-        let oneNum = ScriptNumber(oneData)
+        let oneNum = try ScriptNumber(oneData)
         let oneDataBack = oneNum.data
         XCTAssertEqual(oneDataBack, oneData)
         
         // Minus one (-1)
-        let minusOneNum = ScriptNumber(minusOneData)
+        let minusOneNum = try ScriptNumber(minusOneData)
         let minusOneDataBack = minusOneNum.data
         XCTAssertEqual(minusOneDataBack, minusOneData)
 
         // 1-byte max (127)
-        let maxNum = ScriptNumber(oneByteMaxData)
+        let maxNum = try ScriptNumber(oneByteMaxData)
         let maxDataBack = maxNum.data
         XCTAssertEqual(maxDataBack, oneByteMaxData)
         
         // 1-byte min (-127)
-        let minNum = ScriptNumber(oneByteMinData)
+        let minNum = try ScriptNumber(oneByteMinData)
         let minDataBack = minNum.data
         XCTAssertEqual(minDataBack, oneByteMinData)
         
         // 2-byte max (0x7fff)
-        let twoByteMaxNum = ScriptNumber(twoByteMaxData)
+        let twoByteMaxNum = try ScriptNumber(twoByteMaxData)
         let twoByteMaxDataBack = twoByteMaxNum.data
         XCTAssertEqual(twoByteMaxDataBack, twoByteMaxData)
         
         // 2-byte min (0xffff)
-        let twoByteMinNum = ScriptNumber(twoByteMinData)
+        let twoByteMinNum = try ScriptNumber(twoByteMinData)
         let twoByteMinDataBack = twoByteMinNum.data
         XCTAssertEqual(twoByteMinDataBack, twoByteMinData)
         
         // 3-byte max (0x7fffff)
-        let threeByteMaxNum = ScriptNumber(threeByteMaxData)
+        let threeByteMaxNum = try ScriptNumber(threeByteMaxData)
         let threeByteMaxDataBack = threeByteMaxNum.data
         XCTAssertEqual(threeByteMaxDataBack, threeByteMaxData)
         
         // 3-byte min (0xffffff)
-        let threeByteMinNum = ScriptNumber(threeByteMinData)
+        let threeByteMinNum = try ScriptNumber(threeByteMinData)
         let threeByteMinDataBack = threeByteMinNum.data
         XCTAssertEqual(threeByteMinDataBack, threeByteMinData)
         
         // 4-byte max (0x7fffffff)
-        let fourByteMaxNum = ScriptNumber(fourByteMaxData)
+        let fourByteMaxNum = try ScriptNumber(fourByteMaxData)
         let fourByteMaxDataBack = fourByteMaxNum.data
         XCTAssertEqual(fourByteMaxDataBack, fourByteMaxData)
         
         // 4-byte min (0xffffffff)
-        let fourByteMinNum = ScriptNumber(fourByteMinData)
+        let fourByteMinNum = try ScriptNumber(fourByteMinData)
         let fourByteMinDataBack = fourByteMinNum.data
         XCTAssertEqual(fourByteMinDataBack, fourByteMinData)
         
         // 5-byte max (0x7fffffffff)
-        let fiveByteMaxNum = ScriptNumber(fiveByteMaxData)
+        let fiveByteMaxNum = try ScriptNumber(fiveByteMaxData, extendedLength: true)
         let fiveByteMaxDataBack = fiveByteMaxNum.data
         XCTAssertEqual(fiveByteMaxDataBack, fiveByteMaxData)
         
         // 5-byte min (0xffffffffff)
-        let fiveByteMinNum = ScriptNumber(fiveByteMinData)
+        let fiveByteMinNum = try ScriptNumber(fiveByteMinData, extendedLength: true)
         let fiveByteMinDataBack = fiveByteMinNum.data
         XCTAssertEqual(fiveByteMinDataBack, fiveByteMinData)
     }
     
-    func testAdd() {
-        var a = ScriptNumber(zeroData)
+    func testAdd() throws {
+        var a = try ScriptNumber(zeroData)
         var a2 = a
-        var b = ScriptNumber(zeroData)
+        var b = try ScriptNumber(zeroData)
         XCTAssertNoThrow(try a.add(b))
         var dataBack = a.data
         XCTAssertEqual(dataBack, zeroData)
@@ -96,9 +102,9 @@ final class ScriptNumberTests: XCTestCase {
         dataBack = b.data
         XCTAssertEqual(dataBack, zeroData)
         
-        a = ScriptNumber(oneByteMinData)
+        a = try ScriptNumber(oneByteMinData)
         a2 = a
-        b = ScriptNumber(oneByteMaxData)
+        b = try ScriptNumber(oneByteMaxData)
         XCTAssertNoThrow(try a.add(b))
         dataBack = a.data
         XCTAssertEqual(dataBack, zeroData)
@@ -106,9 +112,9 @@ final class ScriptNumberTests: XCTestCase {
         dataBack = b.data
         XCTAssertEqual(dataBack, zeroData)
         
-        a = ScriptNumber(twoByteMinData)
+        a = try ScriptNumber(twoByteMinData)
         a2 = a
-        b = ScriptNumber(twoByteMaxData)
+        b = try ScriptNumber(twoByteMaxData)
         XCTAssertNoThrow(try a.add(b))
         dataBack = a.data
         XCTAssertEqual(dataBack, zeroData)
@@ -116,9 +122,9 @@ final class ScriptNumberTests: XCTestCase {
         dataBack = b.data
         XCTAssertEqual(dataBack, zeroData)
 
-        a = ScriptNumber(threeByteMinData)
+        a = try ScriptNumber(threeByteMinData)
         a2 = a
-        b = ScriptNumber(threeByteMaxData)
+        b = try ScriptNumber(threeByteMaxData)
         XCTAssertNoThrow(try a.add(b))
         dataBack = a.data
         XCTAssertEqual(dataBack, zeroData)
@@ -126,9 +132,9 @@ final class ScriptNumberTests: XCTestCase {
         dataBack = b.data
         XCTAssertEqual(dataBack, zeroData)
 
-        a = ScriptNumber(fourByteMinData)
+        a = try ScriptNumber(fourByteMinData)
         a2 = a
-        b = ScriptNumber(fourByteMaxData)
+        b = try ScriptNumber(fourByteMaxData)
         XCTAssertNoThrow(try a.add(b))
         dataBack = a.data
         XCTAssertEqual(dataBack, zeroData)
@@ -136,9 +142,9 @@ final class ScriptNumberTests: XCTestCase {
         dataBack = b.data
         XCTAssertEqual(dataBack, zeroData)
 
-        a = ScriptNumber(fiveByteMinData)
+        a = try ScriptNumber(fiveByteMinData, extendedLength: true)
         a2 = a
-        b = ScriptNumber(fiveByteMaxData)
+        b = try ScriptNumber(fiveByteMaxData, extendedLength: true)
         XCTAssertNoThrow(try a.add(b))
         dataBack = a.data
         XCTAssertEqual(dataBack, zeroData)

@@ -19,89 +19,89 @@ final class ScriptTests: XCTestCase {
         
         var script = ParsedScript([.pushBytes(zero), .pushBytes(zero), .boolAnd])
         var stack = [Data]()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
 
         script = ParsedScript([.pushBytes(zero), .pushBytes(one), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(zero), .pushBytes(two), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(zero), .pushBytes(big), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(one), .pushBytes(zero), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(two), .pushBytes(zero), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(big), .pushBytes(zero), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(big), .pushBytes(zero), .boolAnd])
         stack = .init()
-        XCTAssertThrowsError(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: [])) // Zero at the end of script execution
+        XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
         script = ParsedScript([.pushBytes(one), .pushBytes(one), .boolAnd])
         stack = .init()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [one])
         
         script = ParsedScript([.pushBytes(one), .pushBytes(two), .boolAnd])
         stack = .init()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [one])
         
         script = ParsedScript([.pushBytes(two), .pushBytes(two), .boolAnd])
         stack = .init()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [one])
         
         script = ParsedScript([.pushBytes(big), .pushBytes(one), .boolAnd])
         stack = .init()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [one])
         
         script = ParsedScript([.pushBytes(big), .pushBytes(big), .boolAnd])
         stack = .init()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [one])
     }
 
     func testOpSuccess() {
         var script = ParsedScript([.success(80), .pushBytes(Data(repeating: 0, count: 128))], version: .witnessV1)
         var stack = [Data]()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [])
 
         script = ParsedScript([.success(98), .pushBytes(Data(repeating: 1, count: 128))], version: .witnessV1)
         stack = [Data]()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [])
 
         script = ParsedScript([.success(254)], version: .witnessV1)
         stack = [Data]()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [])
 
         let legacyScript = ParsedScript([.reserved(80)])
         stack = [Data]()
-        XCTAssertThrowsError(try legacyScript.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertThrowsError(try legacyScript.run(&stack))
         XCTAssertEqual(stack, [])
     }
 
@@ -109,7 +109,7 @@ final class ScriptTests: XCTestCase {
         let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
         let script = ParsedScript([.pushBytes(big), .drop])
         var stack = [Data]()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssert(stack.isEmpty)
     }
 
@@ -117,7 +117,7 @@ final class ScriptTests: XCTestCase {
         let big = withUnsafeBytes(of: (Int.max / 2) - 1) { Data($0) }
         let script = ParsedScript([.pushBytes(big), .dup])
         var stack = [Data]()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [big, big])
     }
 
@@ -127,28 +127,28 @@ final class ScriptTests: XCTestCase {
         var script = ParsedScript([.constant(3), .constant(4), .add, .constant(7), .equal, .if, .constant(2), .constant(6), .add, .else, .constant(5), .endIf, .constant(10)
         ])
         var stack = [Data]()
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [Data([0x08]), Data([0x0a])])
         
         // Missing else branch
         script = ParsedScript([.constant(3), .constant(4), .add, .constant(7), .equal, .if, .constant(2), .constant(6), .add, .endIf, .constant(10)
         ])
         stack = []
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [Data([0x08]), Data([0x0a])])
         
         // Else branch
         script = ParsedScript([.constant(3), .constant(4), .add, .constant(9), .equal, .if, .constant(2), .constant(6), .add, .else, .constant(5), .endIf, .constant(10)
         ])
         stack = []
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [Data([0x05]), Data([0x0a])])
         
         // Notif
         script = ParsedScript([.constant(3), .constant(4), .add, .constant(9), .equal, .notIf, .constant(5), .endIf, .constant(10)
         ])
         stack = []
-        XCTAssertNoThrow(try script.run(&stack, transaction: .empty, inputIndex: -1, previousOutputs: []))
+        XCTAssertNoThrow(try script.run(&stack))
         XCTAssertEqual(stack, [Data([0x05]), Data([0x0a])])
     }
 

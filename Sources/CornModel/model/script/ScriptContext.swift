@@ -3,7 +3,7 @@ import Foundation
 struct ScriptContext {
     let transaction: Transaction
     let inputIndex: Int
-    let previousOutputs: [Transaction.Output]
+    let previousOutputs: [Output]
     let script: any Script
     var decodedOperations = [ScriptOperation]()
     var operationIndex: Int = 0
@@ -18,7 +18,7 @@ struct ScriptContext {
     var pendingIfOperations = [Bool?]()
     var pendingElseOperations = 0
 
-    var previousOutput: Transaction.Output {
+    var previousOutput: Output {
         previousOutputs[inputIndex]
     }
 
@@ -44,7 +44,7 @@ struct ScriptContext {
             if operation != .codeSeparator && operation != .pushBytes(signature) {
                 scriptCode.append(operation.data)
             }
-            programCounter2 += operation.dataCount
+            programCounter2 += operation.size
         }
 
         // TODO: FindAndDelete signatures

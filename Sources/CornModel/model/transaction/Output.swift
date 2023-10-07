@@ -1,6 +1,6 @@
 import Foundation
 
-extension Transaction { public struct Output: Equatable {
+public struct Output: Equatable {
     
     init(value: Amount, script: SerializedScript) {
         self.value = value
@@ -36,7 +36,7 @@ extension Transaction { public struct Output: Equatable {
         withUnsafeBytes(of: value) { Data($0) }
     }
 
-    var dataCount: Int {
-        MemoryLayout.size(ofValue: value) + script.prefixedDataCount
+    var size: Int {
+        MemoryLayout.size(ofValue: value) + script.prefixedSize
     }
-} }
+}

@@ -16,7 +16,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
         
         let outputKey = scriptTree.getOutputKey(secretKey: secretKey)
         
-        let previousOutputs = [Transaction.Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]
+        let previousOutputs = [Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]
         
         var tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
@@ -40,7 +40,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
                 .equal], version: .witnessV1).data))
         let outputKey = scriptTree.getOutputKey(secretKey: secretKey)
         
-        let previousOutputs = [Transaction.Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]
+        let previousOutputs = [Output(value: 100, script: ParsedScript.makeP2TR(outputKey: outputKey))]
         
         let tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [.init(outpoint: .init(transaction: "", output: 0), sequence: .initial)],
@@ -76,7 +76,7 @@ final class TapscriptPlaygroundTests: XCTestCase {
     func testVectors() {
         for testCase in coreTestAssets {
             let unsigned = Transaction(Data(hex: testCase.tx))
-            let previousOutputs = testCase.previousOutputs.map { Transaction.Output(Data(hex: $0)) }
+            let previousOutputs = testCase.previousOutputs.map { Output(Data(hex: $0)) }
             let inputIndex = testCase.inputIndex
             var tx = unsigned
             tx.inputs[inputIndex].script = .init(Data(hex: testCase.success.scriptSig))

@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-#include "secp256k1.h"
-
 static const size_t KEY_LEN = 32;
 static const size_t PUBKEY_MAX_LEN = 65; // Uncompressed
 static const size_t PUBKEY_COMPRESSED_LEN = 33;

@@ -1,6 +1,6 @@
 import Foundation
 
-public extension Transaction.Input { struct Witness: Equatable {
+public struct Witness: Equatable {
 
     private(set) var elements: [Data]
     
@@ -27,7 +27,7 @@ public extension Transaction.Input { struct Witness: Equatable {
         return ret
     }
     
-    var dataCount: Int {
+    var size: Int {
         UInt64(elements.count).varIntSize + elements.varLenSize
     }
     
@@ -39,4 +39,4 @@ public extension Transaction.Input { struct Witness: Equatable {
             return .none
         }
     }
-} }
+}

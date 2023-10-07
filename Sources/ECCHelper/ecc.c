@@ -6,12 +6,10 @@
 
 #include <secp256k1.h>
 
-//static
-const secp256k1_context *secp256k1_context_static; // This is included in newer versions of lib secp256k1
 secp256k1_context* secp256k1_context_sign = NULL;
 
 void cECCStart(void (*getRandBytes)(u_char*, const size_t)) {
-    secp256k1_context_static = secp256k1_context_no_precomp;
+    secp256k1_context_static = secp256k1_context_static;
 
     assert(secp256k1_context_sign == NULL);
 

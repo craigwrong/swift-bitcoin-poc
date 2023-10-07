@@ -1,6 +1,6 @@
 import Foundation
 
-extension Transaction { public struct Locktime: Equatable {
+public struct Locktime: Equatable {
 
     public static let disabled = Self(0)
     public static let maxBlock = Self(minClock.locktimeValue - 1)
@@ -24,7 +24,7 @@ extension Transaction { public struct Locktime: Equatable {
     }
     
     init?(_ data: Data) {
-        guard data.count >= Self.dataCount else {
+        guard data.count >= Self.size else {
             return nil
         }
         let value32 = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
@@ -39,7 +39,7 @@ extension Transaction { public struct Locktime: Equatable {
         self.locktimeValue = locktimeValue
     }
 
-    static var dataCount: Int {
+    static var size: Int {
         MemoryLayout<UInt32>.size
     }
     
@@ -69,4 +69,4 @@ extension Transaction { public struct Locktime: Equatable {
         UInt32(locktimeValue)
     }
 
-} }
+}

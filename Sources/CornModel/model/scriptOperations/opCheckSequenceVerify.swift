@@ -11,7 +11,7 @@ func opCheckSequenceVerify(_ stack: inout [Data], context: ScriptContext) throws
         sequence64 <= UInt32.max
     else { throw ScriptError.invalidScript }
     
-    let sequence = Transaction.Input.Sequence(UInt32(sequence64))
+    let sequence = Sequence(UInt32(sequence64))
     if sequence.isLocktimeDisabled { return }
     
     if context.transaction.version == .v1 { throw ScriptError.invalidScript }

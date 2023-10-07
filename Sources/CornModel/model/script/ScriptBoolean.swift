@@ -35,7 +35,7 @@ public struct ScriptBoolean: Equatable {
         value ? Data([1]) : Data()
     }
     
-    public var dataCount: Int {
+    public var size: Int {
         value ? 1 : 0
     }
     

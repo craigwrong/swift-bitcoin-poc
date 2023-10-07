@@ -11,14 +11,14 @@ extension Transaction {
     ///   - previousOutput: Previous unspent transaction output corresponding to the transaction input being signed/verified.
     ///   - scriptCode: The executed script. For Pay-to-Script-Hash outputs it should correspond to the redeem script.
     /// - Returns: A hash value for use while either signing or verifying a transaction input.
-    func signatureHash(sighashType: SighashType, inputIndex: Int, previousOutput: Transaction.Output, scriptCode: Data) -> Data {
+    func signatureHash(sighashType: SighashType, inputIndex: Int, previousOutput: Output, scriptCode: Data) -> Data {
         let sigMsg = signatureMessage(sighashType: sighashType, inputIndex: inputIndex, scriptCode: scriptCode)
         return hash256(sigMsg)
     }
     
     /// Aka sigMsg. See https://en.bitcoin.it/wiki/OP_CHECKSIG
     func signatureMessage(sighashType: SighashType, inputIndex: Int, scriptCode: Data) -> Data {
-        var newIns = [Transaction.Input]()
+        var newIns = [Input]()
         if sighashType.isAnyCanPay {
             // Procedure for Hashtype SIGHASH_ANYONECANPAY
             // The txCopy input vector is resized to a length of one.
@@ -36,7 +36,7 @@ extension Transaction {
                 ))
             }
         }
-        var newOuts: [Transaction.Output]
+        var newOuts: [Output]
         // Procedure for Hashtype SIGHASH_SINGLE
         
         if sighashType.isSingle {
@@ -82,7 +82,7 @@ extension Transaction {
 
     // -MARK: Segregated Witnes version 0 (SegWit)
     
-    func segwitSignatureHash(sighashType: SighashType, inputIndex: Int, previousOutput: Transaction.Output, scriptCode: Data) -> Data {
+    func segwitSignatureHash(sighashType: SighashType, inputIndex: Int, previousOutput: Output, scriptCode: Data) -> Data {
         hash256(segwitSignatureMessage(sighashType: sighashType, inputIndex: inputIndex, scriptCode: scriptCode, amount: previousOutput.value))
     }
 
@@ -136,12 +136,12 @@ extension Transaction {
 
     // -MARK: Segregated Witnes version 1 (TapRoot)
 
-    mutating func taprootSignatureHash(sighashType: SighashType?, inputIndex: Int, previousOutputs: [Transaction.Output], tapscriptExtension: TapscriptExtension? = .none) -> Data {
+    mutating func taprootSignatureHash(sighashType: SighashType?, inputIndex: Int, previousOutputs: [Output], tapscriptExtension: TapscriptExtension? = .none) -> Data {
         var cache = SighashCache()
         return taprootSignatureHash(sighashType: sighashType, inputIndex: inputIndex, previousOutputs: previousOutputs, tapscriptExtension: tapscriptExtension, sighashCache: &cache)
     }
     
-    mutating func taprootSignatureHash(sighashType: SighashType?, inputIndex: Int, previousOutputs: [Transaction.Output], tapscriptExtension: TapscriptExtension? = .none, sighashCache: inout SighashCache) -> Data {
+    mutating func taprootSignatureHash(sighashType: SighashType?, inputIndex: Int, previousOutputs: [Output], tapscriptExtension: TapscriptExtension? = .none, sighashCache: inout SighashCache) -> Data {
         var payload = taprootSignatureMessage(sighashType: sighashType, extFlag: tapscriptExtension == .none ? 0 : 1, inputIndex: inputIndex, previousOutputs: previousOutputs, sighashCache: &sighashCache)
         if let tapscriptExtension {
             payload += tapscriptExtension.data
@@ -152,7 +152,7 @@ extension Transaction {
     /// SegWit v1 (Schnorr / TapRoot) signature message (sigMsg). More at https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message .
     /// https://github.com/bitcoin/bitcoin/blob/58da1619be7ac13e686cb8bbfc2ab0f836eb3fa5/src/script/interpreter.cpp#L1477
     /// https://bitcoin.stackexchange.com/questions/115328/how-do-you-calculate-a-taproot-sighash
-    func taprootSignatureMessage(sighashType: SighashType?, extFlag: UInt8 = 0, inputIndex: Int, previousOutputs: [Transaction.Output], sighashCache: inout SighashCache) -> Data {
+    func taprootSignatureMessage(sighashType: SighashType?, extFlag: UInt8 = 0, inputIndex: Int, previousOutputs: [Output], sighashCache: inout SighashCache) -> Data {
         
         precondition(previousOutputs.count == inputs.count, "The corresponding (aligned) UTXO for each transaction input is required.")
         precondition(!sighashType.isSingle || inputIndex < outputs.count, "For single hash type, the selected input needs to have a matching output.")

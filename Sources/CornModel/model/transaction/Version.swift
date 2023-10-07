@@ -1,6 +1,6 @@
 import Foundation
 
-extension Transaction { public struct Version: Equatable {
+public struct Version: Equatable {
     
     public static let v1 = Self(1)
     public static let v2 = Self(2)
@@ -15,7 +15,7 @@ extension Transaction { public struct Version: Equatable {
     }
     
     init?(_ data: Data) {
-        guard data.count >= Self.dataCount else {
+        guard data.count >= Self.size else {
             return nil
         }
         let rawValue = data.withUnsafeBytes { $0.load(as: UInt32.self) }
@@ -30,7 +30,7 @@ extension Transaction { public struct Version: Equatable {
         self.versionValue = versionValue
     }
     
-    static var dataCount: Int {
+    static var size: Int {
         MemoryLayout<UInt32>.size
     }
     
@@ -46,4 +46,4 @@ extension Transaction { public struct Version: Equatable {
         UInt32(versionValue)
     }
     
-} }
+}

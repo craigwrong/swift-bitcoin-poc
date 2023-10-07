@@ -2,7 +2,7 @@ import Foundation
 
 extension Transaction {
 
-    public func verify(previousOutputs: [Transaction.Output]) -> Bool {
+    public func verify(previousOutputs: [Output]) -> Bool {
         for i in inputs.indices {
             do {
                 try verify(inputIndex: i, previousOutputs: previousOutputs)
@@ -13,7 +13,7 @@ extension Transaction {
         return true
     }
     
-    func verify(inputIndex: Int, previousOutputs: [Transaction.Output]) throws {
+    func verify(inputIndex: Int, previousOutputs: [Output]) throws {
         let input = inputs[inputIndex]
         let previousOutput = previousOutputs[inputIndex]
 

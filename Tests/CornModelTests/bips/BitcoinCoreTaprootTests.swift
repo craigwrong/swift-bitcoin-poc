@@ -14,7 +14,7 @@ final class BitcoinCoreTaprootTests: XCTestCase {
     func testVectors() {
         for testCase in coreTestAssets {
             let unsigned = Transaction(Data(hex: testCase.tx))
-            let previousOutputs = testCase.previousOutputs.map { Transaction.Output(Data(hex: $0)) }
+            let previousOutputs = testCase.previousOutputs.map { Output(Data(hex: $0)) }
             let inputIndex = testCase.inputIndex
             var tx = unsigned
             tx.inputs[inputIndex].script = .init(Data(hex: testCase.success.scriptSig))

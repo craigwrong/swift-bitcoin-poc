@@ -80,7 +80,7 @@ public struct ScriptNumber: Equatable {
         fatalError() // Should never reach here
     }
     
-    public var dataCount: Int {
+    public var size: Int {
         if value == 0 {
             return 0
         }

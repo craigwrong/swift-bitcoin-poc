@@ -16,9 +16,9 @@ final class DataTests: XCTestCase {
         let secretKey1 = createSecretKey()
         let publicKey1 = getPublicKey(secretKey: secretKey1)
         let previousOutputs = [
-            Transaction.Output(value: 0,
+            Output(value: 0,
                    script: ParsedScript.makeP2PKH(publicKey: publicKey0)),
-            Transaction.Output(value: 0,
+            Output(value: 0,
                    script: ParsedScript.makeP2PKH(publicKey: publicKey1))
         ]
         var tx = Transaction(version: .v1, locktime: .disabled,
@@ -33,7 +33,7 @@ final class DataTests: XCTestCase {
         res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
         
-        tx.inputs.append(Transaction.Input(outpoint: .init(transaction: "", output: 0), sequence: .initial))
+        tx.inputs.append(Input(outpoint: .init(transaction: "", output: 0), sequence: .initial))
         tx.sign(secretKeys: [secretKey1], publicKeys: [publicKey1], sighashType: .all, inputIndex: 1, previousOutputs: previousOutputs)
         res = tx.verify(previousOutputs: previousOutputs)
         XCTAssert(res)
@@ -50,14 +50,14 @@ final class DataTests: XCTestCase {
         
         // Some previous outputs
         let previousOutputs = [
-            Transaction.Output(value: 0,
+            Output(value: 0,
                    script: ParsedScript.makeP2PKH(publicKey: publicKey0)),
-            Transaction.Output(value: 0,
+            Output(value: 0,
                    script: ParsedScript.makeP2PKH(publicKey: publicKey1))
         ]
         
         let previousOutputsPlus = previousOutputs + [
-            Transaction.Output(value: 0,
+            Output(value: 0,
                    script: ParsedScript.makeP2WKH(publicKey: publicKey2))
         ]
         
@@ -143,41 +143,41 @@ final class DataTests: XCTestCase {
         // Sprevious outputs
         let previousOutputs = [
             // p2pk
-            Transaction.Output(value: 0, script:ParsedScript.makeP2PK(publicKey: publicKeys[0])),
+            Output(value: 0, script:ParsedScript.makeP2PK(publicKey: publicKeys[0])),
             
             // p2pkh
-            Transaction.Output(value: 0, script:ParsedScript.makeP2PKH(publicKey: publicKeys[1])),
+            Output(value: 0, script:ParsedScript.makeP2PKH(publicKey: publicKeys[1])),
             
             // p2sh
-            Transaction.Output( value: 0,
+            Output( value: 0,
                 script: ParsedScript.makeP2SH(redeemScript: redeemScript2)
             ),
             
             // p2wkh
-            Transaction.Output(value: 0, script:ParsedScript.makeP2WKH(publicKey: publicKeys[3])),
+            Output(value: 0, script:ParsedScript.makeP2WKH(publicKey: publicKeys[3])),
             
             // p2sh-p2wkh
-            Transaction.Output(value: 0,
+            Output(value: 0,
                 script: ParsedScript.makeP2SH(redeemScript: redeemScript4)
             ),
 
             // p2wsh
-            Transaction.Output(value: 0,
+            Output(value: 0,
                 script: ParsedScript.makeP2WSH(redeemScriptV0: redeemScript5)
             ),
 
             // p2sh-p2wsh
-            Transaction.Output(value: 0,
+            Output(value: 0,
                 script: ParsedScript.makeP2SH(redeemScript: redeemScript6)
             ),
 
             // p2tr (key path)
-            Transaction.Output(value: 0,
+            Output(value: 0,
                 script: ParsedScript.makeP2TR(outputKey: outputKey7)
             ),
             
             // legacy multisig
-            Transaction.Output(value: 0,
+            Output(value: 0,
                 script: .init([
                     .constant(2),
                     .pushBytes(publicKeys[9]),

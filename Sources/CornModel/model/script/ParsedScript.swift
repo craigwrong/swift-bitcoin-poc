@@ -15,7 +15,7 @@ public struct ParsedScript: Script {
                 return nil
             }
             operations.append(operation)
-            data = data.dropFirst(operation.dataCount)
+            data = data.dropFirst(operation.size)
         }
         self.version = version
     }
@@ -35,8 +35,8 @@ public struct ParsedScript: Script {
         }
     }
 
-    public var dataCount: Int {
-        operations.reduce(0) { $0 + $1.dataCount }
+    public var size: Int {
+        operations.reduce(0) { $0 + $1.size }
     }
 
     public var prefixedData: Data {
@@ -44,8 +44,8 @@ public struct ParsedScript: Script {
         return data.varLenData
     }
 
-    public var prefixedDataCount: Int {
-        UInt64(dataCount).varIntSize + dataCount
+    public var prefixedSize: Int {
+        UInt64(size).varIntSize + size
     }
 
     mutating func removeSubScripts(before opIndex: Int) {
@@ -70,7 +70,7 @@ public struct ParsedScript: Script {
         SerializedScript(data, version: version)
     }
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], tapLeafHash: Data? = .none) throws {
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Output], tapLeafHash: Data? = .none) throws {
         var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, script: self, tapLeafHash: tapLeafHash)
         
         for operation in operations {
@@ -80,7 +80,7 @@ public struct ParsedScript: Script {
                 context.lastCodeSeparatorOffset = context.programCounter
             }
             context.decodedOperations.append(operation)
-            context.programCounter += operation.dataCount
+            context.programCounter += operation.size
             
             try operation.execute(stack: &stack, context: &context)
 

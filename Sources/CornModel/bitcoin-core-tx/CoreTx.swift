@@ -124,11 +124,11 @@ extension CoreTx {
 extension Transaction {
     func toBCoreTransaction(network: Network = .main) -> CoreTx {
         .init(
-            txid: txid,
-            hash: wtxid,
+            txid: id,
+            hash: witnessID,
             version: version.rawValue,
             size: size,
-            vsize: vsize,
+            vsize: virtualSize,
             weight: weight,
             locktime: locktime.rawValue,
             vin: inputs.map {
@@ -146,7 +146,7 @@ extension Transaction {
     }
 }
 
-extension Transaction.Input {
+extension Input {
     var bCoreInput: CoreTx.Input {
         let parsedScript = ParsedScript(script.data)!
         return isCoinbase
@@ -172,7 +172,7 @@ extension Transaction.Input {
     }
 }
 
-extension Transaction.Output {
+extension Output {
 
     func toBCoreOutput(outputIndex: Int, network: Network = .main) -> CoreTx.Output {
         let parsedScript = ParsedScript(script.data)!

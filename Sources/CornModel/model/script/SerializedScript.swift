@@ -15,7 +15,7 @@ public struct SerializedScript: Script {
         self.init(Data(varLenData: prefixedData), version: version)
     }
     
-    public var dataCount: Int {
+    public var size: Int {
        data.count
     }
     
@@ -33,7 +33,7 @@ public struct SerializedScript: Script {
 
     public var serialized: SerializedScript { self }
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], tapLeafHash: Data? = .none) throws {
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Output], tapLeafHash: Data? = .none) throws {
         var context = ScriptContext(transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, script: self, tapLeafHash: tapLeafHash)
         
         while context.programCounter < data.count {
@@ -47,7 +47,7 @@ public struct SerializedScript: Script {
                 context.lastCodeSeparatorOffset = context.programCounter
             }
             context.decodedOperations.append(operation)
-            context.programCounter += operation.dataCount
+            context.programCounter += operation.size
                         
             try operation.execute(stack: &stack, context: &context)
 

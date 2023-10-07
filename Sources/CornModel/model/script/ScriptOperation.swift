@@ -17,7 +17,7 @@ public enum ScriptOperation: Equatable {
         }
     }
 
-    var dataCount: Int {
+    var size: Int {
         operationPreconditions()
         
         let additionalSize: Int
@@ -418,18 +418,18 @@ public enum ScriptOperation: Equatable {
         case 0x4c ... 0x4e:
             let byteCount: Int
             if opCode == 0x4c {
-                let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
-                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
-                byteCount = Int(pushDataCount)
+                let pushSize = data.withUnsafeBytes {  $0.load(as: UInt8.self) }
+                data = data.dropFirst(MemoryLayout.size(ofValue: pushSize))
+                byteCount = Int(pushSize)
             } else if opCode == 0x4d {
-                let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt16.self) }
-                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
-                byteCount = Int(pushDataCount)
+                let pushSize = data.withUnsafeBytes {  $0.load(as: UInt16.self) }
+                data = data.dropFirst(MemoryLayout.size(ofValue: pushSize))
+                byteCount = Int(pushSize)
             } else {
                 // opCode == 0x4e
-                let pushDataCount = data.withUnsafeBytes {  $0.load(as: UInt32.self) }
-                data = data.dropFirst(MemoryLayout.size(ofValue: pushDataCount))
-                byteCount = Int(pushDataCount)
+                let pushSize = data.withUnsafeBytes {  $0.load(as: UInt32.self) }
+                data = data.dropFirst(MemoryLayout.size(ofValue: pushSize))
+                byteCount = Int(pushSize)
             }
             guard data.count >= byteCount else { return nil }
             let d = Data(data[..<(data.startIndex + byteCount)])

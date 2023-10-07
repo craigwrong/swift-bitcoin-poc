@@ -4,9 +4,9 @@ public protocol Script: Equatable {
 
     var version: ScriptVersion { get }
     var data: Data { get }
-    var dataCount: Int { get }
+    var size: Int { get }
     var prefixedData: Data { get }
-    var prefixedDataCount: Int { get }
+    var prefixedSize: Int { get }
     
     var asm: String { get }
 
@@ -15,14 +15,14 @@ public protocol Script: Equatable {
     var parsed: ParsedScript? { get }
     var serialized: SerializedScript { get }
 
-    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output], tapLeafHash: Data?) throws
+    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Output], tapLeafHash: Data?) throws
     
-    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output]) throws
+    func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Output]) throws
 }
 
 extension Script {
 
-    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Transaction.Output]) throws {
+    public func run(_ stack: inout [Data], transaction: Transaction, inputIndex: Int, previousOutputs: [Output]) throws {
         try run(&stack, transaction: transaction, inputIndex: inputIndex, previousOutputs: previousOutputs, tapLeafHash: .none)
     }
 
@@ -30,7 +30,7 @@ extension Script {
         data.varLenData
     }
     
-    public var prefixedDataCount: Int {
+    public var prefixedSize: Int {
         data.varLenSize
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-extension Transaction { public struct Input: Equatable {
+public struct Input: Equatable {
 
     public var outpoint: Outpoint
     public var sequence: Sequence
@@ -21,15 +21,15 @@ extension Transaction { public struct Input: Equatable {
     init(_ data: Data) {
         var offset = data.startIndex
         let outpoint = Outpoint(data)
-        offset += Outpoint.dataCount
+        offset += Outpoint.size
         
         let script = SerializedScript(prefixedData: data[offset...])
-        offset += script.prefixedDataCount
+        offset += script.prefixedSize
         
         guard let sequence = Sequence(data[offset...]) else {
             fatalError()
         }
-        offset += Sequence.dataCount
+        offset += Sequence.size
         
         self.init(outpoint: outpoint, sequence: sequence, script: script)
     }
@@ -44,8 +44,8 @@ extension Transaction { public struct Input: Equatable {
         return ret
     }
     
-    var dataCount: Int {
-        Outpoint.dataCount + script.prefixedDataCount + Sequence.dataCount
+    var size: Int {
+        Outpoint.size + script.prefixedSize + Sequence.size
     }
 
-} }
+}

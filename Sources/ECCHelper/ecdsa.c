@@ -7,7 +7,6 @@
 
 #include <secp256k1.h>
 
-extern secp256k1_context* secp256k1_context_static;
 extern secp256k1_context* secp256k1_context_sign;
 
 uint32_t htobe32(uint32_t x) /* aka bswap_32 */
@@ -59,8 +58,7 @@ const int signECDSA(u_char* sigOut, size_t* sigLenOut, const u_char* msg32, cons
     secp256k1_pubkey pk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, secretKey32);
     assert(ret);
-    // secp256k1_context_no_precomp should be secp256k1_context_static
-    ret = secp256k1_ecdsa_verify(secp256k1_context_no_precomp, &sig, msg32, &pk);
+    ret = secp256k1_ecdsa_verify(secp256k1_context_static, &sig, msg32, &pk);
     assert(ret);
     memcpy(sigOut, sigBytes, sigLen);
     *sigLenOut = sigLen;
@@ -76,7 +74,6 @@ const int verifyECDSA(const u_char *sigBytes, const size_t sigLen, const u_char*
     secp256k1_pubkey pk;
     ret = secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pk, pubKey, pubKeyLen);
     assert(ret);
-    // secp256k1_context_no_precomp should be secp256k1_context_static
     ret = secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, msg32, &pk);
     return ret;
 }
@@ -90,7 +87,6 @@ const int verifyECDSASecretKey(const u_char *sigBytes, const size_t sigLen, cons
     secp256k1_pubkey pk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, secretKey32);
     assert(ret);
-    // secp256k1_context_no_precomp should be secp256k1_context_static
     ret = secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, msg32, &pk);
     return ret;
 }

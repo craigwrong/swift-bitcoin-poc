@@ -37,11 +37,11 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let tx = Transaction(Data(hex: CoreTx.Sample.coinbase1.hex))
         XCTAssertEqual(tx.size, CoreTx.Sample.coinbase1.size)
         XCTAssertEqual(tx.weight, CoreTx.Sample.coinbase1.weight)
-        XCTAssertEqual(tx.vsize, CoreTx.Sample.coinbase1.vsize)
+        XCTAssertEqual(tx.virtualSize, CoreTx.Sample.coinbase1.vsize)
         let txSegWit = Transaction(Data(hex: CoreTx.Sample.segwit1.hex))
         XCTAssertEqual(txSegWit.size, txSegWit.size)
         XCTAssertEqual(txSegWit.weight, txSegWit.weight)
-        XCTAssertEqual(txSegWit.vsize, txSegWit.vsize)
+        XCTAssertEqual(txSegWit.virtualSize, txSegWit.virtualSize)
     }
     
     func testLockTime() throws {
@@ -95,19 +95,19 @@ final class BTransactionBCoreTransactionTests: XCTestCase {
         let tx = Transaction(Data(hex: txHex))
         XCTAssertEqual(tx.data.hex, txHex)
         XCTAssertEqual(tx.data.hex, tx.idData.hex)
-        XCTAssertEqual(tx.txid, txID)
+        XCTAssertEqual(tx.id, txID)
     }
     
     func testTxID() throws {
         let tx = Transaction(Data(hex: CoreTx.Sample.coinbase1.hex))
-        XCTAssertEqual(tx.txid, CoreTx.Sample.coinbase1.txid)
+        XCTAssertEqual(tx.id, CoreTx.Sample.coinbase1.txid)
         let txSegwit = Transaction(Data(hex: CoreTx.Sample.segwit1.hex))
-        XCTAssertEqual(txSegwit.txid, CoreTx.Sample.segwit1.txid)
+        XCTAssertEqual(txSegwit.id, CoreTx.Sample.segwit1.txid)
     }
     func testTxHash() throws {
         let tx = Transaction(Data(hex: CoreTx.Sample.coinbase1.hex))
-        XCTAssertEqual(tx.wtxid, CoreTx.Sample.coinbase1.hash)
+        XCTAssertEqual(tx.witnessID, CoreTx.Sample.coinbase1.hash)
         let txSegwit = Transaction(Data(hex: CoreTx.Sample.segwit1.hex))
-        XCTAssertEqual(txSegwit.wtxid, CoreTx.Sample.segwit1.hash)
+        XCTAssertEqual(txSegwit.witnessID, CoreTx.Sample.segwit1.hash)
     }
 }

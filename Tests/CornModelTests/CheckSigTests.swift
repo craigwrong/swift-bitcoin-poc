@@ -16,14 +16,14 @@ final class CheckSigTests: XCTestCase {
         let secretKey = createSecretKey()
         let publicKey = getPublicKey(secretKey: secretKey)
         let previousOutputs = [
-            Transaction.Output(value: 0, script:.init([]))
+            Output(value: 0, script:.init([]))
         ]
         let tx = Transaction(version: .v1, locktime: .disabled,
             inputs: [
                 .init(outpoint: .init(transaction: "", output: 0), sequence: .initial)
             ],
             outputs: [
-                Transaction.Output(value: 0, script:.init([]))
+                Output(value: 0, script:.init([]))
             ]
         )
         

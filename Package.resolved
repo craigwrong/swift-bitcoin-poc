@@ -8,6 +8,15 @@
         "revision" : "0ed110f7555c34ff468e72e1686e59721f2b0da6",
         "version" : "5.3.0"
       }
+    },
+    {
+      "identity" : "secp256k1",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-bitcoin/secp256k1",
+      "state" : {
+        "branch" : "develop",
+        "revision" : "3b6530dbf52be88344d5aae0932f201512d39636"
+      }
     }
   ],
   "version" : 2

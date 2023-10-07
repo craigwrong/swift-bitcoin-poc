@@ -1,6 +1,6 @@
 import Foundation
 
-public extension Transaction.Input { struct Sequence: Equatable {
+public struct Sequence: Equatable {
 
     public static let initial = Self(0)
     public static let secondFinal = Self(0xfffffffe)
@@ -34,7 +34,7 @@ public extension Transaction.Input { struct Sequence: Equatable {
     }
     
     init?(_ data: Data) {
-        guard data.count >= Self.dataCount else {
+        guard data.count >= Self.size else {
             return nil
         }
         let rawValue = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
@@ -49,7 +49,7 @@ public extension Transaction.Input { struct Sequence: Equatable {
         self.sequenceValue = sequenceValue
     }
     
-    static var dataCount: Int {
+    static var size: Int {
         MemoryLayout<UInt32>.size
     }
        
@@ -79,4 +79,4 @@ public extension Transaction.Input { struct Sequence: Equatable {
         UInt32(sequenceValue)
     }
 
-} }
+}

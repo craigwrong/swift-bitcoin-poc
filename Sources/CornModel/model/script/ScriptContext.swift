@@ -37,7 +37,7 @@ struct ScriptContext {
         
         var scriptCode = Data()
         var programCounter2 = scriptData.startIndex
-        while programCounter2 < scriptData.count {
+        while programCounter2 < scriptData.endIndex {
             guard let operation = ScriptOperation(scriptData[programCounter2...], version: script.version) else {
                 return .none
             }

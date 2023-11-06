@@ -5,6 +5,14 @@ public enum ScriptOperation: Equatable {
     
     private func operationPreconditions() {
         switch(self) {
+        case .pushBytes(let d):
+            precondition(d.count > 0 && d.count <= 75)
+        case .pushData1(let d):
+            precondition(d.count > 75 && d.count <= UInt8.max)
+        case .pushData2(let d):
+            precondition(d.count > UInt8.max && d.count <= UInt16.max)
+        case .pushData4(let d):
+            precondition(d.count > UInt16.max && d.count <= UInt32.max)
         case .reserved(let k):
             precondition(k == 80 || (k >= 137 && k <= 138))
         case .success(let k):
@@ -568,8 +576,8 @@ public enum ScriptOperation: Equatable {
         case Self.checkSigVerify.opCode: self = .checkSigVerify
         case Self.checkMultiSig.opCode: self = .checkMultiSig
         case Self.checkMultiSigVerify.opCode: self = .checkMultiSigVerify
-        case Self.checkLockTimeVerify.opCode: self = .checkLockTimeVerify
         case Self.noOp1.opCode: self = .noOp1
+        case Self.checkLockTimeVerify.opCode: self = .checkLockTimeVerify
         case Self.checkSequenceVerify.opCode: self = .checkSequenceVerify
         case Self.noOp4.opCode: self = .noOp4
         case Self.noOp5.opCode: self = .noOp5

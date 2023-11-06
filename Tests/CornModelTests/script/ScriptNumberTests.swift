@@ -1,5 +1,5 @@
 import XCTest
-import CornModel
+@testable import CornModel
 
 final class ScriptNumberTests: XCTestCase {
 

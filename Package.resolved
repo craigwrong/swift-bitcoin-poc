@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-bitcoin/secp256k1",
       "state" : {
-        "branch" : "develop",
-        "revision" : "3b6530dbf52be88344d5aae0932f201512d39636"
+        "revision" : "14a763774c240ce0eb84754ac240560830c24ead",
+        "version" : "0.4.0"
       }
     }
   ],

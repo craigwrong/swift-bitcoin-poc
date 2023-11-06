@@ -35,7 +35,7 @@ func getQuaternaryParams(_ stack: inout [Data]) throws -> (Data, Data, Data, Dat
     return (first, second, third, fourth)
 }
 
-func getSernaryParams(_ stack: inout [Data]) throws -> (Data, Data, Data, Data, Data, Data) {
+func getSenaryParams(_ stack: inout [Data]) throws -> (Data, Data, Data, Data, Data, Data) {
     guard stack.count > 5 else {
         throw ScriptError.invalidScript
     }

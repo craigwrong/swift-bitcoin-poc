@@ -1,4 +1,4 @@
-import CornModel
+@testable import CornModel
 import Foundation
 
 extension ParsedScript {

@@ -1,28 +1,29 @@
 import Foundation
 
-public struct ScriptNumber: Equatable {
+struct ScriptNumber: Equatable {
 
-    public static let zero = Self(unsafeValue: 0)
-    public static let one = Self(unsafeValue: 1)
-    public static let negativeOne = Self(unsafeValue: -1)
+    static let zero = Self(unsafeValue: 0)
+    static let one = Self(unsafeValue: 1)
+    static let negativeOne = Self(unsafeValue: -1)
     
     private static let maxValue: Int = 0x0000007fffffffff
     private static let minValue: Int = -0x0000007fffffffff
     
     public private(set) var value: Int
     
-    public init(_ value: Int) throws {
+    init(_ value: Int) throws {
         guard value.magnitude <= Self.maxValue else {
             throw ScriptError.numberOverflow
         }
         self.value = value
     }
-    public init(_ value: UInt8) {
+
+    init(_ value: UInt8) {
         self.init(unsafeValue: Int(value))
     }
     
-    // TODO: optionally check for minimal data (no leading zero bytes unless next previous byte is max)
-    public init(_ data: Data, extendedLength: Bool = false) throws {
+    init(_ data: Data, extendedLength: Bool = false) throws {
+        // TODO: optionally check for minimal data (no leading zero bytes unless next previous byte is max)
         if data.isEmpty {
             value = 0
             return
@@ -107,7 +108,7 @@ public struct ScriptNumber: Equatable {
         value.signum() == -1
     }
 
-    public mutating func add(_ b: ScriptNumber) throws {
+    mutating func add(_ b: ScriptNumber) throws {
         let newValue = value + b.value
         if newValue.magnitude > Self.maxValue {
             throw ScriptError.numberOverflow
@@ -115,7 +116,7 @@ public struct ScriptNumber: Equatable {
         value = newValue
     }
     
-    public mutating func negate() {
+    mutating func negate() {
         value = -value
     }
 }

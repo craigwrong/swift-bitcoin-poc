@@ -11,7 +11,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
-        .package(url: "https://github.com/swift-bitcoin/secp256k1", branch: "develop"),
+        .package(url: "https://github.com/swift-bitcoin/secp256k1", from: "0.4.0"),
     ],
     targets: [
         /*.binaryTarget(name: "secp256k1",
@@ -19,7 +19,7 @@ let package = Package(
             ),*/
         .target(
             name: "ECCHelper",
-            dependencies: [.product(name: "secp256k1", package: "secp256k1")]),
+            dependencies: [.product(name: "LibSECP256k1", package: "secp256k1")]),
         .target(
             name: "CornModel",
             dependencies: ["ECCHelper", "BigInt"]),

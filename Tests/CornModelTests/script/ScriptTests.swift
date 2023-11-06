@@ -17,42 +17,42 @@ final class ScriptTests: XCTestCase {
         let two = withUnsafeBytes(of: Int32(2)) { Data($0) }
         let big = withUnsafeBytes(of: (Int32.max / 2) - 1) { Data($0) }
         
-        var script = ParsedScript([.pushBytes(zero), .pushBytes(zero), .boolAnd])
+        var script = ParsedScript([.zero, .zero, .boolAnd])
         var stack = [Data]()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
 
-        script = ParsedScript([.pushBytes(zero), .pushBytes(one), .boolAnd])
+        script = ParsedScript([.zero, .pushBytes(one), .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ParsedScript([.pushBytes(zero), .pushBytes(two), .boolAnd])
+        script = ParsedScript([.zero, .pushBytes(two), .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ParsedScript([.pushBytes(zero), .pushBytes(big), .boolAnd])
+        script = ParsedScript([.zero, .pushBytes(big), .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ParsedScript([.pushBytes(one), .pushBytes(zero), .boolAnd])
+        script = ParsedScript([.pushBytes(one), .zero, .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ParsedScript([.pushBytes(two), .pushBytes(zero), .boolAnd])
+        script = ParsedScript([.pushBytes(two), .zero, .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ParsedScript([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        script = ParsedScript([.pushBytes(big), .zero, .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])
         
-        script = ParsedScript([.pushBytes(big), .pushBytes(zero), .boolAnd])
+        script = ParsedScript([.pushBytes(big), .zero, .boolAnd])
         stack = .init()
         XCTAssertThrowsError(try script.run(&stack)) // Zero at the end of script execution
         XCTAssertEqual(stack, [zero])

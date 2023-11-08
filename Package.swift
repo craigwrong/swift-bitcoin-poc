@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "CornModel",
+    name: "SwiftBitcoinPOC",
     platforms: [.macOS(.v13)],
     products: [
         .library(
-            name: "CornModel",
-            targets: ["CornModel"]),
+            name: "SwiftBitcoinPOC",
+            targets: ["SwiftBitcoinPOC"]),
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
@@ -21,11 +21,11 @@ let package = Package(
             name: "ECCHelper",
             dependencies: [.product(name: "LibSECP256k1", package: "secp256k1")]),
         .target(
-            name: "CornModel",
+            name: "SwiftBitcoinPOC",
             dependencies: ["ECCHelper", "BigInt"]),
         .testTarget(
-            name: "CornModelTests",
-            dependencies: [ "CornModel"]
+            name: "SwiftBitcoinPOCTests",
+            dependencies: [ "SwiftBitcoinPOC"]
             ),
     ]
 )

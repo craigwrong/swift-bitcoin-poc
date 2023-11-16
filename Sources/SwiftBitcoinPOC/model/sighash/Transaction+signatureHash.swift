@@ -80,8 +80,8 @@ extension Transaction {
         return txCopy.data + sighashType.data32
     }
 
-    // -MARK: Segregated Witnes version 0 (SegWit)
-    
+    // MARK: - Segregated Witnes version 0 (SegWit)
+
     func segwitSignatureHash(sighashType: SighashType, inputIndex: Int, previousOutput: Output, scriptCode: Data) -> Data {
         hash256(segwitSignatureMessage(sighashType: sighashType, inputIndex: inputIndex, scriptCode: scriptCode, amount: previousOutput.value))
     }
@@ -92,7 +92,7 @@ extension Transaction {
         // Otherwise, hashPrevouts is a uint256 of 0x0000......0000.
         var hashPrevouts: Data
         if sighashType.isAnyCanPay {
-            hashPrevouts = Data(repeating: 0, count: 256)
+            hashPrevouts = Data(repeating: 0, count: 32)
         } else {
             let prevouts = inputs.reduce(Data()) { $0 + $1.outpoint.data }
             hashPrevouts = hash256(prevouts)
@@ -107,7 +107,7 @@ extension Transaction {
             }
             hashSequence = hash256(sequence)
         } else {
-            hashSequence = Data(repeating: 0, count: 256)
+            hashSequence = Data(repeating: 0, count: 32)
         }
         
         let outpointData = inputs[inputIndex].outpoint.data
@@ -127,7 +127,7 @@ extension Transaction {
         } else if sighashType.isSingle && inputIndex < outputs.count {
             hashOuts = hash256(outputs[inputIndex].data)
         } else {
-            hashOuts = Data(repeating: 0, count: 256)
+            hashOuts = Data(repeating: 0, count: 32)
         }
         
         let remaindingData = sequenceData + hashOuts + locktime.data + sighashType.data32
